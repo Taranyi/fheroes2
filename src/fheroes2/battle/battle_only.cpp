@@ -166,7 +166,7 @@ bool Battle::Only::setup( const bool allowBackup, bool & reset )
         }
         else {
             info.ui.army = std::make_unique<ArmyBar>( &info.monster, true, false, true );
-            info.ui.army->setTableSize( { 5, 1 } );
+            info.ui.army->setTableSize( { 6, 1 } );
             info.ui.army->setRenderingOffset( { cur_pt.x + armyOffsetX[info.armyId], cur_pt.y + 267 } );
             info.ui.army->setInBetweenItemsOffset( { 2, 0 } );
         }
@@ -564,7 +564,7 @@ void Battle::Only::updateArmyUI( ArmyUI & ui, Heroes * hero, const fheroes2::Poi
     ui.artifact->setRenderingOffset( { offset.x + artifactOffsetX[armyId], offset.y + 347 } );
 
     ui.army = std::make_unique<ArmyBar>( &hero->GetArmy(), true, false, true );
-    ui.army->setTableSize( { 5, 1 } );
+    ui.army->setTableSize( { 6, 1 } );
     ui.army->setRenderingOffset( { offset.x + armyOffsetX[armyId], offset.y + 267 } );
     ui.army->setInBetweenItemsOffset( { 2, 0 } );
 }

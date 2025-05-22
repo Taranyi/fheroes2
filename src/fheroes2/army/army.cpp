@@ -1935,7 +1935,7 @@ void Army::ArrangeForBattle( const Monster & monster, const uint32_t monstersCou
     ArrangeForBattle( monster, monstersCount, stacksCount );
 
     if ( allowUpgrade ) {
-        assert( size() % 2 == 1 );
+        assert( size() > 0 );
 
         // An upgraded stack can be located only in the center
         Troop * troopToUpgrade = at( size() / 2 );

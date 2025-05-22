@@ -417,7 +417,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
     dst_pt.y = cur_pt.y + 267;
 
     MeetingArmyBar selectArmy1( &GetArmy() );
-    selectArmy1.setTableSize( { 5, 1 } );
+    selectArmy1.setTableSize( { 6, 1 } );
     selectArmy1.setRenderingOffset( dst_pt );
     selectArmy1.setInBetweenItemsOffset( { 2, 0 } );
     selectArmy1.Redraw( display );
@@ -426,7 +426,7 @@ void Heroes::MeetingDialog( Heroes & otherHero )
     dst_pt.y = cur_pt.y + 267;
 
     MeetingArmyBar selectArmy2( &otherHero.GetArmy() );
-    selectArmy2.setTableSize( { 5, 1 } );
+    selectArmy2.setTableSize( { 6, 1 } );
     selectArmy2.setRenderingOffset( dst_pt );
     selectArmy2.setInBetweenItemsOffset( { 2, 0 } );
     selectArmy2.Redraw( display );

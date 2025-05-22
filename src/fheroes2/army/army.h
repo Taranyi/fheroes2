@@ -159,7 +159,7 @@ struct NeutralMonsterJoiningCondition
 class Army final : public Troops, public Control
 {
 public:
-    static const size_t maximumTroopCount = 5;
+    static const size_t maximumTroopCount = 6;
 
     static std::string SizeString( uint32_t );
     static std::string TroopSizeString( const Troop & );

@@ -175,6 +175,9 @@ void Castle::LoadFromMP2( const std::vector<uint8_t> & data )
     // - uint8_t (1 byte)
     //    Custom defender monster type in army slot 5.
     //
+    // - uint8_t (1 byte)
+    //    Custom defender monster type in army slot 6.
+    //
     // - uint16_t (2 bytes)
     //    The number of custom defender monsters in army slot 1.
     //
@@ -189,6 +192,9 @@ void Castle::LoadFromMP2( const std::vector<uint8_t> & data )
     //
     // - uint16_t (2 bytes)
     //    The number of custom defender monsters in army slot 5.
+    //
+    // - uint16_t (2 bytes)
+    //    The number of custom defender monsters in army slot 6.
     //
     // - uint8_t (1 byte)
     //     Does the town / castle have captain?

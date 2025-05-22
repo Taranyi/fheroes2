@@ -144,7 +144,7 @@ namespace
 
             armyBar = std::make_unique<ArmyBar>( &hero->GetArmy(), true, false );
             armyBar->SetBackground( { 41, 53 }, fheroes2::GetColorId( 72, 28, 0 ) );
-            armyBar->setTableSize( { 5, 1 } );
+            armyBar->setTableSize( { 6, 1 } );
             armyBar->setInBetweenItemsOffset( { -1, 0 } );
             armyBar->setTroopWindowOffsetY( -60 );
 
@@ -417,7 +417,7 @@ namespace
 
             garrisonArmyBar = std::make_unique<ArmyBar>( &castle->GetArmy(), true, false );
             garrisonArmyBar->SetBackground( { 41, 41 }, fheroes2::GetColorId( 40, 12, 0 ) );
-            garrisonArmyBar->setTableSize( { 5, 1 } );
+            garrisonArmyBar->setTableSize( { 6, 1 } );
             garrisonArmyBar->setInBetweenItemsOffset( { -1, 0 } );
             garrisonArmyBar->setTroopWindowOffsetY( -60 );
 
@@ -435,7 +435,7 @@ namespace
             if ( hero ) {
                 heroArmyBar = std::make_unique<ArmyBar>( &hero->GetArmy(), true, false );
                 heroArmyBar->SetBackground( { 41, 41 }, fheroes2::GetColorId( 40, 12, 0 ) );
-                heroArmyBar->setTableSize( { 5, 1 } );
+                heroArmyBar->setTableSize( { 6, 1 } );
                 heroArmyBar->setInBetweenItemsOffset( { -1, 0 } );
             }
             else {

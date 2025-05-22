@@ -65,8 +65,8 @@ namespace Maps::Map_Format
         std::string customName;
 
         // Defending monsters that are set in the castle. Type ( < 0 ) means default units (for neutral race) and 0 means an empty army slot.
-        std::array<int32_t, 5> defenderMonsterType{ 0 };
-        std::array<int32_t, 5> defenderMonsterCount{ 0 };
+        std::array<int32_t, 6> defenderMonsterType{ 0 };
+        std::array<int32_t, 6> defenderMonsterCount{ 0 };
 
         // Whether the buildings are customized.
         bool customBuildings{ false };
@@ -113,8 +113,8 @@ namespace Maps::Map_Format
         int32_t customPortrait{ 0 };
 
         // Custom hero army. Type 0 means not set.
-        std::array<int32_t, 5> armyMonsterType{ 0 };
-        std::array<int32_t, 5> armyMonsterCount{ 0 };
+        std::array<int32_t, 6> armyMonsterType{ 0 };
+        std::array<int32_t, 6> armyMonsterCount{ 0 };
 
         // Artifacts with metadata. Type 0 means not set.
         std::array<int32_t, 14> artifact{ 0 };

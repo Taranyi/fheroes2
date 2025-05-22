@@ -72,7 +72,7 @@ namespace
         const Maps::Map_Format::TileObjectInfo * info{ nullptr };
     };
 
-    void loadArmyFromMetadata( Army & army, const std::array<int32_t, 5> & unitType, const std::array<int32_t, 5> & unitCount )
+    void loadArmyFromMetadata( Army & army, const std::array<int32_t, 6> & unitType, const std::array<int32_t, 6> & unitCount )
     {
         std::vector<Troop> troops( unitType.size() );
         for ( size_t i = 0; i < troops.size(); ++i ) {
@@ -83,7 +83,7 @@ namespace
         army.Assign( troops.data(), troops.data() + troops.size() );
     }
 
-    void saveArmyToMetadata( const Army & army, std::array<int32_t, 5> & unitType, std::array<int32_t, 5> & unitCount )
+    void saveArmyToMetadata( const Army & army, std::array<int32_t, 6> & unitType, std::array<int32_t, 6> & unitCount )
     {
         const size_t armySize = army.Size();
         assert( unitType.size() == armySize );

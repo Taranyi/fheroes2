@@ -348,6 +348,9 @@ void Heroes::LoadFromMP2( const int32_t mapIndex, const int colorType, const int
     // - uint8_t (1 byte)
     //    Custom monster type in army slot 5.
     //
+    // - uint8_t (1 byte)
+    //    Custom monster type in army slot 6.
+    //
     // - uint16_t (2 bytes)
     //    The number of custom monsters in army slot 1.
     //
@@ -362,6 +365,9 @@ void Heroes::LoadFromMP2( const int32_t mapIndex, const int colorType, const int
     //
     // - uint16_t (2 bytes)
     //    The number of custom monsters in army slot 5.
+    //
+    // - uint16_t (2 bytes)
+    //    The number of custom monsters in army slot 6.
     //
     // - uint8_t (1 byte)
     //     Does the hero have a custom portrait?

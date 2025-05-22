@@ -296,7 +296,7 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
 
     // In Editor mode we allow to edit army and remove all customized troops from the army.
     ArmyBar selectArmy( &army, false, readonly, isEditor, !isEditor );
-    selectArmy.setTableSize( { 5, 1 } );
+    selectArmy.setTableSize( { 6, 1 } );
     selectArmy.setRenderingOffset( dst_pt );
     selectArmy.setInBetweenItemsOffset( { 6, 0 } );
     selectArmy.Redraw( display );
