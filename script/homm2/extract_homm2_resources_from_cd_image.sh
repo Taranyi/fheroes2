@@ -158,7 +158,7 @@ if [[ "${CD_IMAGE_EXTENSION^^}" == "CUE" ]]; then
       OLD_TRACK_NUM=$(echo "${WAV_FILE%.*}" | cut -d'_' -f2)
       NEW_TRACK_NUM=$(printf '%02d' $((${OLD_TRACK_NUM#0}-1)))
       NEW_FILE_NAME="homm2_$NEW_TRACK_NUM.flac"
-      # Flac generates a lot noise on the error stream, even when it's working
+      # Flac generates a lot of noise on the error stream, even when it's working
       # as expected.  So we redirect the error output to quiet things down.
       flac --delete-input-file -8 "$WAV_PATH" -o "MUSIC/$NEW_FILE_NAME" 2> /dev/null
       echo_green "Completed ripping $NEW_FILE_NAME to 'MUSIC'."

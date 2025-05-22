@@ -2891,7 +2891,7 @@
           <li>disable spell animation after mine was cleared</li>
           <li>save boat direction when disembarking</li>
           <li>set parts of wide objects as visited</li>
-          <li>allow AI player to start it's move with action</li>
+          <li>allow AI player to start its move with action</li>
           <li>use original difficulty bonuses for the game</li>
           <li>check armies for validity before starting the battle</li>
           <li>remove mud pool from cover object list</li>

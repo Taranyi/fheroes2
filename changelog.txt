@@ -2572,7 +2572,7 @@ version 0.8.3 (04 November 2020)
 - disable spell animation after mine was cleared
 - save boat direction when disembarking
 - set parts of wide objects as visited
-- allow AI player to start it's move with action
+- allow AI player to start its move with action
 - use original difficulty bonuses for the game
 - check armies for validity before starting the battle
 - remove mud pool from cover object list
