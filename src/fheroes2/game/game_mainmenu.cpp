@@ -151,6 +151,9 @@ void Game::mainGameLoop( bool isFirstGameRun, bool isProbablyDemoVersion )
         case fheroes2::GameMode::NEW_HOT_SEAT:
             result = Game::NewHotSeat();
             break;
+        case fheroes2::GameMode::NEW_NETWORK:
+            result = Game::NewNetwork();
+            break;
         case fheroes2::GameMode::NEW_BATTLE_ONLY:
             result = Game::NewBattleOnly();
             break;

@@ -38,6 +38,7 @@ namespace fheroes2
         NEW_PRICE_OF_LOYALTY_CAMPAIGN,
         NEW_MULTI,
         NEW_HOT_SEAT,
+        NEW_NETWORK,
         NEW_BATTLE_ONLY,
         LOAD_STANDARD,
         LOAD_CAMPAIGN,

@@ -58,6 +58,7 @@
 #include "screen.h"
 #include "settings.h"
 #include "smk_decoder.h"
+#include "network.h"
 #include "translations.h"
 #include "ui_button.h"
 #include "ui_dialog.h"
@@ -498,6 +499,20 @@ fheroes2::GameMode Game::NewNetwork()
         buttonGuest.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonGuest.area() ) );
         buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
+        if ( le.MouseClickLeft( buttonHost.area() ) ) {
+            if ( fheroes2::network::initializeHost( 1950 ) ) {
+                fheroes2::showStandardTextMessage( "Network", "Hosting network game on port 1950.", Dialog::OK );
+                fheroes2::network::shutdown();
+            }
+            return fheroes2::GameMode::MAIN_MENU;
+        }
+        if ( le.MouseClickLeft( buttonGuest.area() ) ) {
+            if ( fheroes2::network::initializeGuest( "127.0.0.1", 1950 ) ) {
+                fheroes2::showStandardTextMessage( "Network", "Connected to host on port 1950.", Dialog::OK );
+                fheroes2::network::shutdown();
+            }
+            return fheroes2::GameMode::MAIN_MENU;
+        }
         if ( HotKeyPressEvent( HotKeyEvent::DEFAULT_CANCEL ) || le.MouseClickLeft( buttonCancel.area() ) ) {
             return fheroes2::GameMode::MAIN_MENU;
         }
@@ -639,8 +654,8 @@ fheroes2::GameMode Game::NewMulti()
     fheroes2::Button buttonCancel( buttonPos.x, buttonPos.y + buttonYStep * 5, ICN::BUTTON_LARGE_CANCEL, 0, 1 );
 
     buttonHotSeat.draw();
+    buttonNetwork.draw();
     buttonCancel.draw();
-    buttonNetwork.disable();
 
     fheroes2::Display::instance().render();
 
@@ -648,13 +663,14 @@ fheroes2::GameMode Game::NewMulti()
     // new game loop
     while ( le.HandleEvents() ) {
         buttonHotSeat.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonHotSeat.area() ) );
-        if ( buttonNetwork.isEnabled() ) {
-            buttonNetwork.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonNetwork.area() ) );
-        }
+        buttonNetwork.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonNetwork.area() ) );
         buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
         if ( le.MouseClickLeft( buttonHotSeat.area() ) || HotKeyPressEvent( HotKeyEvent::MAIN_MENU_HOTSEAT ) ) {
             return fheroes2::GameMode::NEW_HOT_SEAT;
+        }
+        if ( le.MouseClickLeft( buttonNetwork.area() ) ) {
+            return fheroes2::GameMode::NEW_NETWORK;
         }
         if ( HotKeyPressEvent( HotKeyEvent::DEFAULT_CANCEL ) || le.MouseClickLeft( buttonCancel.area() ) ) {
             return fheroes2::GameMode::MAIN_MENU;
@@ -666,6 +682,10 @@ fheroes2::GameMode Game::NewMulti()
                 showStandardTextMessage( _( "Hot Seat" ),
                                          _( "Play a Hot Seat game, where 2 to 6 players play on the same device, switching into the 'Hot Seat' when it is their turn." ),
                                          Dialog::ZERO );
+        }
+        else if ( le.isMouseRightButtonPressedInArea( buttonNetwork.area() ) ) {
+            fheroes2::showStandardTextMessage(
+                _( "Network" ), _( "Play over a local network. This feature is experimental." ), Dialog::ZERO );
         }
         else if ( le.isMouseRightButtonPressedInArea( buttonCancel.area() ) ) {
             fheroes2::showStandardTextMessage( _( "Cancel" ), _( "Cancel back to the main menu." ), Dialog::ZERO );
