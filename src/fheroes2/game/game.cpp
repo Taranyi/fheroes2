@@ -434,6 +434,15 @@ uint32_t Game::getGameOverScoreFactor()
     case Maps::XLARGE:
         mapSizeFactor = 60;
         break;
+    case Maps::HUGE:
+        mapSizeFactor = 40;
+        break;
+    case Maps::XHUGE:
+        mapSizeFactor = 20;
+        break;
+    case Maps::XXL:
+        mapSizeFactor = 10;
+        break;
     default:
         break;
     }

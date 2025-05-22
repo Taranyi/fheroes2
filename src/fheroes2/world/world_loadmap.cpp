@@ -175,6 +175,9 @@ bool World::LoadMapMP2( const std::string & filename, const bool isOriginalMp2Fi
     case Maps::MEDIUM:
     case Maps::LARGE:
     case Maps::XLARGE:
+    case Maps::HUGE:
+    case Maps::XHUGE:
+    case Maps::XXL:
         width = static_cast<int32_t>( mapWidth );
         break;
     default:
@@ -188,6 +191,9 @@ bool World::LoadMapMP2( const std::string & filename, const bool isOriginalMp2Fi
     case Maps::MEDIUM:
     case Maps::LARGE:
     case Maps::XLARGE:
+    case Maps::HUGE:
+    case Maps::XHUGE:
+    case Maps::XXL:
         height = static_cast<int32_t>( mapHeight );
         break;
     default:

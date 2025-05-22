@@ -127,6 +127,12 @@ const char * Maps::SizeString( int s )
         return _( "maps|Large" );
     case XLARGE:
         return _( "maps|Extra Large" );
+    case HUGE:
+        return _( "maps|Huge" );
+    case XHUGE:
+        return _( "maps|Extra Huge" );
+    case XXL:
+        return _( "maps|XXL" );
     default:
         break;
     }
@@ -657,7 +663,7 @@ uint32_t Maps::GetApproximateDistance( const int32_t pos1, const int32_t pos2 )
     const uint32_t diffX = std::abs( point1.x - point2.x );
     const uint32_t diffY = std::abs( point1.y - point2.y );
 
-    assert( diffX < Maps::XLARGE && diffY < Maps::XLARGE );
+    assert( diffX < Maps::XXL && diffY < Maps::XXL );
 
     return std::max( diffX, diffY ) + std::min( diffX, diffY ) / 2;
 }
@@ -670,7 +676,7 @@ uint32_t Maps::GetStraightLineDistance( const int32_t pos1, const int32_t pos2 )
     const uint32_t diffX = std::abs( point1.x - point2.x );
     const uint32_t diffY = std::abs( point1.y - point2.y );
 
-    assert( diffX < Maps::XLARGE && diffY < Maps::XLARGE );
+    assert( diffX < Maps::XXL && diffY < Maps::XXL );
 
     return static_cast<uint32_t>( std::hypot( diffX, diffY ) );
 }

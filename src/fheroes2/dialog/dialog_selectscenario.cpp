@@ -384,6 +384,11 @@ void ScenarioListBox::_renderMapIcon( const uint16_t size, fheroes2::Display & d
     case Maps::XLARGE:
         mapIconIndex = 29;
         break;
+    case Maps::HUGE:
+    case Maps::XHUGE:
+    case Maps::XXL:
+        mapIconIndex = 29;
+        break;
     default:
         break;
     }
@@ -481,6 +486,9 @@ const Maps::FileInfo * Dialog::SelectScenario( const MapsFileInfoList & allMaps,
             large.push_back( info );
             break;
         case Maps::XLARGE:
+        case Maps::HUGE:
+        case Maps::XHUGE:
+        case Maps::XXL:
             xlarge.push_back( info );
             break;
         default:
@@ -566,6 +574,9 @@ const Maps::FileInfo * Dialog::SelectScenario( const MapsFileInfoList & allMaps,
             currentMapsList = &large;
             break;
         case Maps::XLARGE:
+        case Maps::HUGE:
+        case Maps::XHUGE:
+        case Maps::XXL:
             currentPressedButton = &buttonSelectXLarge;
             currentMapsList = &xlarge;
             break;
