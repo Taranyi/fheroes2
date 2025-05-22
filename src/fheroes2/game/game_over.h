@@ -80,6 +80,8 @@ namespace GameOver
             return result;
         }
 
+        void SetResult( uint32_t res );
+
         fheroes2::GameMode checkGameOver();
 
     private:

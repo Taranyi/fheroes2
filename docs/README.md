@@ -92,6 +92,20 @@ We also have a [**Discord**](https://discord.gg/xF85vbZ) server to discuss the d
         alt="Discord" />
 </a>
 
+### Cheats
+
+Cheat support can be enabled by setting `cheats = on` in `fheroes2.cfg`.
+When active, type the following numeric codes during gameplay:
+
+* **11111** – reveal the entire world map.
+* **22222** – gain a large amount of all resources.
+* **32167** – add five Black Dragons to the focused hero.
+* **33333** – max out the focused hero's skills.
+* **44444** – replenish the focused hero's movement points.
+* **55555** – instantly win the current map.
+* **66666** – learn all spells and restore spell points for the focused hero.
+* **77777** – build every building in the focused castle.
+
 ## Frequently Asked Questions (FAQ)
 
 You can find answers to the most commonly asked questions on our [**F.A.Q. page**](https://github.com/ihhub/fheroes2/wiki/F.A.Q.).

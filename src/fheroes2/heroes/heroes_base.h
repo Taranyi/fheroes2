@@ -128,6 +128,11 @@ public:
         magic_point = points;
     }
 
+    void SetMovePoints( const uint32_t points )
+    {
+        move_point = points;
+    }
+
     bool isPotentSpellcaster() const;
 
     // Returns all spells that the hero can cast (including spells from the spell book and spell scrolls)

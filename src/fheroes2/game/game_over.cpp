@@ -410,6 +410,11 @@ GameOver::Result::Result()
     , result( 0 )
 {}
 
+void GameOver::Result::SetResult( uint32_t res )
+{
+    result = res;
+}
+
 void GameOver::Result::Reset()
 {
     colors = Game::GetKingdomColors();
