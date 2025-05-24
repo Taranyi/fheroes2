@@ -21,11 +21,12 @@
 
 #include <SDL2/SDL.h>
 
+#include "army_troop.h"
 #include "castle.h"
 #include "game_interface.h"
 #include "game_over.h"
 #include "heroes.h"
-#include "army_troop.h"
+#include "interface_gamearea.h"
 #include "kingdom.h"
 #include "logging.h"
 #include "monster.h"
@@ -34,7 +35,6 @@
 #include "spell.h"
 #include "spell_storage.h"
 #include "world.h"
-#include "interface_gamearea.h"
 
 namespace GameCheats
 {
@@ -48,12 +48,7 @@ namespace GameCheats
         void checkBuffer()
         {
             const Settings & conf = Settings::Get();
-            if ( buffer.find( "99999" ) != std::string::npos ) {
-                DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: reveal map" );
-                World::Get().ClearFog( conf.CurrentColor() );
-                buffer.clear();
-            }
-            else if ( buffer.find( "55555" ) != std::string::npos ) {
+            if ( buffer.find( "55555" ) != std::string::npos ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: reveal all fog" );
                 World::Get().RevealMap( conf.CurrentColor() );
                 Interface::GameArea::updateMapFogDirections();
@@ -62,7 +57,7 @@ namespace GameCheats
             else if ( buffer.find( "10000" ) != std::string::npos ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: resources" );
                 Kingdom & kingdom = World::Get().GetKingdom( conf.CurrentColor() );
-                kingdom.AddFundsResource( Funds( 0, 0, 0, 0, 0, 0, 10000 ) );
+                kingdom.AddFundsResource( Funds( 0, 0, 0, 0, 0, 0, 999999 ) );
                 kingdom.AddFundsResource( Funds( Resource::WOOD, 999 ) );
                 kingdom.AddFundsResource( Funds( Resource::ORE, 999 ) );
                 kingdom.AddFundsResource( Funds( Resource::MERCURY, 999 ) );
@@ -153,21 +148,6 @@ namespace GameCheats
                     hero->AppendSpellsToBook( storage, true );
                     hero->SetSpellPoints( hero->GetMaxSpellPoints() );
                 }
-                buffer.clear();
-            }
-            else if ( buffer.find( "42424" ) != std::string::npos ) {
-                DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: build all" );
-                if ( Castle * castle = Interface::GetFocusCastle() ) {
-                    for ( uint32_t build = 0x00000001; build; build <<= 1 ) {
-                        castle->BuyBuilding( build );
-                    }
-                }
-                buffer.clear();
-            }
-            else if ( buffer.find( "88888" ) != std::string::npos ) {
-                DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: instant win" );
-                GameOver::Result::Get().SetResult( GameOver::WINS_ALL );
-                GameOver::Result::Get().checkGameOver();
                 buffer.clear();
             }
         }
