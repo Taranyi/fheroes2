@@ -48,13 +48,8 @@ namespace GameCheats
         void checkBuffer()
         {
             const Settings & conf = Settings::Get();
-            if ( buffer.find( "55555" ) != std::string::npos ) {
-                DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: reveal all fog" );
-                World::Get().RevealMap( conf.CurrentColor() );
-                Interface::GameArea::updateMapFogDirections();
-                buffer.clear();
-            }
-            else if ( buffer.find( "10000" ) != std::string::npos ) {
+
+            if ( buffer.find( "19960214" ) != std::string::npos ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: resources" );
                 Kingdom & kingdom = World::Get().GetKingdom( conf.CurrentColor() );
                 kingdom.AddFundsResource( Funds( 0, 0, 0, 0, 0, 0, 999999 ) );
@@ -66,6 +61,14 @@ namespace GameCheats
                 kingdom.AddFundsResource( Funds( Resource::GEMS, 999 ) );
                 buffer.clear();
             }
+
+            else if ( buffer.find( "8675309" ) != std::string::npos ) {
+                DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: reveal all fog" );
+                World::Get().RevealMap( conf.CurrentColor() );
+                Interface::GameArea::updateMapFogDirections();
+                buffer.clear();
+            }
+
             else if ( buffer.find( "32167" ) != std::string::npos ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: black dragons" );
                 if ( Heroes * hero = Interface::GetFocusHeroes() ) {
@@ -112,7 +115,7 @@ namespace GameCheats
                 }
                 buffer.clear();
             }
-            else if ( buffer.find( "1234" ) != std::string::npos ) {
+            else if ( buffer.find( "12345" ) != std::string::npos ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: max primary skills" );
                 if ( Heroes * hero = Interface::GetFocusHeroes() ) {
                     hero->setAttackBaseValue( 20 );
@@ -138,7 +141,7 @@ namespace GameCheats
                 }
                 buffer.clear();
             }
-            else if ( buffer.find( "77777" ) != std::string::npos ) {
+            else if ( buffer.find( "22222" ) != std::string::npos ) {
                 DEBUG_LOG( DBG_GAME, DBG_INFO, "Cheat activated: all spells" );
                 if ( Heroes * hero = Interface::GetFocusHeroes() ) {
                     SpellStorage storage;
