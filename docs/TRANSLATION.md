@@ -103,7 +103,7 @@ the program will need to be set to compile the MO file in the font encoding/char
 set to.
 
 For example, for German you will have to set font encoding to CP1252, while for Russian this would be CP1251. Later when submitting
-a pull request with your changes, you will have to save the PO file in UTF-8 encoding because this is what Github supports.
+a pull request with your changes, you will have to save the PO file in UTF-8 encoding because this is what GitHub supports.
 
 ### Sharing Your Translation Work
 
@@ -138,7 +138,7 @@ example creature names or castle buildings.
 
 ## Updating PO Templates and Translatable Strings in PO Files
 
-Currently all PO files are automatically updated with new strings after each commit that brings changes to the ingame text. If for whatever reason
+Currently all PO files are automatically updated with new strings after each commit that brings changes to the in-game text. If for whatever reason
 you still need to update strings locally, this can be achieved by running the command below in `src/dist/fheroes2` to generate a new portable object
 template (POT) file. Windows users will need to set up an environment that lets them run `make`, like Windows Subsystem for Linux (WSL) or
 [**Cygwin**](https://www.cygwin.com/)/[**MSYS2**](https://www.msys2.org/).

@@ -21,7 +21,7 @@ You can find a complete list of all of our changes and enhancements in [**its ow
 
 Please follow the [**installation guide**](docs/INSTALL.md) to download and install fheroes2.
 
-[![Github Downloads](https://img.shields.io/github/downloads/ihhub/fheroes2/total.svg)](https://github.com/ihhub/fheroes2/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/ihhub/fheroes2/total.svg)](https://github.com/ihhub/fheroes2/releases)
 
 ## Copyright
 

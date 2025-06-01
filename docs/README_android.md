@@ -17,7 +17,7 @@ ZIP archive created by you in the previous step to extract the assets of the ori
 Depending on your version of Heroes 2, the music files that need to be placed in the "MUSIC" directory can either be on your
 original CD or in the installation folder (GOG and Ubisoft).
 
-Ingame cinematics are supported by fheroes2 and for these to be supported it is necessary to have them in the "ANIM" folder.
+In-game cinematics are supported by fheroes2 and for these to be supported it is necessary to have them in the "ANIM" folder.
 Depending on your original version of Heroes 2 they can either be found on your CD, disc image or in a folder named "anim" in
 your Heroes 2 installation directory.
 
@@ -27,7 +27,7 @@ To simulate a right-click to get info on various items, you need to first touch 
 and then touch anywhere else on the screen. While holding the second finger, you can remove the first one from the screen
 and keep viewing the information on the item.
 
-By default normal adventure map scrolling on the borders of the screen is disabled. To pane the viewing area around you
+By default normal adventure map scrolling on the borders of the screen is disabled. To pan the viewing area around you
 need to press anywhere on the adventure map and slide around to change where you are viewing.
 
 During combat, actions (such as moving, attacking, or casting a spell) performed using the touchpad/touchscreen must be

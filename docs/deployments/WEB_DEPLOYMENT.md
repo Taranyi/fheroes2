@@ -1,12 +1,12 @@
 # Website Build and Deployment
 
 This document describes the end-to-end deployment strategy for the fheroes2 site deployment.
-We target Github Pages for hosting and leverage GitHub Actions for automation.
+We target GitHub Pages for hosting and leverage GitHub Actions for automation.
 
 ## Functionality
 
 * Builds the documentation site for the fheroes2 project
-* Deploys the site, along with WebAssembly build, to Github Pages on push.
+* Deploys the site, along with WebAssembly build, to GitHub Pages on push.
 * Allows end users to view the documentation via the web.
 * Allows end users to click a link and launch the game via the web.
 
@@ -50,7 +50,7 @@ sequenceDiagram
 
 * Listens for completion of the upstream `Make` workflow.
 * Pulls the latest GitHub Release and extracts the ZIP bundle.
-* Builds and Deploys the Github Pages with the bundle.
+* Builds and Deploys the GitHub Pages with the bundle.
 
 ## GitHub Workflows Summary
 
@@ -65,7 +65,7 @@ sequenceDiagram
 * Triggered on completion of `make.yml`
 * Builds Jekyll site
 * Downloads release
-* Deploys to Github Pages
+* Deploys to GitHub Pages
 
 ## Future Considerations
 
