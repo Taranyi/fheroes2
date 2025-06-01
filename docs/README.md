@@ -92,6 +92,22 @@ We also have a [**Discord**](https://discord.gg/xF85vbZ) server to discuss the d
         alt="Discord" />
 </a>
 
+### Cheats
+
+Cheat support can be enabled by setting `cheats = on` in `fheroes2.cfg`.
+When active, type one of the following numeric codes during gameplay:
+
+* **11111** – gain a large amount of all resources
+* **22222** – clear fog across the entire map
+* **33333** – add five Black Dragons to the focused hero
+* **44444** – replace the focused hero's army with upgraded units from tiers 2–6 of their faction (WARLOCK DOES NOT WORK YET) # FIX
+* **55555** – add five of a randomly selected unit to the focused hero
+* **66666** – max out the focused hero's primary skills
+* **77777** – learn every secondary skill at expert level (NOT WORKING ALL) # FIX
+* **88888** – give the focused hero unlimited movement points for the turn
+* **99999** – learn all spells and restore spell points (NEED SPELLBOOK!!!) # FIX
+* **Etc** *****************
+
 ## Frequently Asked Questions (FAQ)
 
 You can find answers to the most commonly asked questions on our [**F.A.Q. page**](https://github.com/ihhub/fheroes2/wiki/F.A.Q.).
