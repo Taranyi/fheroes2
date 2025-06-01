@@ -106,6 +106,7 @@ When active, type one of the following numeric codes during gameplay:
 * **77777** – learn every secondary skill at expert level (NOT WORKING ALL) # FIX
 * **88888** – give the focused hero unlimited movement points for the turn
 * **99999** – learn all spells and restore spell points (NEED SPELLBOOK!!!) # FIX
+* **Etc** *****************
 
 ## Frequently Asked Questions (FAQ)
 
