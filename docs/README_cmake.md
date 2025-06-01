@@ -32,10 +32,13 @@ git clone https://github.com/microsoft/vcpkg.git
 .\vcpkg\bootstrap-vcpkg.bat
 ```
 
-Your vcpkg is ready to install external libraries. Assuming that you use x64 system, let's install all needed dependencies:
+Your vcpkg is ready to install external libraries. The repository contains a
+`vcpkg.json` manifest which lists all required packages. To install them simply
+execute `vcpkg install` inside the project directory. Optionally you may specify
+the desired triplet, e.g. `--triplet x64-windows`:
 
 ```shell
-.\vcpkg\vcpkg --triplet x64-windows install sdl2 sdl2-image sdl2-mixer zlib
+.\vcpkg\vcpkg install --triplet x64-windows
 ```
 
 If you planning to develop fheroes2 with Visual Studio, you may want to integrate vcpkg with it (requires elevated admin privileges).
@@ -45,8 +48,9 @@ After following command Visual Studio automagically will find all required depen
 .\vcpkg\vcpkg integrate install
 ```
 
-Now you are ready to configure the project. cd to fheroes2 directory and run `cmake` command (note for `-DCMAKE_TOOLCHAIN_FILE` and
-`-DVCPKG_TARGET_TRIPLET` options):
+Now you are ready to configure the project. cd to `fheroes2` directory and run
+`cmake`. The toolchain file allows CMake to use vcpkg and it will automatically
+install missing dependencies from the manifest:
 
 ```shell
 cmake -B build -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows

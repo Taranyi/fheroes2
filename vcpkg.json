@@ -1,0 +1,12 @@
+{
+    "name": "fheroes2",
+    "version": "0.0.0",
+    "description": "Free Heroes of Might and Magic II Engine",
+    "dependencies": [
+        "sdl2",
+        "sdl2-mixer",
+        "sdl2-image",
+        "zlib",
+        "libpng"
+    ]
+}
