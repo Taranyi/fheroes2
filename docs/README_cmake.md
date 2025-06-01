@@ -32,14 +32,18 @@ git clone https://github.com/microsoft/vcpkg.git
 .\vcpkg\bootstrap-vcpkg.bat
 ```
 
-Your vcpkg is ready to install external libraries. Assuming that you use x64 system, let's install all needed dependencies:
+Your vcpkg is ready to install external libraries. The repository contains a
+`vcpkg.json` manifest file so dependencies can be installed automatically when
+configuring the project in manifest mode. If you still prefer to install them
+manually you can run:
 
 ```shell
 .\vcpkg\vcpkg --triplet x64-windows install sdl2 sdl2-image sdl2-mixer zlib
 ```
 
-If you planning to develop fheroes2 with Visual Studio, you may want to integrate vcpkg with it (requires elevated admin privileges).
-After following command Visual Studio automagically will find all required dependencies:
+If you plan to develop **fheroes2** with Visual Studio, you may want to integrate
+vcpkg with it (requires elevated admin privileges). After the following command
+Visual Studio automatically will find all required dependencies:
 
 ```shell
 .\vcpkg\vcpkg integrate install
@@ -49,8 +53,12 @@ Now you are ready to configure the project. cd to fheroes2 directory and run `cm
 `-DVCPKG_TARGET_TRIPLET` options):
 
 ```shell
-cmake -B build -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake -B build -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" \
+      -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_FEATURE_FLAGS=manifests
 ```
+
+If you configure the project with `-DENABLE_IMAGE=ON`, vcpkg will automatically
+install additional libraries required for that feature from the manifest.
 
 After configuration let's build the project:
 
@@ -59,6 +67,43 @@ cmake --build build --config Release
 ```
 
 After building, executable can be found in `build\Release` directory.
+
+## Windows / Visual Studio Code and MinGW64
+
+If you prefer a workflow without Visual Studio, you can build **fheroes2** using
+the MinGW‑w64 toolchain and Visual Studio Code. Install a recent MinGW‑w64
+distribution (for example via [MSYS2](https://www.msys2.org/)) so that `gcc`,
+`g++`, `ar` and `make` are available in your `PATH`. Then clone the vcpkg
+repository as described above and bootstrap it with `bootstrap-vcpkg.bat`.
+
+To make CMake automatically locate vcpkg, set the `VCPKG_ROOT` environment
+variable to the directory where vcpkg is installed:
+
+```cmd
+set VCPKG_ROOT=C:\vcpkg
+```
+
+Now configure the project using the MinGW generator and the vcpkg toolchain
+file:
+
+```shell
+cmake -B build -G "MinGW Makefiles" ^
+      -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ^
+      -DVCPKG_TARGET_TRIPLET=x64-mingw-static ^
+      -DVCPKG_FEATURE_FLAGS=manifests
+```
+
+If you configure with `-DENABLE_IMAGE=ON`, vcpkg will automatically install the
+additional image libraries listed in the manifest. After configuration build the
+project with:
+
+```shell
+cmake --build build
+```
+
+The resulting executable will appear in the `build` directory. When using Visual
+Studio Code, the **CMake Tools** extension can invoke these commands to provide
+an IDE-like experience on Windows 11 without requiring Visual Studio.
 
 ## Using Demo Data
 

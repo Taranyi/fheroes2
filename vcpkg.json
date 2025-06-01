@@ -1,0 +1,15 @@
+{
+    "name": "fheroes2",
+    "version-string": "1.1.8",
+    "dependencies": [
+        "sdl2",
+        "sdl2-mixer",
+        "zlib"
+    ],
+    "features": {
+        "image": {
+            "description": "Support for SDL_image based features",
+            "dependencies": ["sdl2-image", "libpng"]
+        }
+    }
+}

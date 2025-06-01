@@ -16,6 +16,12 @@ Please follow the instructions below to be able to build the project from source
   This script will download a demo version of the original game, which is the minimum required for development.
 * Open the file `fheroes2-vs2019.vcxproj` (targeted for Visual Studio 2019) and build the project.
 * Visual Studio will automatically copy game files in the root directory to the build directory.
+* As an alternative to Visual Studio, you can use **Visual Studio Code** with the
+  MinGW‑w64 toolchain and CMake. Install MinGW‑w64 and clone
+  [vcpkg](https://github.com/microsoft/vcpkg). After bootstrapping vcpkg set the
+  `VCPKG_ROOT` environment variable and follow the
+  [CMake build guide](README_cmake.md#windows--visual-studio-code-and-mingw64)
+  to configure and build the project.
 
 ### macOS and Linux
 
