@@ -40,3 +40,13 @@ After activating the virtual environment you can run any script from `script/too
 python script/tools/changelog_update_metainfo.py --help
 ```
 
+## Troubleshooting
+
+* If a command reports that Python is missing, verify that Python 3.8 or newer is installed and available in your `PATH`.
+* When a script fails because a module cannot be imported, reinstall the dependencies:
+
+  ```bash
+  pip install --force-reinstall -r requirements.txt
+  ```
+* As a last resort, delete the `venv` directory and set up the environment again.
+
