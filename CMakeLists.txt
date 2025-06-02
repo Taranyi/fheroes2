@@ -76,7 +76,7 @@ add_subdirectory(src)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/script/setup_python_venv.py --print-python
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/script/tools/python/setup_python_venv.py --print-python
         OUTPUT_VARIABLE VENV_PYTHON
         OUTPUT_STRIP_TRAILING_WHITESPACE
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

@@ -36,7 +36,7 @@ PROJECT_VERSION := $(file < version.txt)
 .PHONY: all clean
 
 PYTHON ?= python3
-VENV_PYTHON := $(shell $(PYTHON) script/setup_python_venv.py --print-python)
+VENV_PYTHON := $(shell $(PYTHON) script/tools/python/setup_python_venv.py --print-python)
 
 all:
 $(MAKE) -C src/dist
