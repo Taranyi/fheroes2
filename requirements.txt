@@ -1,0 +1,4 @@
+# Development requirements for Python scripts
+pylint
+pytest
+polib
