@@ -53,24 +53,11 @@ If you would like to build the project using CMake please follow the instruction
 
 ### Python helper tools
 
-The repository includes several helper scripts written in Python. To use them you need a working Python 3.8 or newer installation.
+The repository includes several helper scripts written in Python. A working Python 3.8 or newer installation **must** be available on your system.
 
-* Create a virtual environment in the project directory:
+When running `make` or configuring the project with CMake the build system automatically creates a `venv` directory and installs the dependencies from `requirements.txt` if the environment does not already exist. All Python scripts are executed using this environment.
 
-  ```bash
-  python -m venv venv
-  ```
-
-* Activate the environment and install the required packages:
-
-  ```bash
-  source venv/bin/activate  # Linux/macOS
-  venv\Scripts\activate    # Windows
-  pip install -r requirements.txt
-  ```
-
-If package installation fails or Python cannot be found, ensure that Python and `pip` are available in your system path.
-Rerun the commands and see [PYTHON_SUPPORT.md](PYTHON_SUPPORT.md) for additional guidance.
+If Python is missing entirely the build will fail. See [PYTHON_SUPPORT.md](PYTHON_SUPPORT.md) for additional guidance.
 
 ## Building the front end website
 

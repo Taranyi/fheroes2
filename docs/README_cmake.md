@@ -37,7 +37,7 @@ Your vcpkg is ready to install external libraries. Assuming that you use x64 sys
 ```shell
 .\vcpkg\vcpkg --triplet x64-windows install sdl2 sdl2-image sdl2-mixer zlib gettext 
 ```
-Python 3 is also required for compiling translation files. The build will automatically run `files/lang/compile_translations.py` when a Python interpreter is available.
+Python 3 is also required for compiling translation files. The build system automatically creates a `venv` directory and installs the dependencies from `requirements.txt` if needed, then runs `files/lang/compile_translations.py` using that environment.
 
 If you planning to develop fheroes2 with Visual Studio, you may want to integrate vcpkg with it (requires elevated admin privileges).
 After following command Visual Studio automagically will find all required dependencies:

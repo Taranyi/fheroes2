@@ -60,7 +60,7 @@ To build the [website](https://ihhub.github.io/fheroes2/) from source, please fo
 
 ### Python Tools
 
-The repository contains helper scripts in `script/tools`. See [docs/PYTHON_SUPPORT.md](docs/PYTHON_SUPPORT.md) for instructions on setting up a Python environment.
+The repository contains helper scripts in `script/tools`. Python 3.8 or newer must be installed. The build will automatically create a `venv` directory and install the required packages. See [docs/PYTHON_SUPPORT.md](docs/PYTHON_SUPPORT.md) for details.
 
 ## Donation
 

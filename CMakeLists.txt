@@ -74,12 +74,20 @@ add_subdirectory(src)
 # Translation files
 #
 find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/script/setup_python_venv.py --print-python
+        OUTPUT_VARIABLE VENV_PYTHON
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+endif()
 find_program(MAKE_EXECUTABLE NAMES make gmake mingw32-make)
 if(Python3_Interpreter_FOUND)
         add_custom_target(
                 translations
                 ALL
-                COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/files/lang/compile_translations.py
+                COMMAND ${VENV_PYTHON} ${CMAKE_SOURCE_DIR}/files/lang/compile_translations.py
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/files/lang
                 )
 elseif(MAKE_EXECUTABLE)
