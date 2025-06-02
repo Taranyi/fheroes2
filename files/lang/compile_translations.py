@@ -51,7 +51,7 @@ def compile_one(po_path: Path):
                 e.msgstr_plural[k] = safe_kodolas(e.msgstr_plural[k], encoding)
 
     po.save_as_mofile(po_path.with_suffix(".mo"))
-    print(f"✓ {po_path.name} → {po_path.stem}.mo  ({encoding})")
+    print(f"[OK] {po_path.name} -> {po_path.stem}.mo  ({encoding})")
 
 
 def main(argv):
