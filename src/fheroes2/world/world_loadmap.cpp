@@ -1582,7 +1582,7 @@ void World::setHeroIdsForMapConditions()
         Heroes * hero = GetHeroes( pos );
         if ( hero == nullptr ) {
             heroIdAsLossCondition = Heroes::UNKNOWN;
-            ERROR_LOG( "A loosing condition hero at location ['" << pos.x << ", " << pos.y << "'] is not found." )
+            ERROR_LOG( "A losing condition hero at location ['" << pos.x << ", " << pos.y << "'] is not found." )
         }
         else {
             heroIdAsLossCondition = hero->GetID();
