@@ -78,13 +78,15 @@ _( "Are you sure you want to quit?" )
 
 ### Testing Your Changes
 
-Once the translation files have been modified, for Linux/MacOS run the `make` command below in the `files/lang` subdirectory to create
-machine object (MO) binary files which can be used by the fheroes2 engine.
+Once the translation files have been modified you can create machine object (MO)
+binary files using the Python script located in the `files/lang` directory.
+When Python 3 is available the build system also runs this script automatically.
 
-For example, for the German PO file, `de.po`, the following would be the command:
+For example, for the German PO file, `de.po`, the following command will
+compile it manually:
 
 ```bash
-make de.mo
+python3 compile_translations.py de.po
 ```
 
 To make the engine use this MO, the file should be placed in the `files/lang` folder used by the fheroes2 executable.
