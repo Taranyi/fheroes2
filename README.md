@@ -53,6 +53,24 @@ To assist with the graphical asset efforts of the project, please look at our [*
 
 If you would like to help translating the project, please read the [**translation guide**](docs/TRANSLATION.md).
 
+### Python bindings
+
+You can build a Python extension module exposing the game engine. Configure the
+project with CMake as usual and the `fheroes2` module will be created inside the
+`build` directory. It allows running the game directly from Python and querying
+basic information such as the engine version.
+
+Example usage:
+
+```python
+import fheroes2
+
+print("Engine version:", fheroes2.get_version())
+
+# Start the game. Arguments match the command line interface.
+fheroes2.run_game()
+```
+
 ### Developing fheroes2 documentation site
 
 To build the [website](https://ihhub.github.io/fheroes2/) from source, please follow
