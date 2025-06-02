@@ -1,8 +1,10 @@
 #include <Python.h>
-#include "fheroes2/system/settings.h"
+#include "settings.h"
 #include <SDL_main.h>
 #include <vector>
 #include <string>
+
+extern "C" int main( int argc, char ** argv );
 
 static PyObject * py_get_version( PyObject *, PyObject * )
 {
@@ -32,7 +34,7 @@ static PyObject * py_run_game( PyObject *, PyObject * args )
     }
     argv.push_back( nullptr );
 
-    int result = SDL_main( static_cast<int>( argv.size() - 1 ), argv.data() );
+    int result = main( static_cast<int>( argv.size() - 1 ), argv.data() );
     return PyLong_FromLong( result );
 }
 
