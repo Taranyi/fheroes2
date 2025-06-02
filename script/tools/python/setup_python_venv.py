@@ -2,6 +2,7 @@
 import os
 import sys
 import subprocess
+import shutil
 from pathlib import Path
 
 
@@ -15,6 +16,8 @@ def ensure_venv(root: Path) -> Path:
     venv_dir = root / "venv"
     py_path = get_python_path(venv_dir)
     if not py_path.exists():
+        if venv_dir.exists():
+            shutil.rmtree(venv_dir)
         print(f"Creating virtual environment in {venv_dir}")
         subprocess.check_call([sys.executable, "-m", "venv", str(venv_dir)])
         subprocess.check_call(
