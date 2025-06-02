@@ -51,6 +51,14 @@ If you would like to run this project in a web browser please follow the instruc
 
 If you would like to build the project using CMake please follow the instructions on [**this page**](README_cmake.md).
 
+### Python helper tools
+
+The repository includes several helper scripts written in Python. A working Python 3.8 or newer installation **must** be available on your system.
+
+When running `make` or configuring the project with CMake the build system automatically creates a `venv` directory and installs the dependencies from `requirements.txt` if the environment does not already exist. If a leftover `venv` directory is detected but no valid interpreter is found, it will be removed automatically before a fresh environment is created. All Python scripts are executed using this environment.
+
+If Python is missing entirely the build will fail. See [PYTHON_SUPPORT.md](PYTHON_SUPPORT.md) for additional guidance.
+
 ## Building the front end website
 
 We host the website on Github pages, which is a highly customized version of the

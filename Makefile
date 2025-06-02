@@ -35,9 +35,12 @@ PROJECT_VERSION := $(file < version.txt)
 
 .PHONY: all clean
 
+PYTHON ?= python3
+VENV_PYTHON := $(shell $(PYTHON) script/tools/python/setup_python_venv.py --print-python)
+
 all:
-	$(MAKE) -C src/dist
-	$(MAKE) -C files/lang
+$(MAKE) -C src/dist
+$(VENV_PYTHON) files/lang/compile_translations.py
 ifdef FHEROES2_MACOS_APP_BUNDLE
 	mkdir -p fheroes2.app/Contents/MacOS
 	mkdir -p fheroes2.app/Contents/Resources/h2d
@@ -60,6 +63,6 @@ else
 endif
 
 clean:
-	$(MAKE) -C src/dist clean
-	$(MAKE) -C files/lang clean
-	-rm -rf fheroes2 fheroes2.app
+$(MAKE) -C src/dist clean
+$(VENV_PYTHON) files/lang/compile_translations.py clean
+-rm -rf fheroes2 fheroes2.app

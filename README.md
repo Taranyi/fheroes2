@@ -58,6 +58,10 @@ If you would like to help translating the project, please read the [**translatio
 To build the [website](https://ihhub.github.io/fheroes2/) from source, please follow
 [**this guide**](docs/WEBSITE_LOCAL_DEV.md).
 
+### Python Tools
+
+The repository contains helper scripts in `script/tools`. Python 3.8 or newer must be installed. The build will automatically create a `venv` directory and install the required packages. See [docs/PYTHON_SUPPORT.md](docs/PYTHON_SUPPORT.md) for details.
+
 ## Donation
 
 We accept donations via [**Patreon**](https://www.patreon.com/fheroes2), [**PayPal**](https://www.paypal.com/paypalme/fheroes2) or [**Boosty**](https://boosty.to/fheroes2).

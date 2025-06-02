@@ -73,16 +73,31 @@ add_subdirectory(src)
 #
 # Translation files
 #
-if(NOT WIN32)
-	find_program(MAKE_EXECUTABLE make)
-
-	add_custom_target(
-		translations
-		ALL
-		COMMAND ${MAKE_EXECUTABLE}
-		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/files/lang
-		)
-endif(NOT WIN32)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/script/tools/python/setup_python_venv.py --print-python
+        OUTPUT_VARIABLE VENV_PYTHON
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+endif()
+find_program(MAKE_EXECUTABLE NAMES make gmake mingw32-make)
+if(Python3_Interpreter_FOUND)
+        add_custom_target(
+                translations
+                ALL
+                COMMAND ${VENV_PYTHON} ${CMAKE_SOURCE_DIR}/files/lang/compile_translations.py
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/files/lang
+                )
+elseif(MAKE_EXECUTABLE)
+        add_custom_target(
+                translations
+                ALL
+                COMMAND ${MAKE_EXECUTABLE}
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/files/lang
+                )
+endif()
 
 #
 # macOS app bundle
