@@ -102,3 +102,37 @@ fheroes2.data
 fheroes2.js
 fheroes2.wasm
 fheroes2.wasm.map
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+venv/
+.venv/
+ENV/
+env/
+venv.bak/
+env.bak/
+
+# Distribution / packaging
+*.egg-info/
+.eggs/
+*.egg
+dist/
+# build/ is already ignored above
+pip-wheel-metadata/
+
+# Unit test / coverage reports
+.pytest_cache/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
