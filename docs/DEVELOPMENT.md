@@ -58,7 +58,7 @@ The repository includes several helper scripts written in Python. To use them yo
 * Create a virtual environment in the project directory:
 
   ```bash
-  python3 -m venv venv
+  python -m venv venv
   ```
 
 * Activate the environment and install the required packages:
