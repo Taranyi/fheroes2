@@ -9,7 +9,7 @@ This project includes helper tools written in Python. If you want to extend thes
 
 ## Setting up a virtual environment
 
-When running the build system a `venv` directory will be created automatically if it does not exist and the required packages from `requirements.txt` will be installed. You only need to perform the following steps manually if you want to work with the Python tools outside of the build process.
+When running the build system a `venv` directory will be created automatically if it does not exist and the required packages from `requirements.txt` will be installed. Any stale `venv` directory without a proper interpreter is removed automatically before a new environment is created. You only need to perform the following steps manually if you want to work with the Python tools outside of the build process.
 
 1. Create a virtual environment in the project directory:
 
