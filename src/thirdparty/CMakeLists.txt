@@ -19,6 +19,7 @@
 ###########################################################################
 
 add_library(smacker STATIC libsmacker/smacker.c)
+set_target_properties(smacker PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(
 	smacker

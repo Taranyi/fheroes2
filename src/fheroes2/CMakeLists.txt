@@ -20,6 +20,52 @@
 
 file(GLOB_RECURSE FHEROES2_SOURCES CONFIGURE_DEPENDS *.cpp)
 
+add_library(fheroes2core STATIC ${FHEROES2_SOURCES})
+
+set_target_properties(fheroes2core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+target_compile_definitions(
+        fheroes2core
+        PRIVATE
+        # MSVC: suppress deprecation warnings
+        $<$<OR:$<COMPILE_LANG_AND_ID:C,MSVC>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:_CRT_SECURE_NO_WARNINGS>
+        $<$<CONFIG:Debug>:WITH_DEBUG>
+        $<$<BOOL:${MACOS_APP_BUNDLE}>:MACOS_APP_BUNDLE>
+        )
+
+target_include_directories(
+        fheroes2core
+        PRIVATE
+        agg
+        ai
+        army
+        audio
+        battle
+        campaign
+        castle
+        dialog
+        editor
+        game
+        gui
+        h2d
+        heroes
+        image
+        kingdom
+        maps
+        monster
+        resource
+        spell
+        system
+        world
+        )
+
+target_link_libraries(
+        fheroes2core
+        PUBLIC
+        engine
+        ${USE_SDL_VERSION}::${USE_SDL_VERSION}main
+        )
+
 add_compile_options("$<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:${GNU_CC_WARN_OPTS}>")
 add_compile_options("$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang,GNU>:${GNU_CXX_WARN_OPTS}>")
 add_compile_options("$<$<OR:$<COMPILE_LANG_AND_ID:C,MSVC>,$<COMPILE_LANG_AND_ID:CXX,MSVC>>:${MSVC_CC_WARN_OPTS}>")
@@ -28,7 +74,7 @@ if(MACOS_APP_BUNDLE)
 	set(FHEROES2_ICON ${CMAKE_CURRENT_SOURCE_DIR}/../resources/fheroes2.icns)
 	set_source_files_properties(${FHEROES2_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
-	add_executable(fheroes2 MACOSX_BUNDLE ${FHEROES2_ICON} ${FHEROES2_SOURCES} ${TRANSLATION_DATA})
+        add_executable(fheroes2 MACOSX_BUNDLE ${FHEROES2_ICON} ${TRANSLATION_DATA})
 
 	target_compile_definitions(
 		fheroes2
@@ -37,7 +83,7 @@ if(MACOS_APP_BUNDLE)
 		$<$<BOOL:${MACOS_APP_BUNDLE}>:MACOS_APP_BUNDLE>
 		)
 
-	target_link_libraries(fheroes2 "-framework CoreFoundation")
+        target_link_libraries(fheroes2 fheroes2core "-framework CoreFoundation")
 
 	set_target_properties(fheroes2 PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME ${CMAKE_PROJECT_NAME})
 	set_target_properties(fheroes2 PROPERTIES MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION})
@@ -54,12 +100,11 @@ else(MACOS_APP_BUNDLE)
 		OUTPUT_VARIABLE FHEROES2_DATA_ABSOLUTE
 		)
 
-	add_executable(
-		fheroes2
-		${FHEROES2_SOURCES}
-		${CMAKE_CURRENT_SOURCE_DIR}/../resources/fheroes2.manifest
-		${CMAKE_CURRENT_SOURCE_DIR}/../resources/fheroes2.rc
-		)
+        add_executable(
+                fheroes2
+                ${CMAKE_CURRENT_SOURCE_DIR}/../resources/fheroes2.manifest
+                ${CMAKE_CURRENT_SOURCE_DIR}/../resources/fheroes2.rc
+                )
 
 	target_compile_definitions(
 		fheroes2
@@ -107,8 +152,9 @@ target_include_directories(
 	world
 	)
 
-target_link_libraries(
-	fheroes2
-	engine
-	${USE_SDL_VERSION}::${USE_SDL_VERSION}main
-	)
+        target_link_libraries(
+                fheroes2
+                fheroes2core
+                engine
+                ${USE_SDL_VERSION}::${USE_SDL_VERSION}main
+                )
