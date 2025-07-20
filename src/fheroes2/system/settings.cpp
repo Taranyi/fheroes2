@@ -101,7 +101,9 @@ std::string Settings::GetVersion()
 
 Settings::Settings()
     : _resolutionInfo( fheroes2::Display::DEFAULT_WIDTH, fheroes2::Display::DEFAULT_HEIGHT )
+    , _windowPos( -1, -1 )
     , _gameDifficulty( Difficulty::NORMAL )
+    , _saveFileSortType( SaveFileSortingMethod::FILENAME )
     , sound_volume( 6 )
     , music_volume( 6 )
     , _musicType( MUSIC_EXTERNAL )
@@ -280,6 +282,10 @@ bool Settings::Read( const std::string & filePath )
         _resolutionInfo = config.ResolutionParams( "videomode", { fheroes2::Display::DEFAULT_WIDTH, fheroes2::Display::DEFAULT_HEIGHT } );
     }
 
+    if ( config.Exists( "game window position" ) ) {
+        _windowPos = config.PointParams( "game window position", { -1, -1 } );
+    }
+
     if ( config.Exists( "fullscreen" ) ) {
         setFullScreen( config.StrParams( "fullscreen" ) == "on" );
     }
@@ -360,6 +366,15 @@ bool Settings::Read( const std::string & filePath )
         setEditorPassability( config.StrParams( "editor passability" ) == "on" );
     }
 
+    if ( config.Exists( "save file sorting" ) ) {
+        if ( config.StrParams( "save file sorting" ) == "date" ) {
+            _saveFileSortType = SaveFileSortingMethod::TIMESTAMP;
+        }
+        else {
+            _saveFileSortType = SaveFileSortingMethod::FILENAME;
+        }
+    }
+
     return true;
 }
 
@@ -402,6 +417,9 @@ std::string Settings::String() const
 
     os << std::endl << "# video mode: in-game width x in-game height : on-screen width x on-screen height" << std::endl;
     os << "videomode = " << display.width() << "x" << display.height() << ":" << display.screenSize().width << "x" << display.screenSize().height << std::endl;
+
+    os << std::endl << "# position of the game's window" << std::endl;
+    os << "game window position = [ " << _windowPos.x << ", " << _windowPos.y << " ]" << std::endl;
 
     os << std::endl << "# music: original, expansion, external" << std::endl;
     os << "music = " << musicType << std::endl;
@@ -526,6 +544,9 @@ std::string Settings::String() const
 
     os << std::endl << "# display object passability in the Editor: on/off" << std::endl;
     os << "editor passability = " << ( _editorOptions.Modes( EDITOR_PASSABILITY ) ? "on" : "off" ) << std::endl;
+
+    os << std::endl << "# save files sorting method: name/date" << std::endl;
+    os << "save file sorting = " << ( _saveFileSortType == SaveFileSortingMethod::TIMESTAMP ? "date" : "name" ) << std::endl;
 
     return os.str();
 }

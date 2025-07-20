@@ -227,7 +227,14 @@ namespace
             {
                 Maps::ObjectInfo object{ MP2::OBJ_MOUNTAINS };
                 object.groundLevelParts.emplace_back( type, icnOffset + 5U, fheroes2::Point{ 0, 0 }, MP2::OBJ_MOUNTAINS, Maps::OBJECT_LAYER );
-                object.groundLevelParts.emplace_back( type, icnOffset + 4U, fheroes2::Point{ -1, 0 }, MP2::OBJ_MOUNTAINS, Maps::OBJECT_LAYER );
+
+                if ( type == MP2::OBJ_ICN_TYPE_MTNCRCK ) {
+                    object.topLevelParts.emplace_back( type, icnOffset + 4U, fheroes2::Point{ -1, 0 }, MP2::OBJ_MOUNTAINS );
+                }
+                else {
+                    object.groundLevelParts.emplace_back( type, icnOffset + 4U, fheroes2::Point{ -1, 0 }, MP2::OBJ_MOUNTAINS, Maps::OBJECT_LAYER );
+                }
+
                 object.groundLevelParts.emplace_back( type, icnOffset + 6U, fheroes2::Point{ 1, 0 }, MP2::OBJ_MOUNTAINS, Maps::OBJECT_LAYER );
                 object.groundLevelParts.emplace_back( type, icnOffset + 8U, fheroes2::Point{ -1, 1 }, MP2::OBJ_MOUNTAINS, Maps::OBJECT_LAYER );
                 object.groundLevelParts.emplace_back( type, icnOffset + 9U, fheroes2::Point{ 0, 1 }, MP2::OBJ_MOUNTAINS, Maps::OBJECT_LAYER );
@@ -3897,6 +3904,15 @@ namespace
 
             object.topLevelParts.emplace_back( MP2::OBJ_ICN_TYPE_X_LOC2, 74, fheroes2::Point{ 1, -1 }, MP2::OBJ_NON_ACTION_SIRENS );
             object.topLevelParts.back().animationFrames = 8;
+
+            objects.emplace_back( std::move( object ) );
+        }
+
+        // Barrel, "fheroes2 Resurrection" object.
+        {
+            Maps::ObjectInfo object{ MP2::OBJ_BARREL };
+            object.groundLevelParts.emplace_back( MP2::OBJ_ICN_TYPE_OBJNMUL2, 248, fheroes2::Point{ 0, 0 }, MP2::OBJ_BARREL, Maps::OBJECT_LAYER );
+            object.groundLevelParts.back().animationFrames = 6;
 
             objects.emplace_back( std::move( object ) );
         }

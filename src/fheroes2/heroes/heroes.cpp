@@ -26,7 +26,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <iterator>
 #include <map>
 #include <set>
@@ -1958,16 +1957,6 @@ void Heroes::LevelUpSecondarySkill( const HeroSeedsForLevelUp & seeds, int prima
     }
 }
 
-void Heroes::ApplyPenaltyMovement( uint32_t penalty )
-{
-    if ( move_point >= penalty ) {
-        move_point -= penalty;
-    }
-    else {
-        move_point = 0;
-    }
-}
-
 bool Heroes::MayStillMove( const bool ignorePath, const bool ignoreSleeper ) const
 {
     if ( !isActive() ) {
@@ -2011,7 +2000,7 @@ void Heroes::Dismiss( int reason )
         return;
     }
 
-    // if not surrendering, reset army
+    // Reset army to default state for hero's race if hero did not surrender in battle.
     if ( ( reason & Battle::RESULT_SURRENDER ) == 0 ) {
         army.Reset( true );
     }

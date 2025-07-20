@@ -42,6 +42,7 @@
 #include "campaign_scenariodata.h"
 #include "castle.h"
 #include "color.h"
+#include "direction.h"
 #include "game_language.h"
 #include "game_over.h"
 #include "game_static.h"
@@ -272,7 +273,12 @@ bool World::LoadMapMP2( const std::string & filename, const bool isOriginalMp2Fi
             }
         }
 
-        tile.Init( i, mp2tile );
+        assert( tile == Maps::Tile{} );
+
+        tile.setIndex( i );
+        tile.setTerrain( mp2tile.terrainImageIndex, mp2tile.terrainFlags );
+
+        tile.Init( mp2tile );
 
         // Read extra information if it's present.
         size_t addonIndex = mp2tile.nextAddonIndex;
@@ -281,8 +287,21 @@ bool World::LoadMapMP2( const std::string & filename, const bool isOriginalMp2Fi
                 DEBUG_LOG( DBG_GAME, DBG_WARN, "Invalid MP2 format: incorrect addon index " << addonIndex )
                 break;
             }
-            tile.pushGroundObjectPart( vec_mp2addons[addonIndex] );
-            tile.pushTopObjectPart( vec_mp2addons[addonIndex] );
+
+            const auto & objectInfo = vec_mp2addons[addonIndex];
+
+            const MP2::ObjectIcnType groundObjectIcnType = static_cast<MP2::ObjectIcnType>( objectInfo.objectNameN1 >> 2 );
+            const MP2::ObjectIcnType topObjectIcnType = static_cast<MP2::ObjectIcnType>( objectInfo.objectNameN2 >> 2 );
+
+            if ( groundObjectIcnType != MP2::ObjectIcnType::OBJ_ICN_TYPE_UNKNOWN ) {
+                tile.pushGroundObjectPart( { static_cast<Maps::ObjectLayerType>( objectInfo.quantityN & 0x03 ), objectInfo.level1ObjectUID, groundObjectIcnType,
+                                             objectInfo.bottomIcnImageIndex } );
+            }
+
+            if ( topObjectIcnType != MP2::ObjectIcnType::OBJ_ICN_TYPE_UNKNOWN ) {
+                tile.pushTopObjectPart( { Maps::OBJECT_LAYER, objectInfo.level2ObjectUID, topObjectIcnType, objectInfo.topIcnImageIndex } );
+            }
+
             addonIndex = vec_mp2addons[addonIndex].nextAddonIndex;
         }
 
@@ -699,8 +718,8 @@ bool World::loadResurrectionMap( const std::string & filename )
         return false;
     }
 
-    width = map.size;
-    height = map.size;
+    width = map.width;
+    height = map.width;
 
     assert( vec_tiles.empty() );
     vec_tiles.resize( static_cast<size_t>( width ) * height );
@@ -1248,7 +1267,7 @@ bool World::loadResurrectionMap( const std::string & filename )
     }
     else if ( map.lossConditionType == Maps::FileInfo::LOSS_TOWN ) {
         const Castle * castle
-            = vec_castles.Get( { static_cast<int32_t>( map.lossConditionMetadata[0] % map.size ), static_cast<int32_t>( map.lossConditionMetadata[0] / map.size ) } );
+            = vec_castles.Get( { static_cast<int32_t>( map.lossConditionMetadata[0] % map.width ), static_cast<int32_t>( map.lossConditionMetadata[0] / map.width ) } );
         if ( castle == nullptr ) {
             VERBOSE_LOG( "A castle at tile " << map.lossConditionMetadata[0] << " does not exist." )
             return false;
@@ -1264,7 +1283,7 @@ bool World::loadResurrectionMap( const std::string & filename )
     }
     else if ( map.victoryConditionType == Maps::FileInfo::VICTORY_CAPTURE_TOWN ) {
         const Castle * castle = vec_castles.Get(
-            { static_cast<int32_t>( map.victoryConditionMetadata[0] % map.size ), static_cast<int32_t>( map.victoryConditionMetadata[0] / map.size ) } );
+            { static_cast<int32_t>( map.victoryConditionMetadata[0] % map.width ), static_cast<int32_t>( map.victoryConditionMetadata[0] / map.width ) } );
         if ( castle == nullptr ) {
             VERBOSE_LOG( "A castle at tile " << map.victoryConditionMetadata[0] << " does not exist." )
             return false;
@@ -1293,6 +1312,27 @@ bool World::ProcessNewMP2Map( const std::string & filename, const bool checkPoLO
             ERROR_LOG( "Failed to load The Price of Loyalty map '" << filename << "' which is not supported by this version of the game." )
             // You are trying to load a PoL map named as a MP2 file.
             return false;
+        }
+
+        // On some hacked MP2 maps boats are placed on land. One example is the map "Roc around the .".
+        if ( tile.getMainObjectType() == MP2::OBJ_BOAT && !tile.isWater() ) {
+            DEBUG_LOG( DBG_GAME, DBG_WARN,
+                       "Invalid MP2 format: boat at tile index " << tile.GetIndex() << " is placed on the land! It is removed from this tile to avoid bugs." )
+
+            // Remove the "hacked" boat from the map.
+            removeMainObjectFromTile( tile );
+
+            // Search for the water around and move the boat there.
+            for ( const int32_t tileIndex : Maps::getAroundIndexes( tile.GetIndex(), 1 ) ) {
+                Maps::Tile & nearbyTile = world.getTile( tileIndex );
+                if ( nearbyTile.isWater() && nearbyTile.getMainObjectType() == MP2::OBJ_NONE ) {
+                    nearbyTile.setBoat( Direction::RIGHT, PlayerColor::NONE );
+
+                    DEBUG_LOG( DBG_GAME, DBG_WARN, "The boat is placed on water on the empty nearby tile with index " << nearbyTile.GetIndex() << "." )
+
+                    break;
+                }
+            }
         }
     }
 
@@ -1344,6 +1384,7 @@ bool World::updateTileMetadata( Maps::Tile & tile, const MP2::MapObjectType obje
     case MP2::OBJ_ABANDONED_MINE:
     case MP2::OBJ_ALCHEMIST_LAB:
     case MP2::OBJ_ARCHER_HOUSE:
+    case MP2::OBJ_BARREL:
     case MP2::OBJ_BARRIER:
     case MP2::OBJ_BOAT:
     case MP2::OBJ_CAMPFIRE:
@@ -1382,11 +1423,11 @@ bool World::updateTileMetadata( Maps::Tile & tile, const MP2::MapObjectType obje
     case MP2::OBJ_RUINS:
     case MP2::OBJ_SAWMILL:
     case MP2::OBJ_SEA_CHEST:
+    case MP2::OBJ_SHIPWRECK:
+    case MP2::OBJ_SHIPWRECK_SURVIVOR:
     case MP2::OBJ_SHRINE_FIRST_CIRCLE:
     case MP2::OBJ_SHRINE_SECOND_CIRCLE:
     case MP2::OBJ_SHRINE_THIRD_CIRCLE:
-    case MP2::OBJ_SHIPWRECK:
-    case MP2::OBJ_SHIPWRECK_SURVIVOR:
     case MP2::OBJ_SKELETON:
     case MP2::OBJ_STONE_LITHS:
     case MP2::OBJ_TRAVELLER_TENT:
@@ -1562,14 +1603,14 @@ void World::setHeroIdsForMapConditions()
 {
     const Maps::FileInfo & mapInfo = Settings::Get().getCurrentMapInfo();
 
-    // update wins, loss conditions
     if ( GameOver::WINS_HERO & mapInfo.ConditionWins() ) {
         const fheroes2::Point & pos = mapInfo.WinsMapsPositionObject();
 
         const Heroes * hero = GetHeroes( pos );
         if ( hero == nullptr ) {
             heroIdAsWinCondition = Heroes::UNKNOWN;
-            ERROR_LOG( "A winning condition hero at location ['" << pos.x << ", " << pos.y << "'] is not found." )
+
+            ERROR_LOG( "The hero whose defeat is a game win condition was not found at the position ['" << pos.x << ", " << pos.y << "']." )
         }
         else {
             heroIdAsWinCondition = hero->GetID();
@@ -1582,10 +1623,12 @@ void World::setHeroIdsForMapConditions()
         Heroes * hero = GetHeroes( pos );
         if ( hero == nullptr ) {
             heroIdAsLossCondition = Heroes::UNKNOWN;
-            ERROR_LOG( "A loosing condition hero at location ['" << pos.x << ", " << pos.y << "'] is not found." )
+
+            ERROR_LOG( "The hero whose defeat is a game loss condition was not found at the position ['" << pos.x << ", " << pos.y << "']." )
         }
         else {
             heroIdAsLossCondition = hero->GetID();
+
             hero->SetModes( Heroes::NOTDISMISS | Heroes::CUSTOM );
         }
     }

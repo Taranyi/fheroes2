@@ -666,9 +666,7 @@ namespace
     {
         DEBUG_LOG( DBG_GAME, DBG_INFO, hero.GetName() )
 
-        if ( hero.isShipMaster() ) {
-            return;
-        }
+        assert( !hero.isShipMaster() );
 
         hero.setLastGroundRegion( world.getTile( hero.GetIndex() ).GetRegion() );
 
@@ -717,9 +715,7 @@ namespace
     {
         DEBUG_LOG( DBG_GAME, DBG_INFO, hero.GetName() )
 
-        if ( !hero.isShipMaster() ) {
-            return;
-        }
+        assert( hero.isShipMaster() );
 
         const int fromIndex = hero.GetIndex();
         Maps::Tile & from = world.getTile( fromIndex );
@@ -767,11 +763,18 @@ namespace
 
                 fheroes2::showResourceMessage( header, body, Dialog::OK, funds );
             }
+            else if ( objectType == MP2::OBJ_BARREL ) {
+                const fheroes2::Text header( MP2::StringObject( objectType ), fheroes2::FontType::normalYellow() );
+                const fheroes2::Text body( _( "Your ship bumps into a barrel drifting at sea. Inside, you discover a stash of lost treasure." ),
+                                           fheroes2::FontType::normalWhite() );
+
+                fheroes2::showResourceMessage( header, body, Dialog::OK, funds );
+            }
             else {
-                const auto resource = funds.getFirstValidResource();
+                const auto [resourceType, resourceCount] = funds.getFirstValidResource();
 
                 Interface::AdventureMap & I = Interface::AdventureMap::Get();
-                I.getStatusPanel().SetResource( resource.first, resource.second );
+                I.getStatusPanel().SetResource( resourceType, resourceCount );
                 I.setRedraw( Interface::REDRAW_STATUS );
             }
 
@@ -1807,6 +1810,10 @@ namespace
 
             if ( tile.isWater() ) {
                 if ( gold == 0 ) {
+                    fheroes2::showStandardTextMessage( std::move( hdr ),
+                                                       _( "After spending hours trying to fish the chest out of the sea, you open it, only to find it empty." ),
+                                                       Dialog::OK );
+
                     return {};
                 }
 
@@ -2803,7 +2810,12 @@ namespace
 
         MapEvent * mapEvent = world.GetMapEvent( Maps::GetPoint( tileIndex ) );
         if ( mapEvent == nullptr ) {
+            // No data found for this event type. This may happen in the case of hacked maps.
             DEBUG_LOG( DBG_AI, DBG_INFO, "Adventure Map event at index " << tileIndex << " is missing!" )
+
+            // Remove the event object type because of the missing data.
+            hero.setObjectTypeUnderHero( MP2::OBJ_NONE );
+
             return;
         }
 
@@ -3791,13 +3803,18 @@ void Heroes::Action( int tileIndex )
         AudioManager::PlayMusicAsync( MUS::FromGround( world.getTile( heroPosIndex ).GetGround() ), Music::PlaybackMode::RESUME_AND_PLAY_INFINITE );
     }
 
-    const MP2::MapObjectType objectType = world.getTile( tileIndex ).getMainObjectType( tileIndex != heroPosIndex );
-    if ( MP2::isInGameActionObject( objectType, isShipMaster() ) ) {
+    const Maps::Tile & tile = world.getTile( tileIndex );
+    const MP2::MapObjectType objectType = tile.getMainObjectType( tileIndex != heroPosIndex );
+
+    const bool isHeroDisembarking = isShipMaster() && tile.isSuitableForDisembarkation();
+    const bool isHeroActing = isHeroDisembarking || MP2::isInGameActionObject( objectType, isShipMaster() );
+
+    if ( isHeroActing ) {
         SetModes( ACTION );
     }
 
     // Most likely there will be some action or event, immediately center the map on the hero to avoid subsequent minor screen movements
-    if ( Modes( ACTION ) || objectType == MP2::OBJ_EVENT ) {
+    if ( isHeroActing || objectType == MP2::OBJ_EVENT ) {
         Interface::AdventureMap & I = Interface::AdventureMap::Get();
 
         I.getGameArea().SetCenter( GetCenter() );
@@ -3824,10 +3841,6 @@ void Heroes::Action( int tileIndex )
         ActionToBoat( *this, tileIndex );
         break;
 
-    case MP2::OBJ_COAST:
-        ActionToCoast( *this, tileIndex );
-        break;
-
     case MP2::OBJ_WINDMILL:
     case MP2::OBJ_WATER_WHEEL:
     case MP2::OBJ_MAGIC_GARDEN:
@@ -3843,6 +3856,7 @@ void Heroes::Action( int tileIndex )
         ActionToSkeleton( *this, objectType, tileIndex );
         break;
 
+    case MP2::OBJ_BARREL:
     case MP2::OBJ_BOTTLE:
     case MP2::OBJ_CAMPFIRE:
     case MP2::OBJ_RESOURCE:
@@ -4068,6 +4082,12 @@ void Heroes::Action( int tileIndex )
         break;
 
     default:
+        if ( isHeroDisembarking ) {
+            ActionToCoast( *this, tileIndex );
+            break;
+        }
+
+        assert( !isHeroActing );
         break;
     }
 }

@@ -73,6 +73,12 @@ enum class InterfaceType : uint8_t
     DYNAMIC = 2
 };
 
+enum class SaveFileSortingMethod : uint8_t
+{
+    FILENAME,
+    TIMESTAMP,
+};
+
 class Settings
 {
 public:
@@ -238,6 +244,16 @@ public:
         return _resolutionInfo;
     }
 
+    fheroes2::Point getSavedWindowPos() const
+    {
+        return _windowPos;
+    }
+
+    void setStartWindowPos( const fheroes2::Point pos )
+    {
+        _windowPos = pos;
+    }
+
     void EnablePriceOfLoyaltySupport( const bool set );
 
     void SetGameDifficulty( const int difficulty )
@@ -356,6 +372,16 @@ public:
         _viewWorldZoomLevel = zoomLevel;
     }
 
+    SaveFileSortingMethod getSaveFileSortingMethod() const
+    {
+        return _saveFileSortType;
+    }
+
+    void setSaveFileSortingMethod( const SaveFileSortingMethod sortType )
+    {
+        _saveFileSortType = sortType;
+    }
+
     void SetProgramPath( const char * path );
 
     static std::string GetVersion();
@@ -381,6 +407,8 @@ private:
     BitModes _editorOptions;
 
     fheroes2::ResolutionInfo _resolutionInfo;
+    fheroes2::Point _windowPos;
+
     int _gameDifficulty;
 
     std::string _programPath;
@@ -390,6 +418,8 @@ private:
     std::string _loadedFileLanguage;
 
     Maps::FileInfo _currentMapInfo;
+
+    SaveFileSortingMethod _saveFileSortType;
 
     int sound_volume;
     int music_volume;
