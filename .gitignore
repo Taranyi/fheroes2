@@ -53,7 +53,17 @@
 *.tmp
 # visual studio directory
 .vs
-.vscode
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Project-local Windows toolchain and runtime data
+/.tools/
+/ANIM/
+/DATA/
+/MUSIC/
 
 # Ignore Heroes of Might & Magic II game files
 *.agg

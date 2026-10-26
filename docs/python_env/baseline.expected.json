@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-26",
+  "source_commit": "4ec988682",
+  "engine_version": "1.1.17",
+  "evidence": "Normal game UI and immutable local save snapshots; no Python engine API exists yet.",
+  "fixtures": [
+    {
+      "id": "other-side-day1",
+      "path": "build/python-env-baseline/fixtures/other-side-day1.sav",
+      "sha256": "FA8BE2860072D5C9EA9BC57924E33E8495EFB082661A8A18DFDBA9E02083F7D5",
+      "map": "maps/THEOTHER.MP2",
+      "map_sha256": "2699D53A977D7FFBBCD65C51B5490437F005FDEB85801728D1259143A35976D2",
+      "map_name": "The Other Side",
+      "map_size": [36, 36],
+      "setup": {"difficulty": "normal", "human": "blue", "ai": ["green"]},
+      "observed": {
+        "month": 1, "week": 1, "day": 1,
+        "funds": {"wood": 20, "mercury": 5, "ore": 20, "sulfur": 5, "crystal": 5, "gems": 5, "gold": 7500},
+        "own_heroes": 1, "own_castles": 1,
+        "hero": {
+          "name": "Roxana", "class": "necromancer", "level": 1,
+          "attack": 1, "defense": 0, "power": 2, "knowledge": 2,
+          "experience": 49, "spell_points": 20, "max_spell_points": 20,
+          "army": [{"creature": "skeleton", "count": 9}, {"creature": "zombie", "count": 4}],
+          "secondary_skills": [{"skill": "necromancy", "level": "basic"}, {"skill": "wisdom", "level": "basic"}],
+          "artifacts": ["magic_book"],
+          "location": "visiting the starting castle Timberhill"
+        },
+        "castle": {"name": "Timberhill", "race": "necromancer", "garrison": []}
+      },
+      "map_file_castle_entrances_zero_based": [[3, 24], [32, 24]],
+      "engine_coordinate_verification": "Pending state export in implementation step 3; map coordinates are not a decoded save-state assertion.",
+      "reload_verified": true
+    },
+    {
+      "id": "forsaken-day2",
+      "path": "build/python-env-baseline/fixtures/forsaken-day2.sav",
+      "sha256": "F2C91DF8BE3B9396C74B63A1AC3E0997C3157817730DF658CAE1D2DFBA15E6E0",
+      "map": "maps/FORSAKEN.MP2",
+      "map_sha256": "F843CF8249382A35ADCC8DA1BB953006B66A2E36FA86E9C561EA222B22BD5F46",
+      "map_name": "Forsaken Lands",
+      "map_size": [72, 72],
+      "observed": {
+        "player": "green", "month": 1, "week": 1, "day": 2,
+        "funds": {"wood": 28, "mercury": 5, "ore": 20, "sulfur": 5, "crystal": 5, "gems": 5, "gold": 8060},
+        "own_heroes": 1, "own_castles": 1,
+        "hero": {
+          "name": "Gwenneth", "class": "knight", "level": 1,
+          "attack": 2, "defense": 2, "power": 1, "knowledge": 1,
+          "experience": 62, "spell_points": 10, "max_spell_points": 10,
+          "army": [{"creature": "peasant", "count": 42}],
+          "secondary_skills": [{"skill": "leadership", "level": "basic"}, {"skill": "ballistics", "level": "basic"}],
+          "artifacts": [],
+          "location": "outside Quick Silver, next to a dwelling; numeric coordinates not yet exported"
+        },
+        "castle": {"name": "Quick Silver", "race": "knight", "garrison": [{"creature": "peasant", "count": 12}, {"creature": "archer", "count": 8}]}
+      },
+      "reload_verified": true
+    }
+  ],
+  "assets": [
+    {"path": "DATA/HEROES2.AGG", "sha256": "7A11C86DB8EC8FBF19D810C1F7EBF9D8520F63FBDC42D6F51F7538654004315D"},
+    {"path": "DATA/HEROES2X.AGG", "sha256": "1F3EDAD1BB88052DA50B3FAE5D00E8F7E73DD977F356463022AAB132B54F4D41"}
+  ]
+}

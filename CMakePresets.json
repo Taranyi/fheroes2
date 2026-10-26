@@ -1,0 +1,38 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-local",
+      "displayName": "Windows - local GCC (with debug symbols)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows-local",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "environment": {
+        "PATH": "${sourceDir}/.tools/msys64/ucrt64/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_COMPILER": "${sourceDir}/.tools/msys64/ucrt64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "${sourceDir}/.tools/msys64/ucrt64/bin/g++.exe",
+        "CMAKE_RC_COMPILER": "${sourceDir}/.tools/msys64/ucrt64/bin/windres.exe",
+        "CMAKE_MAKE_PROGRAM": "${sourceDir}/.tools/msys64/ucrt64/bin/ninja.exe",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.tools/msys64/ucrt64",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "ENABLE_IMAGE": true
+      }
+    },
+    {
+      "name": "windows-debug",
+      "displayName": "Windows - local GCC (Debug)",
+      "inherits": "windows-local",
+      "binaryDir": "${sourceDir}/build/windows-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-local", "configurePreset": "windows-local", "targets": ["fheroes2"] },
+    { "name": "windows-debug", "configurePreset": "windows-debug", "targets": ["fheroes2"] }
+  ]
+}

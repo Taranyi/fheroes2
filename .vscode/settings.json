@@ -1,0 +1,11 @@
+{
+  "C_Cpp.default.compilerPath": "${workspaceFolder}/.tools/msys64/ucrt64/bin/g++.exe",
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/windows-local/compile_commands.json",
+  "C_Cpp.default.cppStandard": "c++17",
+  "cmake.cmakePath": "${workspaceFolder}/.tools/msys64/ucrt64/bin/cmake.exe",
+  "cmake.useCMakePresets": "always",
+  "cmake.configureOnOpen": false,
+  "files.watcherExclude": { "**/.tools/**": true, "**/build/**": true },
+  "search.exclude": { "**/.tools": true, "**/build": true },
+  "files.exclude": { ".tools": true }
+}
