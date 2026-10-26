@@ -75,7 +75,7 @@ int main( int argc, char ** argv )
         }
 
 #if defined( FHEROES2_ENABLE_PYTHON_ENV )
-        return fheroes2::runPythonEnvBootstrap( std::cin, std::cout, std::cerr );
+        return fheroes2::runPythonEnvBootstrap( std::cin, std::cout, std::cerr, argv[0] );
 #else
         std::cerr << "Python environment support is disabled in this build. Configure with ENABLE_PYTHON_ENV=ON on desktop.\n";
         return EXIT_FAILURE;

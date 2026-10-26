@@ -223,6 +223,9 @@ public:
 
     static World & Get();
 
+    // Release the current world without starting a new game.
+    void Reset();
+
     int32_t w() const
     {
         return width;
@@ -306,6 +309,16 @@ public:
     size_t getCastleCount() const
     {
         return vec_castles.Size();
+    }
+
+    const AllCastles & getAllCastles() const
+    {
+        return vec_castles;
+    }
+
+    const AllHeroes & getAllHeroes() const
+    {
+        return vec_heroes;
     }
 
     void removeCastle( const fheroes2::Point & tilePosition )
@@ -525,7 +538,6 @@ private:
     World() = default;
 
     void Defaults();
-    void Reset();
     void _monthOfMonstersAction( const Monster & mons );
 
     bool ProcessNewMP2Map( const std::string & filename, const bool checkPoLObjects );

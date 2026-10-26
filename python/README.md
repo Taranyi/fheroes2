@@ -1,14 +1,14 @@
 # fheroes2 Python connection
 
-This is implementation step 2: a process connection and lifecycle API. It does not load a map, expose game state, simulate turns,
-render the game, or implement Gymnasium yet. The handshake explicitly reports those capabilities as unavailable.
+Implementation steps 2–3 provide a process connection, real save loading and a read-only world API. Loading and inspection
+work without video or audio initialization. Actions, turn simulation, rendering and Gymnasium are still unavailable.
 
 ## Platform separation
 
 * Python support is opt-in: CMake's `ENABLE_PYTHON_ENV` defaults to `OFF`.
 * Only the project-local `windows-local` and inherited `windows-debug` presets enable it automatically.
 * Standard game builds do not require Python, uv, a virtual environment or the JSON library. The JSON header is compiled only
-  into the enabled transport implementation. Game rules use the same existing C++ code.
+  into the enabled environment implementation. Game rules use the same existing C++ code.
 * Enabling the option is supported for desktop Windows, Linux and macOS. CMake rejects it for other target systems. Android,
   iOS, console and WebAssembly builds retain the disabled default. The legacy Makefiles and Visual Studio project also leave
   the feature disabled unless its C++ definition is explicitly supplied.
@@ -52,11 +52,47 @@ from fheroes2_env import HeroesSession
 with HeroesSession("fheroes2.exe", timeout=5.0) as game:
     print(game.info["engine_version"])
     print(game.capabilities())
+    game.load_save("build/python-env-baseline/fixtures/other-side-day1.sav")
+    state = game.get_state()
+    print(state["date"], state["players"])
     process_id = game.pid
 
 assert game.closed
 assert game.returncode == 0
 ```
+
+For a runnable example with a short report:
+
+```powershell
+uv run --project python python python/examples/read_state.py build/python-env-baseline/fixtures/other-side-day1.sav
+```
+
+`load_save(path)` resolves the path and invokes the original C++ save loader. It currently accepts standard single-player
+adventure saves, up to 64 MiB. Campaign/hotseat saves are rejected. Original `DATA/HEROES2.AGG` assets are required at this
+point; set the child environment's `FHEROES2_DATA` to the game data root if necessary. No Python save parser is involved.
+Only load trusted local saves: the existing engine deserializer is not a security boundary for hostile files.
+
+A successful load does not run a turn or start the human input loop. A failed load clears the previous world; `get_state()`
+then returns `no_game_loaded` until a valid save is loaded. Invalid request parameters are rejected before changing the world.
+Input saves are opened read-only. The session does not initialize or write the normal player profile.
+
+`get_state()` is explicitly **omniscient**: it exports every player's funds, hero/castle ownership, all heroes (including the
+inactive/recruitable pool), armies, positions, primary/secondary skills, artifacts, spell IDs, castles, buildings, dwelling
+stocks, and every tile, including objects behind fog. Tile metadata, object parts, fog colors and passability are included.
+The `date`, `current_player`, map seed/conditions and game result describe the loaded save. Coordinates are zero-based;
+tile index is `y * width + x`; player/owner IDs are the engine's color bits; neutral ownership is zero. Castle IDs are entrance
+tile indices. Enum IDs follow the engine source. Empty army/artifact slots and unavailable positions are `null`.
+
+The JSON fields are an initial projection of the world, not every internal C++ member. By default, `serialized_state` also
+contains the engine's complete `world + settings + game result` save payload as hex, with its save format version. This
+preserves events, visit flags and other persistent fields not yet projected into named JSON properties. It is an opaque,
+version-dependent payload, not a standalone `.sav`, restore API or snapshot of a running battle/input stack. Use
+`get_state(include_serialized=False)` for the named fields alone. Repeated queries do not advance the game or consume RNG.
+
+The state schema is version 1. `state_version` increases on each attempted load; inspection leaves it unchanged. The saved
+current player is metadata, not yet an external-controller decision handshake. Saves do not restore an open castle/hero UI.
+A future `observe(player_id)` will apply visibility rules separately; it is not implemented and omniscient state must not
+be mistaken for a fair player observation.
 
 `hello()` repeats the handshake. `request(method, params)` exposes the underlying connection; unknown commands raise
 `EngineError` without breaking the session. A timeout, invalid reply or unexpected process exit stops the process and raises
@@ -89,20 +125,24 @@ The actual handshake includes all capability fields; the example above abbreviat
 Error:
 
 ```json
-{"api_version":1,"id":2,"error":{"code":"unknown_method","message":"This bootstrap supports hello, capabilities and close."}}
+{"api_version":1,"id":2,"error":{"code":"unknown_method","message":"Unknown environment method. Use capabilities to list supported methods."}}
 ```
 
 * `id`: unsigned 32-bit integer; replies echo it. Invalid/unreadable IDs produce `null` in the error response.
 * `api_version`: integer 1. Unsupported versions are rejected rather than interpreted as another protocol.
-* Methods: `hello`, `capabilities`, `close`. `params` is optional but must be an empty object when present in this version.
+* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `close`. `params` is optional and must be an object.
+  `load_save` requires exactly `{"path":"absolute save path"}`; `get_state` accepts only `{"include_serialized":true}`
+  (optional, default true). Other methods require empty parameters.
 * Request limit: 65,536 bytes before the terminating LF. CRLF is accepted as JSON trailing whitespace plus LF.
+* Response limit: 64 MiB including the terminating LF. A larger state returns `response_too_large`; retry without the payload.
 * Nesting is limited to a shallow request envelope. Malformed/deep/oversized records return an error; the next record can run.
-* Error codes: `invalid_request`, `unsupported_version`, `unknown_method`, `request_too_large`.
+* Error codes include `invalid_request`, `unsupported_version`, `unknown_method`, `request_too_large`, `no_game_loaded`,
+  `invalid_path`, `assets_unavailable`, `load_failed`, `state_export_failed`, `response_too_large` and `engine_error`.
 * `close` returns `{"closed":true}`, flushes stdout and exits with code 0. EOF also ends the bootstrap cleanly.
 * A final nonempty record without LF is rejected. Oversized records are drained with bounded retained memory.
 
-Future world/session operations will reuse this transport and keep game rules in the engine. This bootstrap does not claim
-that a real game can already run headlessly.
+The handshake's historical `mode: "bootstrap"` label is retained. Capabilities report `state_queries` and `omniscient_state`
+as true, and `game_initialized` reflects whether a save is loaded. Full headless gameplay remains false until actions work.
 
 ## Verification
 
@@ -124,3 +164,8 @@ its compile commands contained no transport definition, and the transport object
 CMake configuration defaulted to `OFF`, and a non-desktop target rejected explicit opt-in. The original baseline save and
 asset checks still passed. Normal windowed startup reached the main menu and exited cleanly using the isolated test profile.
 These are Windows build/runtime and configuration checks, not Android/iOS/Linux/macOS SDK tests.
+
+Step 3 added seven world-state tests (21 total): both recorded saves match the original UI values; AI and fog-hidden data are
+present; repeated exports and small/large/small reloads preserve the world; invalid loads recover; loaded processes are
+independent. These tests deliberately use invalid SDL video/audio drivers and an empty isolated profile. Local reference
+saves remain ignored; world tests skip with an explanation when the fixtures are absent.

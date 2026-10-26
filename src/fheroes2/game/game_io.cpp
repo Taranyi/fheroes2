@@ -165,9 +165,25 @@ bool Game::Save( const std::string & filePath, const bool autoSave /* = false */
 
 fheroes2::GameMode Game::Load( const std::string & filePath )
 {
+    return Load( filePath, LoadOptions{} );
+}
+
+fheroes2::GameMode Game::Load( const std::string & filePath, const LoadOptions & options )
+{
     DEBUG_LOG( DBG_GAME, DBG_INFO, filePath )
 
-    const auto showGenericErrorMessage = []() { fheroes2::showStandardTextMessage( _( "Error" ), _( "The save file is corrupted." ), Dialog::OK ); };
+    const auto reportMessage = [&options]( const std::string & message, const bool isError ) {
+        if ( isError && options.errorMessage != nullptr ) {
+            *options.errorMessage = message;
+        }
+        if ( !isError && options.warnings != nullptr ) {
+            options.warnings->push_back( message );
+        }
+        if ( options.showMessages ) {
+            fheroes2::showStandardTextMessage( isError ? _( "Error" ) : _( "Warning" ), message, Dialog::OK );
+        }
+    };
+    const auto showGenericErrorMessage = [&reportMessage]() { reportMessage( _( "The save file is corrupted." ), true ); };
 
     StreamFile fileStream;
     fileStream.setBigendian( true );
@@ -213,7 +229,7 @@ fheroes2::GameMode Game::Load( const std::string & filePath )
         errorMessage += std::to_string( LAST_SUPPORTED_FORMAT_VERSION );
         errorMessage += ".\n";
 
-        fheroes2::showStandardTextMessage( _( "Error" ), errorMessage, Dialog::OK );
+        reportMessage( errorMessage, true );
 
         return fheroes2::GameMode::CANCEL;
     }
@@ -223,9 +239,18 @@ fheroes2::GameMode Game::Load( const std::string & filePath )
     HeaderSAV header;
     fileStream >> header;
 
+    if ( fileStream.fail() ) {
+        showGenericErrorMessage();
+        return fheroes2::GameMode::CANCEL;
+    }
+    if ( options.requireStandardGame && ( header.gameType & ~Game::TYPE_LOADFILE ) != Game::TYPE_STANDARD ) {
+        reportMessage( "Only standard single-player saves are supported by this session.", true );
+        return fheroes2::GameMode::CANCEL;
+    }
+
     Settings & conf = Settings::Get();
     if ( ( conf.GameType() & header.gameType ) == 0 ) {
-        fheroes2::showStandardTextMessage( _( "Error" ), _( "This file contains a save with an invalid game type." ), Dialog::OK );
+        reportMessage( _( "This file contains a save with an invalid game type." ), true );
 
         return fheroes2::GameMode::CANCEL;
     }
@@ -239,9 +264,7 @@ fheroes2::GameMode Game::Load( const std::string & filePath )
     }
 
     if ( ( header.requirements & HeaderSAV::REQUIRES_POL_RESOURCES ) && !conf.isPriceOfLoyaltySupported() ) {
-        fheroes2::showStandardTextMessage( _( "Error" ),
-                                           _( "This save file requires \"The Price of Loyalty\" game assets, but they have not been provided to the engine." ),
-                                           Dialog::OK );
+        reportMessage( _( "This save file requires \"The Price of Loyalty\" game assets, but they have not been provided to the engine." ), true );
 
         return fheroes2::GameMode::CANCEL;
     }
@@ -281,7 +304,7 @@ fheroes2::GameMode Game::Load( const std::string & filePath )
         warningMessage.append( fheroes2::getLanguageName( fheroes2::getLanguageFromAbbreviation( conf.getGameLanguage() ) ) );
         warningMessage += "'.";
 
-        fheroes2::showStandardTextMessage( _( "Warning" ), warningMessage, Dialog::OK );
+        reportMessage( warningMessage, false );
     }
 
     Game::SetLastSaveName( filePath );
@@ -384,13 +407,11 @@ std::string Game::GetSaveFileBaseName()
     std::string baseName = Settings::Get().getCurrentMapInfo().name;
 
     // Replace all non-ASCII characters by exclamation marks
-    std::replace_if(
-        baseName.begin(), baseName.end(), []( const unsigned char c ) { return ( c > 127 ); }, '!' );
+    std::replace_if( baseName.begin(), baseName.end(), []( const unsigned char c ) { return ( c > 127 ); }, '!' );
     // Remove all non-printable characters
     baseName.erase( std::remove_if( baseName.begin(), baseName.end(), []( const unsigned char c ) { return !std::isprint( c ); } ), baseName.end() );
     // Replace all remaining non-alphanumeric characters (excluding exclamation marks) by underscores
-    std::replace_if(
-        baseName.begin(), baseName.end(), []( const unsigned char c ) { return ( c != '!' && !std::isalnum( c ) ); }, '_' );
+    std::replace_if( baseName.begin(), baseName.end(), []( const unsigned char c ) { return ( c != '!' && !std::isalnum( c ) ); }, '_' );
     // If in the end there are no characters left, set the base name to "newgame"
     if ( baseName.empty() ) {
         baseName = "newgame";

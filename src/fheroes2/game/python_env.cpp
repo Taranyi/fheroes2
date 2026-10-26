@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <iostream>
 #include <istream>
 #include <limits>
 #include <ostream>
@@ -33,6 +34,7 @@
 #include <string>
 
 #include "../../thirdparty/nlohmann/json.hpp"
+#include "python_env_world.h"
 #include "version.h"
 
 namespace
@@ -41,6 +43,7 @@ namespace
 
     constexpr uint32_t protocolVersion{ 1 };
     constexpr size_t maxRequestBytes{ 65536 };
+    constexpr size_t maxResponseBytes{ 64 * 1024 * 1024 };
     constexpr int maxNestingDepth{ 16 };
 
     enum class LineStatus
@@ -76,12 +79,15 @@ namespace
         return line.empty() ? LineStatus::EndOfInput : LineStatus::Incomplete;
     }
 
-    Json capabilities()
+    Json capabilities( const bool loaded )
     {
-        return { { "commands", { "hello", "capabilities", "close" } },
+        return { { "commands", { "hello", "capabilities", "load_save", "get_state", "close" } },
                  { "max_request_bytes", maxRequestBytes },
-                 { "game_initialized", false },
-                 { "state_queries", false },
+                 { "max_response_bytes", maxResponseBytes },
+                 { "game_initialized", loaded },
+                 { "state_queries", true },
+                 { "omniscient_state", true },
+                 { "player_observations", false },
                  { "simulation", false },
                  { "render", false },
                  { "headless_gameplay", false } };
@@ -89,7 +95,14 @@ namespace
 
     bool sendResult( std::ostream & output, const Json & id, const Json & result )
     {
-        output << Json( { { "api_version", protocolVersion }, { "id", id }, { "result", result } } ).dump() << '\n' << std::flush;
+        std::string message = Json( { { "api_version", protocolVersion }, { "id", id }, { "result", result } } ).dump( -1, ' ', false, Json::error_handler_t::replace );
+        if ( message.size() >= maxResponseBytes ) {
+            message = Json( { { "api_version", protocolVersion },
+                              { "id", id },
+                              { "error", { { "code", "response_too_large" }, { "message", "State exceeds 64 MiB. Retry without the serialized payload." } } } } )
+                          .dump();
+        }
+        output << message << '\n' << std::flush;
         return output.good();
     }
 
@@ -99,9 +112,58 @@ namespace
         return output.good();
     }
 
-    int serve( std::istream & input, std::ostream & output )
+    class DiagnosticRedirect final
+    {
+    public:
+        DiagnosticRedirect()
+            : _previous( std::cout.rdbuf( std::cerr.rdbuf() ) )
+        {}
+        ~DiagnosticRedirect()
+        {
+            std::cout.rdbuf( _previous );
+        }
+        DiagnosticRedirect( const DiagnosticRedirect & ) = delete;
+        DiagnosticRedirect & operator=( const DiagnosticRedirect & ) = delete;
+
+    private:
+        std::streambuf * _previous;
+    };
+
+    Json execute( const std::string & method, const Json & params, fheroes2::PythonEnvWorld & world )
+    {
+        if ( method == "load_save" ) {
+            if ( params.size() != 1 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty() ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "load_save requires exactly one nonempty path string." );
+            }
+            const DiagnosticRedirect redirect;
+            return world.loadSave( params["path"].get<std::string>() );
+        }
+        if ( method == "get_state" ) {
+            if ( params.size() > 1 || ( !params.empty() && ( !params.contains( "include_serialized" ) || !params["include_serialized"].is_boolean() ) ) ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "get_state accepts only an optional boolean include_serialized." );
+            }
+            const DiagnosticRedirect redirect;
+            return world.getState( params.value( "include_serialized", true ) );
+        }
+        if ( !params.empty() ) {
+            throw fheroes2::PythonEnvError( "invalid_request", "This method requires empty params." );
+        }
+        if ( method == "hello" ) {
+            return { { "engine", "fheroes2" }, { "engine_version", ENGINE_VERSION }, { "mode", "bootstrap" }, { "capabilities", capabilities( world.loaded() ) } };
+        }
+        if ( method == "capabilities" ) {
+            return capabilities( world.loaded() );
+        }
+        if ( method == "close" ) {
+            return { { "closed", true } };
+        }
+        throw fheroes2::PythonEnvError( "unknown_method", "Unknown environment method. Use capabilities to list supported methods." );
+    }
+
+    int serve( std::istream & input, std::ostream & output, const char * executablePath )
     {
         std::string line;
+        fheroes2::PythonEnvWorld world( executablePath );
 
         while ( true ) {
             const LineStatus status = readRequest( input, line );
@@ -148,40 +210,40 @@ namespace
                 }
                 continue;
             }
-            if ( !request.contains( "method" ) || !request["method"].is_string()
-                 || ( request.contains( "params" ) && ( !request["params"].is_object() || !request["params"].empty() ) ) ) {
-                if ( !sendError( output, id, "invalid_request", "Expected a method string and optional empty params object." ) ) {
+            if ( !request.contains( "method" ) || !request["method"].is_string() || ( request.contains( "params" ) && !request["params"].is_object() ) ) {
+                if ( !sendError( output, id, "invalid_request", "Expected a method string and optional params object." ) ) {
                     return EXIT_FAILURE;
                 }
                 continue;
             }
 
             const std::string & method = request["method"].get_ref<const std::string &>();
-            if ( method == "hello" ) {
-                if ( !sendResult( output, id,
-                                  { { "engine", "fheroes2" }, { "engine_version", ENGINE_VERSION }, { "mode", "bootstrap" }, { "capabilities", capabilities() } } ) ) {
+            try {
+                if ( !sendResult( output, id, execute( method, request.value( "params", Json::object() ), world ) ) ) {
+                    return EXIT_FAILURE;
+                }
+                if ( method == "close" ) {
+                    return EXIT_SUCCESS;
+                }
+            }
+            catch ( const fheroes2::PythonEnvError & error ) {
+                if ( !sendError( output, id, error.code.c_str(), error.what() ) ) {
                     return EXIT_FAILURE;
                 }
             }
-            else if ( method == "capabilities" ) {
-                if ( !sendResult( output, id, capabilities() ) ) {
+            catch ( const std::exception & ) {
+                if ( !sendError( output, id, "engine_error", "The engine could not complete the read-only request." ) ) {
                     return EXIT_FAILURE;
                 }
-            }
-            else if ( method == "close" ) {
-                return sendResult( output, id, { { "closed", true } } ) ? EXIT_SUCCESS : EXIT_FAILURE;
-            }
-            else if ( !sendError( output, id, "unknown_method", "This bootstrap supports hello, capabilities and close." ) ) {
-                return EXIT_FAILURE;
             }
         }
     }
 }
 
-int fheroes2::runPythonEnvBootstrap( std::istream & input, std::ostream & output, std::ostream & diagnostics )
+int fheroes2::runPythonEnvBootstrap( std::istream & input, std::ostream & output, std::ostream & diagnostics, const char * executablePath )
 {
     try {
-        return serve( input, output );
+        return serve( input, output, executablePath );
     }
     catch ( const std::exception & ) {
         // Never route protocol errors through the game's logging/UI initialization.

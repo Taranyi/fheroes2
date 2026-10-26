@@ -68,7 +68,7 @@ Hibás/idejétmúlt parancs a módosítás előtt elutasítandó. Külön hibaka
 
 ### 3. Mentésbetöltés és csak olvasó világ-API
 
-**Munka:** a protokollon betöltés és `observe`/`inspect`. Nap, aktuális játékos, pénz, saját hősök/várak, pozíciók, seregek, tárgyak, alap térképadatok. A UI-hibaablakok helyett strukturált betöltési hibák. A kezdeti állapotnál nem indul automatikusan teljes emberi inputhurok vagy extra nap.
+**Munka:** a protokollon `load_save` és mindent látó `get_state`. Nap, aktuális játékos, minden játékos (az AI is), pénz, összes hős/vár, pozíciók, seregek, tárgyak és a köd mögötti térkép is. A UI-hibaablakok helyett strukturált betöltési hibák. A kezdeti állapotnál nem indul automatikusan teljes emberi inputhurok vagy extra nap. A játékosi láthatóságra szűrt `observe(player_id)` külön későbbi felület.
 
 **Fő kód:** `game_io.cpp`, `world.*`, `kingdom.*`, `heroes.*`, `castle.*`.
 
@@ -191,4 +191,5 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 |---|---|---|
 | 1 | Kész | Inkrementális build és ablakos indítás ellenőrizve; két helyi referenciamentés, 36×36-os kis pálya indítása/mentése/visszatöltése, elvárt UI-adatok és fájlujjlenyomatok rögzítve. Részletek: [PYTHON_ENV_BASELINE.md](PYTHON_ENV_BASELINE.md). A numerikus motorállapot exportja a 3. lépés feladata. |
 | 2 | Kész | Opcionális `--python-env` bootstrap, JSON-soros `hello`/`capabilities`/`close`, külön uv-csomag és 14 integrációs/folyamathiba-teszt. Leírás: [Python-kapcsolat](../python/README.md). A bootstrap nem tölt játékot és nem jelenti a teljes headless szimuláció elkészültét. |
-| 3–14 | Tervezett | Következik a mentésbetöltés és a csak olvasó játékállapot-API. |
+| 3 | Kész | Valódi C++ mentésbetöltő, ablak/hang nélküli `load_save` és mindent látó `get_state`, AI-val és teljes térképpel. A JSON-projekció mellett a teljes tartós motorállapot saját szerializált payloadja is kérhető. Két referencia, változatlan ismételt lekérdezés, hibából helyreállás és folyamatizoláció: összesen 21 sikeres teszt. Részletek: [Python API](../python/README.md). Műveletek és láthatóságra szűrt megfigyelés még nincsenek. |
+| 4–14 | Tervezett | A fenti lépések szerint. |

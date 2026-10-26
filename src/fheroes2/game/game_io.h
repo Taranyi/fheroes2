@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2019 - 2025                                             *
+ *   Copyright (C) 2019 - 2026                                             *
  *                                                                         *
  *   Free Heroes2 Engine: http://sourceforge.net/projects/fheroes2         *
  *   Copyright (C) 2009 by Andrey Afletdinov <fheroes2@gmail.com>          *
@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "game_mode.h"
 
@@ -35,6 +36,15 @@ namespace Maps
 
 namespace Game
 {
+    // Keep presentation optional for non-interactive callers of the shared save loader.
+    struct LoadOptions
+    {
+        bool showMessages{ true };
+        bool requireStandardGame{ false };
+        std::string * errorMessage{ nullptr };
+        std::vector<std::string> * warnings{ nullptr };
+    };
+
     const std::string & GetLastSaveName();
     void SetLastSaveName( const std::string & name );
 
@@ -53,6 +63,7 @@ namespace Game
 
     // Returns GameMode::CANCEL in case of failure.
     fheroes2::GameMode Load( const std::string & filePath );
+    fheroes2::GameMode Load( const std::string & filePath, const LoadOptions & options );
 
     bool LoadSAV2FileInfo( std::string filePath, Maps::FileInfo & fileInfo );
 

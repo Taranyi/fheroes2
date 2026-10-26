@@ -35,7 +35,7 @@ from typing import Any, Mapping
 
 API_VERSION = 1
 MAX_REQUEST_BYTES = 65536
-MAX_RESPONSE_BYTES = 65536
+MAX_RESPONSE_BYTES = 64 * 1024 * 1024
 
 
 class EngineError(RuntimeError):
@@ -81,8 +81,8 @@ def _exchange_worker(process, outgoing, incoming):
 class HeroesSession:
     """Start ``fheroes2 --python-env`` and complete its protocol handshake.
 
-    Use as a context manager, or call close(). This version only supports hello(),
-    capabilities() and close(); it does not load or simulate a game.
+    Use as a context manager, or call close(). Saves can be loaded and inspected,
+    including all AI players. This version does not execute gameplay actions.
     """
 
     def __init__(
@@ -213,6 +213,24 @@ class HeroesSession:
 
     def capabilities(self) -> dict[str, Any]:
         return self.request("capabilities")
+
+    def load_save(self, path: str | os.PathLike[str]) -> dict[str, Any]:
+        """Load a trusted standard-game save without advancing turns.
+
+        The save is read-only. A failed load clears the current loaded world;
+        another valid save can then be loaded in the same session.
+        """
+        return self.request("load_save", {"path": str(Path(path).resolve())})
+
+    def get_state(self, *, include_serialized: bool = True) -> dict[str, Any]:
+        """Return the omniscient world, including AI and fog-hidden objects.
+
+        The optional hex payload preserves save fields not projected into JSON.
+        This is not a visibility-filtered observation for a learning agent.
+        """
+        if type(include_serialized) is not bool:
+            raise TypeError("include_serialized must be a boolean")
+        return self.request("get_state", {"include_serialized": include_serialized})
 
     def close(self) -> None:
         with self._lock:

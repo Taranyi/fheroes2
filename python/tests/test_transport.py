@@ -95,7 +95,7 @@ class EngineIntegrationTests(unittest.TestCase):
     def test_multiple_sessions_and_repeated_close(self):
         with HeroesSession(EXECUTABLE) as first, HeroesSession(EXECUTABLE) as second:
             self.assertNotEqual(first.pid, second.pid)
-            self.assertEqual(first.capabilities()["commands"], ["hello", "capabilities", "close"])
+            self.assertEqual(first.capabilities()["commands"], ["hello", "capabilities", "load_save", "get_state", "close"])
             first.close()
             first.close()
             self.assertTrue(first.closed)
@@ -109,7 +109,7 @@ class EngineIntegrationTests(unittest.TestCase):
     def test_engine_rejection_keeps_connection_alive(self):
         with HeroesSession(EXECUTABLE) as game:
             with self.assertRaises(EngineError) as rejected:
-                game.request("load_save")
+                game.request("not_a_method")
             self.assertEqual(rejected.exception.code, "unknown_method")
             with self.assertRaises(EngineError) as rejected:
                 game.request("hello", {"unexpected": True})

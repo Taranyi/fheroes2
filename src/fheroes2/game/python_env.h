@@ -26,6 +26,6 @@
 namespace fheroes2
 {
     // Transport/lifecycle only. No world is loaded or simulated in this bootstrap.
-    int runPythonEnvBootstrap( std::istream & input, std::ostream & output, std::ostream & diagnostics );
+    int runPythonEnvBootstrap( std::istream & input, std::ostream & output, std::ostream & diagnostics, const char * executablePath );
 }
 #endif

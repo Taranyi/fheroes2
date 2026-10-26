@@ -21,8 +21,8 @@
 file(GLOB_RECURSE FHEROES2_SOURCES CONFIGURE_DEPENDS *.cpp)
 
 if(ENABLE_PYTHON_ENV)
-	# Only the entry point and the transport need this opt-in. Game rules stay shared.
-	set_property(SOURCE game/fheroes2.cpp game/python_env.cpp APPEND PROPERTY COMPILE_DEFINITIONS FHEROES2_ENABLE_PYTHON_ENV)
+	# Only the entry point and environment adapters need this opt-in. Game rules stay shared.
+	set_property(SOURCE game/fheroes2.cpp game/python_env.cpp game/python_env_world.cpp APPEND PROPERTY COMPILE_DEFINITIONS FHEROES2_ENABLE_PYTHON_ENV)
 endif()
 
 add_compile_options("$<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:${GNU_CC_WARN_OPTS}>")

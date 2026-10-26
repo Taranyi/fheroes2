@@ -467,6 +467,11 @@ public:
         return _secondarySkills;
     }
 
+    const Skill::SecSkills & GetSecondarySkills() const
+    {
+        return _secondarySkills;
+    }
+
     bool PickupArtifact( const Artifact & art );
 
     bool HasUltimateArtifact() const
