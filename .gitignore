@@ -61,6 +61,9 @@
 
 # Project-local Windows toolchain and runtime data
 /.tools/
+/python/.venv/
+__pycache__/
+*.egg-info/
 /ANIM/
 /DATA/
 /MUSIC/

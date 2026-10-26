@@ -79,4 +79,5 @@ A The Other Side jó kis pálya indításhoz, lekérdezéshez, mozgáshoz, várh
 
 ## Következő lépés
 
-A megvalósítási terv **2. lépése**: külön szimulációs indítási mód és minimális Python-kapcsolat (`hello`, képességek, `close`). A mentésadatokhoz és a játékszabályokhoz ehhez még nem kell hozzányúlni.
+A 2. lépés azóta elkészült: [Python-kapcsolat](../python/README.md). Következik a **3. lépés**, a mentésbetöltés és a csak olvasó játékállapot-API.
+Az itt rögzített executable-ujjlenyomat az 1. lépés eredeti buildjének történeti adata; a segéd mindig az aktuális gyökérbeli és buildbeli exe egyezését ellenőrzi.

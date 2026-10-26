@@ -1,8 +1,11 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
-Dátum: 2026-10-25. Állapot: az 1. lépés tesztalapja elkészült 2026-10-26-án; a motor/Python-kapcsolat implementációja még nem kezdődött el.
+Dátum: 2026-10-25. Állapot: az 1. és 2. lépés elkészült 2026-10-26-án; játékállapot-lekérés és szimuláció még nincs.
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
+
+Platformkövetelmény: a Python-rész opcionális, asztali PC-s fejlesztés. Az Android/iOS és más szokásos játékbuild nem függhet a venv-től vagy Pythontól.
+A CMake `ENABLE_PYTHON_ENV` opciója alapból `OFF`; csak a helyi PC-s preset engedélyezi. A későbbi motorintegrációknál is meg kell őrizni ezt a határt.
 
 Előzmény és kódfeltérképezés: [PYTHON_SIMULATION_RESEARCH.md](PYTHON_SIMULATION_RESEARCH.md).
 
@@ -187,4 +190,5 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | Lépés | Állapot | Bizonyíték / következő teendő |
 |---|---|---|
 | 1 | Kész | Inkrementális build és ablakos indítás ellenőrizve; két helyi referenciamentés, 36×36-os kis pálya indítása/mentése/visszatöltése, elvárt UI-adatok és fájlujjlenyomatok rögzítve. Részletek: [PYTHON_ENV_BASELINE.md](PYTHON_ENV_BASELINE.md). A numerikus motorállapot exportja a 3. lépés feladata. |
-| 2–14 | Tervezett | A protokoll, a headless végrehajtás és az env még nincs implementálva. |
+| 2 | Kész | Opcionális `--python-env` bootstrap, JSON-soros `hello`/`capabilities`/`close`, külön uv-csomag és 14 integrációs/folyamathiba-teszt. Leírás: [Python-kapcsolat](../python/README.md). A bootstrap nem tölt játékot és nem jelenti a teljes headless szimuláció elkészültét. |
+| 3–14 | Tervezett | Következik a mentésbetöltés és a csak olvasó játékállapot-API. |

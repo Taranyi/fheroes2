@@ -19,6 +19,10 @@ Az alapbeállítás optimalizált, hibakeresési információt tartalmazó
 `RelWithDebInfo` változat. Ha a változók vizsgálatát az optimalizálás zavarja,
 válaszd az **fheroes2 (Debug, no optimization)** indítási beállítást.
 
+A két helyi Windows-preset a külön fejlesztett Python-kapcsolatot is bekapcsolja
+(`ENABLE_PYTHON_ENV=ON`). A szokásos CMake-buildben ez alapból `OFF`;
+a játékhoz nem kell Python vagy venv. Használat: [Python-kapcsolat](../python/README.md).
+
 ## Parancssorból
 
 A projekt gyökerében, PowerShellből:

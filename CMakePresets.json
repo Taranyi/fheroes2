@@ -20,7 +20,8 @@
         "CMAKE_PREFIX_PATH": "${sourceDir}/.tools/msys64/ucrt64",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "ENABLE_IMAGE": true
+        "ENABLE_IMAGE": true,
+        "ENABLE_PYTHON_ENV": true
       }
     },
     {

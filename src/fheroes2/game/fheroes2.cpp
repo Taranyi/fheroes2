@@ -25,6 +25,7 @@
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <string_view>
 
 // Managing compiler warnings for SDL headers
 #if defined( __GNUC__ )
@@ -53,6 +54,10 @@
 #include "game_invalid_assets.h"
 #include "logging.h"
 
+#if defined( FHEROES2_ENABLE_PYTHON_ENV )
+#include "python_env.h"
+#endif
+
 int main( int argc, char ** argv )
 {
 // SDL2main.lib converts argv to UTF-8, but this application expects ANSI, use the original argv
@@ -60,9 +65,22 @@ int main( int argc, char ** argv )
     assert( argc == __argc );
 
     argv = __argv;
-#else
-    (void)argc;
 #endif
+
+    // The protocol bootstrap does not initialize graphics, audio, assets or user settings.
+    if ( argc >= 2 && std::string_view{ argv[1] } == "--python-env" ) {
+        if ( argc != 2 ) {
+            std::cerr << "Usage: fheroes2 --python-env\n";
+            return EXIT_FAILURE;
+        }
+
+#if defined( FHEROES2_ENABLE_PYTHON_ENV )
+        return fheroes2::runPythonEnvBootstrap( std::cin, std::cout, std::cerr );
+#else
+        std::cerr << "Python environment support is disabled in this build. Configure with ENABLE_PYTHON_ENV=ON on desktop.\n";
+        return EXIT_FAILURE;
+#endif
+    }
 
     try {
         auto hardwareComponent = Game::createHardwareComponent();
