@@ -24,6 +24,7 @@ from contextlib import contextmanager
 import hashlib
 import json
 import os
+import subprocess
 from pathlib import Path
 import tempfile
 import unittest
@@ -200,6 +201,154 @@ class WorldStateTests(unittest.TestCase):
                     game.request(method, params)
                 self.assertEqual(failed.exception.code, "invalid_request")
             self.assertEqual(game.get_state(), before)
+
+    def test_controller_waits_at_real_loaded_human_turn_without_changing_world(self):
+        for fixture in self.fixtures:
+            with self.subTest(fixture=fixture["id"]), self.session() as (game, directory):
+                game.load_save(ROOT / fixture["path"])
+                before = game.get_state()
+                human = next(player for player in before["players"] if player["is_human"])
+                decision = game.start_session(human["id"])
+                self.assertTrue(decision["waiting"])
+                self.assertEqual(decision["player_id"], human["id"])
+                self.assertEqual(decision["phase"], "adventure")
+                self.assertEqual(decision["controller"], "external")
+                self.assertEqual(decision["token"]["state_version"], before["state_version"])
+                self.assertEqual(decision["turn_order"], [player["id"] for player in sorted(before["players"], key=lambda p: (not p["is_human"], p["id"]))])
+                self.assertEqual(decision["available_actions"], ["session.stop"])
+                self.assertIsNone(decision["pending_choice"])
+                self.assertEqual(decision["notifications"][0]["type"], "decision_required")
+                for _ in range(3):
+                    self.assertEqual(game.get_decision(), decision)
+                    self.assertEqual(game.get_state(), before)
+                    self.assertTrue(game.capabilities()["controller_active"])
+                    self.assertFalse(game.capabilities()["gameplay_actions"])
+                self.assertTrue(game.step("session.stop", token=decision["token"])["stopped"])
+                self.assertFalse(game.capabilities()["controller_active"])
+                with self.assertRaises(EngineError) as failed:
+                    game.get_decision()
+                self.assertEqual(failed.exception.code, "no_active_session")
+                self.assertEqual(game.get_state(), before)
+                self.assertEqual(list(directory.iterdir()), [])
+
+    def test_controller_requires_loaded_human_and_valid_parameters(self):
+        with self.session() as (game, _):
+            with self.assertRaises(EngineError) as failed:
+                game.start_session(1)
+            self.assertEqual(failed.exception.code, "no_game_loaded")
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            before = game.get_state()
+            for player in (2, 4, 8, 16, 32):
+                with self.assertRaises(EngineError) as failed:
+                    game.start_session(player)
+                self.assertEqual(failed.exception.code, "wrong_player")
+            for params in ({}, {"player_id": True}, {"player_id": -1}, {"player_id": 0}, {"player_id": 3}, {"player_id": "1"}, {"player_id": 1, "extra": 1}):
+                with self.assertRaises(EngineError) as failed:
+                    game.request("start_session", params)
+                self.assertEqual(failed.exception.code, "invalid_request")
+            for value in (True, -1, 0, 3, "1"):
+                with self.assertRaises(ValueError):
+                    game.start_session(value)
+            self.assertFalse(game.capabilities()["controller_active"])
+            self.assertEqual(game.get_state(), before)
+
+    def test_command_tokens_reject_wrong_player_session_and_stale_identifiers(self):
+        with self.session() as (game, _):
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            before = game.get_state()
+            decision = game.start_session(1)
+            token = decision["token"]
+            for field, value, code in (
+                ("player_id", 2, "wrong_player"),
+                ("session_id", "another-process", "wrong_session"),
+                ("episode_id", token["episode_id"] + 1, "stale_decision"),
+                ("state_version", token["state_version"] + 1, "stale_decision"),
+                ("decision_id", token["decision_id"] + 1, "stale_decision"),
+                ("decision_id", True, "invalid_request"),
+            ):
+                with self.subTest(field=field), self.assertRaises(EngineError) as failed:
+                    game.step("session.stop", token={**token, field: value})
+                self.assertEqual(failed.exception.code, code)
+                self.assertEqual(game.get_decision(), decision)
+            self.assertEqual(game.get_state(), before)
+            game.step("session.stop", token=token)
+            next_decision = game.start_session(1)
+            self.assertGreater(next_decision["token"]["decision_id"], token["decision_id"])
+            with self.assertRaises(EngineError) as failed:
+                game.step("session.stop", token=token)
+            self.assertEqual(failed.exception.code, "stale_decision")
+            game.step("session.stop", token=next_decision["token"])
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            final = game.start_session(1)
+            with self.assertRaises(EngineError) as failed:
+                game.step("session.stop", token=next_decision["token"])
+            self.assertEqual(failed.exception.code, "stale_decision")
+            game.step("session.stop", token=final["token"])
+
+    def test_unsupported_or_malformed_actions_preserve_pending_decision(self):
+        with self.session() as (game, _):
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            before = game.get_state()
+            decision = game.start_session(1)
+            for action in ("turn.end", "hero.move", "choice.answer", "unknown"):
+                with self.assertRaises(EngineError) as failed:
+                    game.step(action, token=decision["token"])
+                self.assertEqual(failed.exception.code, "unsupported_action")
+            for params in ({}, {"action": "session.stop", "token": {}, "params": {}}, {"action": "session.stop", "token": decision["token"], "params": {"extra": 1}}):
+                with self.assertRaises(EngineError) as failed:
+                    game.request("step", params)
+                self.assertEqual(failed.exception.code, "invalid_request")
+            self.assertEqual(game.get_decision(), decision)
+            self.assertEqual(game.get_state(), before)
+            game.step("session.stop", token=decision["token"])
+
+    def test_active_controller_blocks_reload_and_reentry_and_close_unwinds(self):
+        with self.session() as (game, _):
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            before = game.get_state()
+            decision = game.start_session(1)
+            for method, params in (("start_session", {"player_id": 1}), ("load_save", {"path": str(ROOT / self.fixtures[1]["path"])})):
+                with self.assertRaises(EngineError) as failed:
+                    game.request(method, params)
+                self.assertEqual(failed.exception.code, "session_active")
+            self.assertEqual(game.get_decision(), decision)
+            self.assertEqual(game.get_state(), before)
+            game.close()
+            self.assertEqual(game.returncode, 0)
+
+    def test_decision_tokens_are_isolated_between_loaded_processes(self):
+        with self.session() as (first, _), self.session() as (second, _):
+            for game in (first, second):
+                game.load_save(ROOT / self.fixtures[0]["path"])
+            first_decision = first.start_session(1)
+            second_decision = second.start_session(1)
+            self.assertNotEqual(first_decision["token"]["session_id"], second_decision["token"]["session_id"])
+            with self.assertRaises(EngineError) as failed:
+                second.step("session.stop", token=first_decision["token"])
+            self.assertEqual(failed.exception.code, "wrong_session")
+            first.close()
+            self.assertEqual(second.get_decision(), second_decision)
+            second.step("session.stop", token=second_decision["token"])
+
+    def test_eof_and_malformed_input_inside_engine_decision_wait(self):
+        def request(method, request_id, params):
+            return json.dumps({"api_version": 1, "id": request_id, "method": method, "params": params}).encode() + b"\n"
+
+        payload = (
+            request("load_save", 1, {"path": str(ROOT / self.fixtures[0]["path"])})
+            + request("start_session", 2, {"player_id": 1})
+            + b"not json\n"
+            + request("get_decision", 3, {})
+            + request("get_state", 4, {"include_serialized": False})
+        )
+        result = subprocess.run([str(EXECUTABLE), "--python-env"], input=payload, capture_output=True, timeout=20,
+                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        replies = [json.loads(line) for line in result.stdout.splitlines()]
+        self.assertEqual([reply["id"] for reply in replies], [1, 2, None, 3, 4])
+        self.assertEqual(replies[2]["error"]["code"], "invalid_request")
+        self.assertEqual(replies[1]["result"], replies[3]["result"])
+        self.assertEqual(replies[4]["result"]["date"]["total_days"], 1)
 
 
 if __name__ == "__main__":

@@ -248,6 +248,46 @@ fheroes2::GameMode Game::StartGame()
     return Interface::AdventureMap::Get().StartGame();
 }
 
+std::vector<Player *> Game::getPlayersInTurnOrder()
+{
+    std::vector<Player *> players = Settings::Get().GetPlayers().getVector();
+    std::sort( players.begin(), players.end(), SortPlayers );
+    return players;
+}
+
+PlayerColor Game::getLoadedAdventurePlayer()
+{
+    const Settings & settings = Settings::Get();
+    if ( !settings.LoadedGameVersion() || ( settings.GameType() & ~TYPE_LOADFILE ) != TYPE_STANDARD || world.CountDay() == 0
+         || GameOver::Result::Get().GetResult() != 0 ) {
+        return PlayerColor::NONE;
+    }
+
+    // Standard single-player resumes at the sole human player's turn, just as AdventureMap::StartGame does.
+    // Do not turn that player into an AI: control flags also affect rules, alliances and visibility.
+    PlayerColor human = PlayerColor::NONE;
+    for ( const Player * player : getPlayersInTurnOrder() ) {
+        if ( player->isControlHuman() ) {
+            if ( human != PlayerColor::NONE || player->GetControl() != CONTROL_HUMAN || !world.GetKingdom( player->GetColor() ).isPlay() ) {
+                return PlayerColor::NONE;
+            }
+            human = player->GetColor();
+        }
+    }
+    return human;
+}
+
+fheroes2::GameMode Game::StartGame( const std::function<fheroes2::GameMode( PlayerColor )> & controller )
+{
+    const PlayerColor player = getLoadedAdventurePlayer();
+    if ( player == PlayerColor::NONE || !controller ) {
+        return fheroes2::GameMode::CANCEL;
+    }
+    // Keep this call on the engine thread/stack while the external controller services requests.
+    // No NewDay, ActionBeforeTurn, UI setup or AI execution belongs to this saved-turn checkpoint.
+    return controller( player );
+}
+
 void Game::DialogPlayers( const PlayerColor color, std::string title, std::string message )
 {
     const Player * player = Players::Get( color );
@@ -761,8 +801,7 @@ fheroes2::GameMode Interface::AdventureMap::StartGame()
     GameOver::Result & gameResult = GameOver::Result::Get();
     fheroes2::GameMode res = fheroes2::GameMode::END_TURN;
 
-    std::vector<Player *> sortedPlayers = conf.GetPlayers().getVector();
-    std::sort( sortedPlayers.begin(), sortedPlayers.end(), SortPlayers );
+    const std::vector<Player *> sortedPlayers = Game::getPlayersInTurnOrder();
     if ( !isLoadedFromSave || world.CountDay() == 1 ) {
         // Clear fog around heroes, castles and mines for all players when starting a new map or if the save was done at the first day.
         for ( Player * player : sortedPlayers ) {

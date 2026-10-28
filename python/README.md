@@ -1,7 +1,8 @@
 # fheroes2 Python connection
 
-Implementation steps 2–3 provide a process connection, real save loading and a read-only world API. Loading and inspection
-work without video or audio initialization. Actions, turn simulation, rendering and Gymnasium are still unavailable.
+Implementation steps 2–4 provide a process connection, real save loading, a read-only world API and an initial external
+controller decision checkpoint. These work without video or audio initialization. Gameplay actions, turn simulation,
+rendering and Gymnasium are still unavailable.
 
 ## Platform separation
 
@@ -94,6 +95,13 @@ current player is metadata, not yet an external-controller decision handshake. S
 A future `observe(player_id)` will apply visibility rules separately; it is not implemented and omniscient state must not
 be mistaken for a fair player observation.
 
+After loading, `start_session(player_id)` enters the engine's saved human-turn checkpoint and returns its pending decision.
+`get_decision()` repeats it. `step("session.stop", token=decision["token"])` exits that wait without ending a game turn.
+State inspection and `close()` remain available while waiting. Tokens identify the process, episode, state, decision and
+player; stale or wrong-player commands are rejected without changing the world. Loading another save requires stopping
+the wait first. Only the single human player of a live standard save can be attached at present. No control flags change.
+See the [controller contract and source audit](../docs/PYTHON_ENV_CONTROLLER.md) and runnable `examples/decision.py`.
+
 `hello()` repeats the handshake. `request(method, params)` exposes the underlying connection; unknown commands raise
 `EngineError` without breaking the session. A timeout, invalid reply or unexpected process exit stops the process and raises
 `EngineTimeoutError`, `ProtocolError` or `EngineProcessError`. The request deadline covers both writing and reading.
@@ -130,9 +138,11 @@ Error:
 
 * `id`: unsigned 32-bit integer; replies echo it. Invalid/unreadable IDs produce `null` in the error response.
 * `api_version`: integer 1. Unsupported versions are rejected rather than interpreted as another protocol.
-* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `close`. `params` is optional and must be an object.
+* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `start_session`, `get_decision`, `step`, `close`.
+  `params` is optional and must be an object.
   `load_save` requires exactly `{"path":"absolute save path"}`; `get_state` accepts only `{"include_serialized":true}`
-  (optional, default true). Other methods require empty parameters.
+  (optional, default true). `start_session` requires `{"player_id":1}` (one color bit); `step` requires `action`, `token`
+  and `params`, as described in the controller contract. Other methods require empty parameters.
 * Request limit: 65,536 bytes before the terminating LF. CRLF is accepted as JSON trailing whitespace plus LF.
 * Response limit: 64 MiB including the terminating LF. A larger state returns `response_too_large`; retry without the payload.
 * Nesting is limited to a shallow request envelope. Malformed/deep/oversized records return an error; the next record can run.
@@ -143,6 +153,7 @@ Error:
 
 The handshake's historical `mode: "bootstrap"` label is retained. Capabilities report `state_queries` and `omniscient_state`
 as true, and `game_initialized` reflects whether a save is loaded. Full headless gameplay remains false until actions work.
+`external_controller` is true; `controller_active` reflects the decision wait. `gameplay_actions` and `choices` remain false.
 
 ## Verification
 
@@ -169,3 +180,7 @@ Step 3 added seven world-state tests (21 total): both recorded saves match the o
 present; repeated exports and small/large/small reloads preserve the world; invalid loads recover; loaded processes are
 independent. These tests deliberately use invalid SDL video/audio drivers and an empty isolated profile. Local reference
 saves remain ignored; world tests skip with an explanation when the fixtures are absent.
+
+Step 4 adds seven decision tests (28 total), covering repeated state reads while the real C++ decision callback waits,
+unchanged player control flags and serialized world, rejection of wrong/stale/cross-process tokens, unsupported actions,
+reload/reentry protection, close and EOF unwinding, and malformed requests inside the decision wait.

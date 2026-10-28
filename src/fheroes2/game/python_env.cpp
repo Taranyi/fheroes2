@@ -79,15 +79,19 @@ namespace
         return line.empty() ? LineStatus::EndOfInput : LineStatus::Incomplete;
     }
 
-    Json capabilities( const bool loaded )
+    Json capabilities( const bool loaded, const bool waiting )
     {
-        return { { "commands", { "hello", "capabilities", "load_save", "get_state", "close" } },
+        return { { "commands", { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "close" } },
                  { "max_request_bytes", maxRequestBytes },
                  { "max_response_bytes", maxResponseBytes },
                  { "game_initialized", loaded },
                  { "state_queries", true },
                  { "omniscient_state", true },
                  { "player_observations", false },
+                 { "external_controller", true },
+                 { "controller_active", waiting },
+                 { "gameplay_actions", false },
+                 { "choices", false },
                  { "simulation", false },
                  { "render", false },
                  { "headless_gameplay", false } };
@@ -145,14 +149,27 @@ namespace
             const DiagnosticRedirect redirect;
             return world.getState( params.value( "include_serialized", true ) );
         }
+        if ( method == "step" ) {
+            if ( params.size() != 3 || !params.contains( "action" ) || !params["action"].is_string() || !params.contains( "token" ) || !params["token"].is_object()
+                 || !params.contains( "params" ) || !params["params"].is_object() ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "step requires action, token and params objects." );
+            }
+            return world.dispatch( params["action"].get<std::string>(), params["token"], params["params"] );
+        }
         if ( !params.empty() ) {
             throw fheroes2::PythonEnvError( "invalid_request", "This method requires empty params." );
         }
         if ( method == "hello" ) {
-            return { { "engine", "fheroes2" }, { "engine_version", ENGINE_VERSION }, { "mode", "bootstrap" }, { "capabilities", capabilities( world.loaded() ) } };
+            return { { "engine", "fheroes2" },
+                     { "engine_version", ENGINE_VERSION },
+                     { "mode", "bootstrap" },
+                     { "capabilities", capabilities( world.loaded(), world.waiting() ) } };
         }
         if ( method == "capabilities" ) {
-            return capabilities( world.loaded() );
+            return capabilities( world.loaded(), world.waiting() );
+        }
+        if ( method == "get_decision" ) {
+            return world.getDecision();
         }
         if ( method == "close" ) {
             return { { "closed", true } };
@@ -160,14 +177,14 @@ namespace
         throw fheroes2::PythonEnvError( "unknown_method", "Unknown environment method. Use capabilities to list supported methods." );
     }
 
-    int serve( std::istream & input, std::ostream & output, const char * executablePath )
+    int serveRequests( std::istream & input, std::ostream & output, fheroes2::PythonEnvWorld & world, bool & finished, const bool decisionWait )
     {
         std::string line;
-        fheroes2::PythonEnvWorld world( executablePath );
 
-        while ( true ) {
+        while ( !decisionWait || world.waiting() ) {
             const LineStatus status = readRequest( input, line );
             if ( status == LineStatus::EndOfInput ) {
+                finished = true;
                 return input.bad() ? EXIT_FAILURE : EXIT_SUCCESS;
             }
             if ( status != LineStatus::Ready ) {
@@ -219,10 +236,36 @@ namespace
 
             const std::string & method = request["method"].get_ref<const std::string &>();
             try {
-                if ( !sendResult( output, id, execute( method, request.value( "params", Json::object() ), world ) ) ) {
+                const Json params = request.value( "params", Json::object() );
+                if ( method == "start_session" ) {
+                    if ( params.size() != 1 || !params.contains( "player_id" ) || !params["player_id"].is_number_unsigned()
+                         || params["player_id"].get<uint64_t>() > 32 ) {
+                        throw fheroes2::PythonEnvError( "invalid_request", "start_session requires a player_id color bit." );
+                    }
+                    const int playerId = params["player_id"].get<int>();
+                    if ( playerId == 0 || ( playerId & ( playerId - 1 ) ) != 0 ) {
+                        throw fheroes2::PythonEnvError( "invalid_request", "player_id must contain exactly one player color bit." );
+                    }
+                    int result = EXIT_SUCCESS;
+                    // Acknowledge from inside Game::StartGame's callback. Its C++ stack stays alive until
+                    // session.stop, close or EOF. All requests continue on this same engine thread.
+                    world.startSession( playerId, [&]( const Json & decision ) {
+                        if ( !sendResult( output, id, decision ) ) {
+                            result = EXIT_FAILURE;
+                            return;
+                        }
+                        result = serveRequests( input, output, world, finished, true );
+                    } );
+                    if ( finished || result != EXIT_SUCCESS ) {
+                        return result;
+                    }
+                    continue;
+                }
+                if ( !sendResult( output, id, execute( method, params, world ) ) ) {
                     return EXIT_FAILURE;
                 }
                 if ( method == "close" ) {
+                    finished = true;
                     return EXIT_SUCCESS;
                 }
             }
@@ -232,18 +275,21 @@ namespace
                 }
             }
             catch ( const std::exception & ) {
-                if ( !sendError( output, id, "engine_error", "The engine could not complete the read-only request." ) ) {
+                if ( !sendError( output, id, "engine_error", "The engine could not complete the request." ) ) {
                     return EXIT_FAILURE;
                 }
             }
         }
+        return EXIT_SUCCESS;
     }
 }
 
 int fheroes2::runPythonEnvBootstrap( std::istream & input, std::ostream & output, std::ostream & diagnostics, const char * executablePath )
 {
     try {
-        return serve( input, output, executablePath );
+        PythonEnvWorld world( executablePath );
+        bool finished = false;
+        return serveRequests( input, output, world, finished, false );
     }
     catch ( const std::exception & ) {
         // Never route protocol errors through the game's logging/UI initialization.

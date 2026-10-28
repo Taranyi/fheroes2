@@ -25,12 +25,15 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <string>
+#include <vector>
 
 #include "color.h"
 #include "game_mode.h"
 
 class Players;
+class Player;
 class Heroes;
 class Castle;
 
@@ -70,6 +73,11 @@ namespace Game
     fheroes2::GameMode SelectCampaignScenario( const fheroes2::GameMode prevMode, const bool allowToRestart );
     fheroes2::GameMode SelectScenario( const uint8_t humanPlayerCount );
     fheroes2::GameMode StartGame();
+    // Resume a supported saved human turn through an external controller, before any UI initialization.
+    // The callback owns the decision wait. It must not advance to another turn in this initial integration.
+    fheroes2::GameMode StartGame( const std::function<fheroes2::GameMode( PlayerColor )> & controller );
+    PlayerColor getLoadedAdventurePlayer();
+    std::vector<Player *> getPlayersInTurnOrder();
     fheroes2::GameMode StartBattleOnly();
     fheroes2::GameMode DisplayLoadGameDialog();
     fheroes2::GameMode CompleteCampaignScenario( const bool isLoadingSaveFile );

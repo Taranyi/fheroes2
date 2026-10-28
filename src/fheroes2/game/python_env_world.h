@@ -23,6 +23,7 @@
 #if defined( FHEROES2_ENABLE_PYTHON_ENV )
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -56,6 +57,10 @@ namespace fheroes2
         bool loaded() const;
         nlohmann::json loadSave( const std::string & path );
         nlohmann::json getState( bool includeSerialized ) const;
+        bool waiting() const;
+        void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
+        nlohmann::json getDecision() const;
+        nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params );
 
     private:
         void clear();
@@ -64,6 +69,10 @@ namespace fheroes2
         std::unique_ptr<AGG::AGGInitializer> _resources;
         bool _loaded{ false };
         uint64_t _stateVersion{ 0 };
+        const std::string _sessionId;
+        uint64_t _decisionId{ 0 };
+        int _controllerPlayer{ 0 };
+        bool _waiting{ false };
         std::vector<std::string> _warnings;
     };
 }

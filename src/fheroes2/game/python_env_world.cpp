@@ -24,6 +24,7 @@
 
 #include <array>
 #include <filesystem>
+#include <random>
 #include <system_error>
 #include <utility>
 
@@ -189,6 +190,17 @@ namespace
         }
         return result;
     }
+
+    std::string sessionId()
+    {
+        // This transport identifier must not consume the game's random number generator.
+        std::random_device source;
+        std::array<uint8_t, 16> bytes;
+        for ( auto & byte : bytes ) {
+            byte = static_cast<uint8_t>( source() );
+        }
+        return hex( bytes.data(), bytes.size() );
+    }
 }
 
 fheroes2::PythonEnvError::PythonEnvError( std::string errorCode, const std::string & message )
@@ -198,6 +210,7 @@ fheroes2::PythonEnvError::PythonEnvError( std::string errorCode, const std::stri
 
 fheroes2::PythonEnvWorld::PythonEnvWorld( std::string executablePath )
     : _executablePath( std::move( executablePath ) )
+    , _sessionId( sessionId() )
 {}
 
 fheroes2::PythonEnvWorld::~PythonEnvWorld() = default;
@@ -218,6 +231,9 @@ void fheroes2::PythonEnvWorld::clear()
 
 nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path )
 {
+    if ( _waiting ) {
+        throw PythonEnvError( "session_active", "Stop the active decision before loading another save." );
+    }
     clear();
     ++_stateVersion;
     const std::string path = System::encUTF8ToLocal( utf8Path );
@@ -265,6 +281,102 @@ nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path 
     }
     return { { "loaded", true },      { "state_version", _stateVersion }, { "map_name", text( settings.getCurrentMapInfo().name ) }, { "width", world.w() },
              { "height", world.h() }, { "warnings", _warnings } };
+}
+
+bool fheroes2::PythonEnvWorld::waiting() const
+{
+    return _waiting;
+}
+
+void fheroes2::PythonEnvWorld::startSession( const int playerId, const std::function<void( const nlohmann::json & )> & wait )
+{
+    if ( _waiting ) {
+        throw PythonEnvError( "session_active", "An external controller is already waiting." );
+    }
+    if ( !_loaded ) {
+        throw PythonEnvError( "no_game_loaded", "Call load_save before starting a controller." );
+    }
+    const PlayerColor player = Game::getLoadedAdventurePlayer();
+    if ( player == PlayerColor::NONE ) {
+        throw PythonEnvError( "unsupported_state", "Expected a live standard save with exactly one human-controlled player." );
+    }
+    if ( playerId != static_cast<int>( player ) ) {
+        throw PythonEnvError( "wrong_player", "This checkpoint supports the saved human player only." );
+    }
+    try {
+        const GameMode result = Game::StartGame( [&]( const PlayerColor color ) {
+            _controllerPlayer = static_cast<int>( color );
+            ++_decisionId;
+            _waiting = true;
+            wait( getDecision() );
+            return GameMode::MAIN_MENU;
+        } );
+        if ( result == GameMode::CANCEL ) {
+            throw PythonEnvError( "unsupported_state", "The engine could not resume this saved turn." );
+        }
+    }
+    catch ( ... ) {
+        _waiting = false;
+        _controllerPlayer = 0;
+        throw;
+    }
+    _waiting = false;
+    _controllerPlayer = 0;
+}
+
+nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
+{
+    if ( !_waiting ) {
+        throw PythonEnvError( "no_active_session", "Start an external controller before requesting a decision." );
+    }
+    Json order = Json::array();
+    for ( const Player * player : Game::getPlayersInTurnOrder() ) {
+        order.push_back( static_cast<int>( player->GetColor() ) );
+    }
+    return { { "waiting", true },
+             { "phase", "adventure" },
+             { "controller", "external" },
+             { "player_id", _controllerPlayer },
+             { "token",
+               { { "session_id", _sessionId },
+                 { "episode_id", _stateVersion },
+                 { "state_version", _stateVersion },
+                 { "decision_id", _decisionId },
+                 { "player_id", _controllerPlayer } } },
+             { "turn_order", order },
+             { "available_actions", { "session.stop" } },
+             { "pending_choice", nullptr },
+             { "notifications", { { { "type", "decision_required" }, { "phase", "adventure" }, { "player_id", _controllerPlayer } } } } };
+}
+
+nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params )
+{
+    const Json current = getDecision()["token"];
+    if ( token.size() != current.size() || !token.contains( "session_id" ) || !token["session_id"].is_string() ) {
+        throw PythonEnvError( "invalid_request", "Expected a complete decision token." );
+    }
+    for ( const char * field : { "episode_id", "state_version", "decision_id", "player_id" } ) {
+        if ( !token.contains( field ) || !token[field].is_number_unsigned() ) {
+            throw PythonEnvError( "invalid_request", "Decision token identifiers must be unsigned integers." );
+        }
+    }
+    if ( token["session_id"] != current["session_id"] ) {
+        throw PythonEnvError( "wrong_session", "This decision belongs to a different engine process." );
+    }
+    if ( token["episode_id"] != current["episode_id"] || token["state_version"] != current["state_version"] || token["decision_id"] != current["decision_id"] ) {
+        throw PythonEnvError( "stale_decision", "This decision token is no longer current." );
+    }
+    if ( token["player_id"] != current["player_id"] ) {
+        throw PythonEnvError( "wrong_player", "The action does not belong to the waiting player." );
+    }
+    if ( action != "session.stop" ) {
+        throw PythonEnvError( "unsupported_action", "Gameplay actions are not enabled at this checkpoint." );
+    }
+    if ( !params.empty() ) {
+        throw PythonEnvError( "invalid_request", "session.stop requires empty action params." );
+    }
+    _waiting = false;
+    return { { "stopped", true }, { "state_version", _stateVersion } };
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized ) const

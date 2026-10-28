@@ -232,6 +232,26 @@ class HeroesSession:
             raise TypeError("include_serialized must be a boolean")
         return self.request("get_state", {"include_serialized": include_serialized})
 
+    def start_session(self, player_id: int) -> dict[str, Any]:
+        """Wait at the loaded human player's adventure decision, without advancing time."""
+        if type(player_id) is not int or player_id not in (1, 2, 4, 8, 16, 32):
+            raise ValueError("player_id must be one player color bit")
+        return self.request("start_session", {"player_id": player_id})
+
+    def get_decision(self) -> dict[str, Any]:
+        """Inspect the pending decision and its explicit action token."""
+        return self.request("get_decision")
+
+    def step(self, action: str, *, token: Mapping[str, Any], params: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        """Submit a token-checked command. Currently only session.stop is supported.
+
+        Pass the token returned by start_session/get_decision explicitly; the
+        client must never silently replace a stale token with the latest one.
+        """
+        if not isinstance(action, str) or not isinstance(token, Mapping) or (params is not None and not isinstance(params, Mapping)):
+            raise TypeError("Expected an action string, token mapping and optional params mapping")
+        return self.request("step", {"action": action, "token": dict(token), "params": dict(params) if params is not None else {}})
+
     def close(self) -> None:
         with self._lock:
             if self._closed:
