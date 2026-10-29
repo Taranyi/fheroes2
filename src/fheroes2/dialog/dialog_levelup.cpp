@@ -25,9 +25,11 @@
 #include <utility>
 #include <vector>
 
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h" // IWYU pragma: associated
 #include "game_assets.h"
+#include "game_external_interaction.h"
 #include "game_hotkeys.h"
 #include "heroes.h"
 #include "icn.h"
@@ -212,6 +214,24 @@ namespace
 
 int Dialog::LevelUpSelectSkill( const std::string & name, const int primarySkillType, const Skill::Secondary & sec1, const Skill::Secondary & sec2, Heroes & hero )
 {
+    if ( System::isHeadlessMode() ) {
+        std::vector<int64_t> options;
+        if ( sec1.isValid() ) {
+            options.push_back( sec1.Skill() );
+        }
+        if ( sec2.isValid() ) {
+            options.push_back( sec2.Skill() );
+        }
+        if ( options.empty() ) {
+            Game::ScopedExternalInteractions::notify( "level_up", name );
+            return Skill::Secondary::UNKNOWN;
+        }
+        return static_cast<int>( Game::ScopedExternalInteractions::choose(
+            { "hero.secondary_skill",
+              hero.GetID(),
+              options,
+              { { "primary_skill", primarySkillType }, { "first_level", sec1.Level() }, { "second_level", sec2.Level() } } } ) );
+    }
     if ( Skill::Secondary::UNKNOWN == sec1.Skill() && Skill::Secondary::UNKNOWN == sec2.Skill() ) {
         DialogPrimaryOnly( name, primarySkillType );
         return Skill::Secondary::UNKNOWN;

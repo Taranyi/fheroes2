@@ -133,6 +133,9 @@ class AdventurePreviewEnv(gym.Env):
                     raise EngineError("illegal_action", "The target is outside the map")
                 result = self._session.move_hero(self._hero_id, x, y, token=self._decision["token"])
             self._decision, self._events = result["decision"], result["events"]
+            if self._decision["phase"] == "choice":
+                self._needs_reset = True
+                raise EngineError("unsupported_choice", "The nine-action preview cannot answer choices; use HeroesSession or reset")
         except EngineError as error:
             if error.code not in ("illegal_action", "unsupported_action"):
                 # A battle boundary, engine failure or bad protocol is not an episode result/time limit.

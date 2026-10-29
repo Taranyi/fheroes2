@@ -24,9 +24,11 @@
 #include <cstdint>
 #include <string>
 
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h" // IWYU pragma: associated
 #include "game_assets.h"
+#include "game_external_interaction.h"
 #include "game_hotkeys.h"
 #include "heroes.h"
 #include "icn.h"
@@ -44,6 +46,9 @@
 
 bool Dialog::SelectGoldOrExp( const std::string & header, const std::string & message, uint32_t gold, uint32_t expr, const Heroes & hero )
 {
+    if ( System::isHeadlessMode() ) {
+        return Game::ScopedExternalInteractions::choose( { "treasure.gold_or_experience", hero.GetID(), { 1, 0 }, { { "gold", gold }, { "experience", expr } } } ) == 1;
+    }
     fheroes2::Display & display = fheroes2::Display::instance();
 
     // setup cursor

@@ -26,11 +26,17 @@
 
 #include <SDL_main.h>
 
+#include "army.h"
 #include "artifact.h"
 #include "core.h"
 #include "game_io.h"
 #include "heroes.h"
+#include "map_object_info.h"
+#include "maps_tiles.h"
+#include "maps_tiles_helper.h"
+#include "monster.h"
 #include "python_env_world.h"
+#include "skill.h"
 #include "spell.h"
 #include "world.h"
 
@@ -44,7 +50,9 @@ int main( int argc, char ** argv )
         const auto input = std::filesystem::absolute( std::filesystem::u8path( argv[1] ) );
         const auto output = std::filesystem::absolute( std::filesystem::u8path( argv[2] ) );
         std::filesystem::create_directories( output );
-        for ( const char * name : { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav" } ) {
+        for ( const char * name :
+              { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav", "choices-chest-day1.sav", "choices-join-day1.sav",
+                "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav", "choices-paid-join-day1.sav" } ) {
             const auto file = output / name;
             if ( std::filesystem::exists( file ) && std::filesystem::equivalent( input, file ) ) {
                 throw std::runtime_error( "The output must not overwrite the input save." );
@@ -92,7 +100,62 @@ int main( int argc, char ** argv )
         if ( !Game::Save( ( output / "heroes-protected-day1.sav" ).string() ) ) {
             throw std::runtime_error( "Could not save the native dismissal-protection fixture." );
         }
-        std::cout << "Native artifact fixtures saved in " << output.string() << '\n';
+        const auto load = [&]() {
+            session.loadSave( input.u8string() );
+            return world.GetHeroes( 52 );
+        };
+        const auto save = [&]( const char * name ) {
+            if ( !Game::Save( ( output / name ).string() ) ) {
+                throw std::runtime_error( "Could not save native choice fixture." );
+            }
+        };
+        const auto place = []( const MP2::MapObjectType type ) -> Maps::Tile & {
+            auto & tile = world.getTile( 932 );
+            if ( tile.getMainObjectType() != MP2::OBJ_NONE || tile.isWater() ) {
+                throw std::runtime_error( "Expected an empty land tile below Timberhill." );
+            }
+            for ( const Maps::ObjectGroup group : { Maps::ObjectGroup::ADVENTURE_TREASURES, Maps::ObjectGroup::ADVENTURE_DWELLINGS } ) {
+                for ( const auto & info : Maps::getObjectsByGroup( group ) ) {
+                    if ( info.objectType == type && Maps::setObjectOnTile( tile, info, true ) ) {
+                        return tile;
+                    }
+                }
+            }
+            throw std::runtime_error( "Could not place native adventure object." );
+        };
+        load();
+        auto & chest = place( MP2::OBJ_TREASURE_CHEST );
+        chest.metadata() = { Artifact::UNKNOWN, 2500, 0 };
+        save( "choices-chest-day1.sav" );
+
+        for ( const bool joins : { true, false } ) {
+            Heroes * hero = load();
+            hero->GetArmy().Reset();
+            hero->GetArmy().JoinTroop( Monster::BLACK_DRAGON, 100, false );
+            Maps::Tile & tile = world.getTile( 932 );
+            Maps::setMonsterOnTile( tile, Monster::PEASANT, 5 );
+            Maps::setMonsterOnTileJoinCondition( tile, joins ? Monster::JOIN_CONDITION_FREE : Monster::JOIN_CONDITION_SKIP );
+            save( joins ? "choices-join-day1.sav" : "choices-pursue-day1.sav" );
+        }
+        load();
+        auto & lamp = place( MP2::OBJ_GENIE_LAMP );
+        Maps::setMonsterCountOnTile( lamp, 4 );
+        save( "choices-recruit-day1.sav" );
+
+        Heroes * diplomat = load();
+        diplomat->GetArmy().Reset();
+        diplomat->GetArmy().JoinTroop( Monster::BLACK_DRAGON, 100, false );
+        diplomat->LearnSkill( Skill::Secondary( Skill::Secondary::DIPLOMACY, Skill::Level::BASIC ) );
+        Maps::setMonsterOnTile( world.getTile( 932 ), Monster::PEASANT, 5 );
+        Maps::setMonsterOnTileJoinCondition( world.getTile( 932 ), Monster::JOIN_CONDITION_MONEY );
+        save( "choices-paid-join-day1.sav" );
+
+        Heroes * hero = load();
+        hero->AppendSpellToBook( Spell::IDENTIFYHERO, true );
+        hero->AppendSpellToBook( Spell::VISIONS, true );
+        Maps::setMonsterOnTile( world.getTile( 968 ), Monster::PEASANT, 5 );
+        save( "choices-spells-day1.sav" );
+        std::cout << "Native environment fixtures saved in " << output.string() << '\n';
         return EXIT_SUCCESS;
     }
     catch ( const std::exception & error ) {

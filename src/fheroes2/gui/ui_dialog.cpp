@@ -36,6 +36,7 @@
 #include "experience.h"
 #include "game_assets.h"
 #include "game_delays.h"
+#include "game_external_interaction.h"
 #include "game_hotkeys.h"
 #include "heroes_indicator.h"
 #include "icn.h"
@@ -323,6 +324,16 @@ namespace fheroes2
 
     int showStandardTextMessage( std::string headerText, std::string messageBody, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
+        if ( System::isHeadlessMode() ) {
+            if ( buttons == Dialog::OK ) {
+                Game::ScopedExternalInteractions::notify( headerText, messageBody );
+                return Dialog::OK;
+            }
+            if ( buttons == ( Dialog::YES | Dialog::NO ) ) {
+                Game::ScopedExternalInteractions::notify( headerText, messageBody );
+                return static_cast<int>( Game::ScopedExternalInteractions::choose( { "confirmation", -1, { Dialog::YES, Dialog::NO }, {} } ) );
+            }
+        }
         System::requireInteractive( "modal dialog" );
         const Text header( std::move( headerText ), FontType::normalYellow() );
         const Text body( std::move( messageBody ), FontType::normalWhite() );

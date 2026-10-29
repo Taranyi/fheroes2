@@ -1,7 +1,7 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
 Dátum: 2026-10-25; frissítve: 2026-10-29. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
-a 8. lépés a deklarált profilon szintén kész, korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
+a 8–9. lépés a deklarált profilon szintén kész, korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
 
@@ -245,6 +245,9 @@ Győzelem/vereség: `terminated=True`. Külső lépésszámkorlát: `truncated=T
 
 Minden számozott lépés külön végrehajtható munkaszakasz. Kezdetekor átnézzük az előző eredményt és az aktuális repóállapotot. Elvégezzük a módosítást, futtatjuk a hozzá tartozó célzott ellenőrzést, és itt rögzítjük a bizonyítékot/korlátot. A szükséges közös alapok egymás után készülnek; nincs szükség arra, hogy előbb az egész C++ motort átírjuk és csak a végén próbáljuk a Pythont.
 
+A felhasználó kérése szerint minden munkaszakasz végén a teljes hátralévő feladatlistát is közöljük az aktuális állapotokkal,
+nem csak a közvetlen következő lépést. A profilkorlátokat és a korábbi lépések nyitott kiegészítéseit is feltüntetjük.
+
 Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósítási részletet és függőséget frissítjük, a végcélt megtartva. Különösen az offscreen backend, a beágyazott döntések és az RNG-reset igényel futtatással igazolt döntést.
 
 | Lépés | Állapot | Bizonyíték / következő teendő |
@@ -258,7 +261,8 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 7 | Várlekérdezés, építés, pontos toborzás, hősvásárlás és piaci csere kész | Natív feltételek, árak, napi építési limit, faji fejlesztések, készlet és seregcél ellenőrzése. Explicit hősajánlat-frissítés; a lekérdezés változatlanul csak olvas. A piaci ablak és a Python közös, ellenőrzött kereskedelmi műveletet használ. [Szerződés és futtatható példák](PYTHON_ENV_CASTLE.md). Hajóvásárlás még nincs bekötve; az eredeti „indokolt esetben hajó” rész nem teljesült. |
 | 4/A | Rögzített követelmény; még nincs megvalósítva | Résztvevőnkénti vezérlő, AI-nak jelölt oldal Python-elérése, több külső oldal, kizárólag beépített AI-k futtatása és körhatáron történő követése. Nem írja felül a 7. lépés egyeztetett folytatását; megvalósítása külön munkaszakasz. |
 | 8 | Kész a deklarált profilon | Pontos slot-áthelyezés, split/merge, csapat- és tárgycsere közös natív függvényekkel. Tulajdonjog, utolsó kötelező csapat, varázskönyv-védelem és valódi találkozás ellenőrzött. Tekercsadat, Anduran-összeállítás és a találkozás végén alkalmazott natív felderítés megmarad. Teljes csapat fejlesztése/elbocsátása, önkéntes hőselbocsátás és varázskönyv-vétel a normál UI-val közös műveletekkel. Minden oldali, tisztán olvasó seregopciók és árak. [Seregpélda](PYTHON_ENV_ARMY.md), [tárgypélda](PYTHON_ENV_ARTIFACTS.md), [új hősműveletek és tesztmentések](PYTHON_ENV_HERO_OPERATIONS.md). |
-| 9–14 | Tervezett | A fenti lépéssorrend szerint, a többoldalas vezérlés rögzített követelményét megőrizve. |
+| 9 | Kész a kezdeti, deklarált választás/varázslat profilon | Élő C++ veremben felfüggesztett láda → szintlépés lánc, ingyenes/fizetős csatlakozás és üldözés, lámpa/Wagon Camp toborzás. Köztes lekérdezés/render, hibás válasz változatlan állapottal; megszakítás és csatához jutás esetén teljes műveleti rollback. Identify Hero és Visions natív árral/hatással; a célzott és további varázslatok külön bővítések. [Szerződés és példa](PYTHON_ENV_CHOICES.md). |
+| 10–14 | Tervezett | Közvetlenül a teljes játékmenetbe kapcsolt csata következik. A többoldalas vezérlés, hajózás és a profilon kívüli műveletek nyitott követelménye megmarad. |
 
 ### Korai, futtatható Gym-példa a 6. lépés után
 

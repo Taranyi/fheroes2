@@ -34,10 +34,12 @@
 #include "army_troop.h"
 #include "battle.h"
 #include "battle_cell.h"
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h" // IWYU pragma: associated
 #include "game_assets.h"
 #include "game_delays.h"
+#include "game_external_interaction.h"
 #include "game_hotkeys.h"
 #include "icn.h"
 #include "image.h"
@@ -725,6 +727,10 @@ int Dialog::ArmyInfo( const Troop & troop, int flags, bool isReflected, const in
 
 int Dialog::ArmyJoinFree( const Troop & troop )
 {
+    if ( System::isHeadlessMode() ) {
+        return static_cast<int>( Game::ScopedExternalInteractions::choose(
+            { "monster.join", -1, { Dialog::YES, Dialog::NO }, { { "monster_id", troop.GetID() }, { "count", troop.GetCount() }, { "gold", 0 } } } ) );
+    }
     std::string message = _( "A group of %{monster} with a desire for greater glory wish to join you.\nDo you accept?" );
     StringReplaceWithLowercase( message, "%{monster}", troop.GetMultiName() );
 
@@ -734,6 +740,11 @@ int Dialog::ArmyJoinFree( const Troop & troop )
 int Dialog::ArmyJoinWithCost( const Troop & troop, const uint32_t join, const uint32_t gold )
 {
     assert( join > 0 );
+
+    if ( System::isHeadlessMode() ) {
+        return static_cast<int>( Game::ScopedExternalInteractions::choose(
+            { "monster.join", -1, { Dialog::YES, Dialog::NO }, { { "monster_id", troop.GetID() }, { "count", join }, { "gold", gold } } } ) );
+    }
 
     fheroes2::Display & display = fheroes2::Display::instance();
 

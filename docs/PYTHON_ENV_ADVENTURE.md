@@ -34,8 +34,9 @@ A korábbi tokent újra elküldve `stale_decision` a válasz. A hibás vagy nem 
 A hősnek aktívnak és a vezérelt játékos tulajdonában kell lennie. A cél nulla alapú mezőkoordináta.
 A motor saját `world.getPath` útkeresője adja az útvonalat és a terep/út/átlós mozgás költségét.
 A teljes útvonalnak ki kell férnie a megmaradt mozgáspontból; részleges többnapos útvonal ebben a profilban nincs.
-Minden érintett mezőt még a mozgás előtt ellenőrzünk: víz, esemény, harcot/választást igénylő vagy más nem támogatott
-akcióobjektum, illetve szörnyvédettség esetén a művelet elutasított. Saját várból ki lehet indulni, a várba belépés még nincs bekötve.
+Minden érintett mezőt még a mozgás előtt ellenőrzünk: víz, esemény, nem támogatott akcióobjektum vagy őrzött köztes mező
+esetén a művelet elutasított. A 9. lépéstől a cél lehet a [deklarált választási objektum](PYTHON_ENV_CHOICES.md) is;
+semleges célcsapatnál annak saját őrzése nem tiltja az ajánlat megkérdezését. Saját várból ki lehet indulni, a várba belépés még nincs bekötve.
 
 A tényleges lépések `Heroes::Move(true)` hívások. A `Scout`, mozgáspont-levonás, mezőváltás, útvonal-fogyasztás és
 `ActionNewPosition` megmarad. A radar/fókusz/hang/frissítő animációk headless ágon kimaradnak.
@@ -65,7 +66,9 @@ Az `available_actions` parancsneveket jelez; még nem ad minden paraméterezett 
 
 ## Határ és visszaállítás
 
-Emberi részvételű csata és választási helyzet még nem automatikus döntés. Ha például az AI megtámadja az emberi várat,
+A [9. lépés deklarált választásai](PYTHON_ENV_CHOICES.md) már Pythonból megválaszolhatók; az adventure profil
+ezért kincsesládával, semleges lényekkel, dzsinnlámpával és Wagon Camp toborzással bővült. Más akcióobjektum és a hajózás még nem támogatott.
+Emberi részvételű csata továbbra sem automatikus döntés. Ha például az AI megtámadja az emberi várat,
 `unsupported_interaction` a válasz, és a teljes külső művelet visszaáll. A későbbi csatavezérlő nélkül a kör ezen a ponton nem folytatható.
 Más, még leválasztatlan interaktív motorútvonal ugyanezzel a hibakategóriával állhat meg. Ez nem kész, tetszőleges pályát végigjátszó Gym env.
 

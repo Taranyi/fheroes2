@@ -50,6 +50,7 @@
 #include "game_assets.h"
 #include "game_auto_playtest.h"
 #include "game_delays.h"
+#include "game_external_interaction.h"
 #include "game_interface.h"
 #include "game_static.h"
 #include "game_string.h"
@@ -302,7 +303,9 @@ namespace
 
                 hero.GetArmy().JoinTroop( troop.GetMonster(), recruit, false );
 
-                Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+                }
             }
         }
     }
@@ -363,8 +366,6 @@ namespace
         Maps::Tile & tile = world.getTile( dst_index );
         const Troop troop = getTroopFromTile( tile );
 
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-
         bool destroy = false;
 
         const NeutralMonsterJoiningCondition join = Army::GetJoinSolution( hero, tile, troop );
@@ -402,7 +403,9 @@ namespace
             if ( Dialog::YES == Dialog::ArmyJoinFree( troop ) ) {
                 hero.GetArmy().JoinTroop( troop );
 
-                I.setRedraw( Interface::REDRAW_STATUS );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+                }
                 destroy = true;
             }
             else {
@@ -421,7 +424,9 @@ namespace
                 hero.GetArmy().JoinTroop( troop.GetMonster(), join.monsterCount, false );
                 hero.GetKingdom().OddFundsResource( Funds( Resource::GOLD, joiningCost ) );
 
-                I.setRedraw( Interface::REDRAW_STATUS );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+                }
                 destroy = true;
             }
             else {
@@ -434,7 +439,12 @@ namespace
             std::string message = _( "The %{monster}, awed by the power of your forces, begin to scatter.\nDo you wish to pursue and engage them?" );
             StringReplaceWithLowercase( message, "%{monster}", troop.GetMultiName() );
 
-            if ( fheroes2::showStandardTextMessage( "", std::move( message ), Dialog::YES | Dialog::NO ) == Dialog::NO ) {
+            const int pursuit
+                = System::isHeadlessMode()
+                      ? static_cast<int>( Game::ScopedExternalInteractions::choose(
+                            { "monster.pursue", hero.GetID(), { Dialog::YES, Dialog::NO }, { { "monster_id", troop.GetID() }, { "count", troop.GetCount() } } } ) )
+                      : fheroes2::showStandardTextMessage( "", std::move( message ), Dialog::YES | Dialog::NO );
+            if ( pursuit == Dialog::NO ) {
                 destroy = true;
             }
         }
@@ -446,14 +456,18 @@ namespace
             // Set the hero's attacked monster tile index and immediately redraw game area to show an attacking sprite for this monster
             hero.SetAttackedMonsterTileIndex( dst_index );
 
-            I.redraw( Interface::REDRAW_GAMEAREA );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().redraw( Interface::REDRAW_GAMEAREA );
+            }
 
             Army army( tile );
 
             const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dst_index );
 
             // Hero' spell points and army could have changed. Update heroes icons and status area.
-            I.renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            }
 
             if ( res.isAttackerWin() ) {
                 hero.IncreaseExperience( res.getAttackerExperience() );

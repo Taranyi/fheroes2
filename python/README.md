@@ -2,7 +2,7 @@
 
 Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
-initialization. An optional Gymnasium preview demonstrates the reset/step loop below. External battles/choices,
+initialization. An optional Gymnasium preview demonstrates the reset/step loop below. Selected native choices and two adventure spells work through the session API. External battles,
 other actions/views and the full Gym action/observation contract remain future steps.
 
 Participant-control requirement (2026-10-29): the final session must support a built-in AI or Python controller per side,
@@ -80,6 +80,25 @@ including AI armies. `upgrade_troop(source, token=...)` and `dismiss_troop(sourc
 `dismiss_hero(hero_id, token=...)` respects castle/scenario restrictions; `buy_spell_book(hero_id, token=...)` requires an owned
 castle visitor, mage guild, funds and free artifact space. The full state includes book/purchase/dismissal flags for every hero.
 See [the API, native side effects and limits](../docs/PYTHON_ENV_HERO_OPERATIONS.md). The Gym preview still exposes nine actions.
+
+## Native choices and adventure spells
+
+Prepare the native local fixtures and run the treasure/level-up walkthrough:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File script/windows/python-env-artifact-fixture.ps1
+uv run --project python python python/examples/choices.py
+```
+
+An action can return `decision["phase"] == "choice"`. Read `pending_choice`, then call
+`answer_choice(choice_id, value, token=decision["token"])` with an exact offered integer or a quantity inside its bounds.
+The original C++ action continues and can return another choice before completing. State, AI data and rendering remain readable.
+`session.stop` during a choice rolls back the whole suspended action; close/reset can also unwind it.
+The supported profile includes treasure gold/experience, secondary skills, neutral joining/pursuit, and lamp/Wagon Camp recruitment.
+`cast_spell(hero_id, spell_id, token=...)` supports Identify Hero and Visions with native costs/conditions.
+All heroes expose `adventure_spell_options`; player state exposes `identify_hero` and `vision_monster_indices`.
+See [choice protocol, partial state, rollback and spell limits](../docs/PYTHON_ENV_CHOICES.md).
+The nine-action Gym preview reports `unsupported_choice` and requires reset at a choice boundary; it never chooses on the agent's behalf.
 
 ## Runnable Gymnasium preview
 
@@ -268,7 +287,7 @@ native path costs, fog, pickup/removal and daily/weekly rules. `turn.end` runs t
 at the next human decision. Events report movement, funds collected, AI turns, dates and daily events; player state exposes
 `daily_income` and `lost_town_days`. Each successful gameplay action invalidates the old token; reads/render do not.
 
-Battles involving the human, choices, ships and other external actions are not supported yet. A blocked interaction
+Battles involving the human, ships and actions outside the declared choice/adventure profile are not supported yet. A blocked interaction
 during an AI turn rejects and restores the entire command's world/settings/result, RNG, UID and decision checkpoint.
 The pending token remains valid. It does not silently resolve a human battle or skip the AI's intended action.
 Gameplay requires matching H2D resources as well as AGG data. See the [action contract and limits](../docs/PYTHON_ENV_ADVENTURE.md).
@@ -368,7 +387,8 @@ Error:
 The handshake's historical `mode: "bootstrap"` label is retained. Capabilities report `state_queries` and `omniscient_state`
 as true, and `game_initialized` reflects whether a save is loaded. `simulation`, `headless_gameplay` and `gameplay_actions`
 are true for the limited `gameplay_profile: "adventure_basic"` described above, not for every game interaction.
-`external_controller` is true; `controller_active` reflects the decision wait. `choices` remains false.
+`external_controller` is true; `controller_active` reflects the decision wait. `choices` is true for the enumerated `choice_types`;
+`adventure_spells` lists the two currently supported spells. This does not mean all map interactions or spells are covered.
 `render` is true, `render_views` lists only `adventure`, and `render_backend` is `memory_image`.
 
 ## Verification

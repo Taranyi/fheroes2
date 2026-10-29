@@ -23,7 +23,7 @@ Az első fordítása ezért külön munkát igényel. A builder csak bekapcsolt 
 Más PC-s CMake-buildben a `fheroes2_artifact_fixture` target fordítható, majd `BASE_SAVE OUTPUT_DIRECTORY` argumentummal futtatható;
 ennek futását ebben a munkaszakaszban Windowson ellenőriztük.
 
-Az eredmény négy helyi, ignorált fájl a `build/python-env-baseline/fixtures` könyvtárban:
+Az eredmény helyi, ignorált fájlok a `build/python-env-baseline/fixtures` könyvtárban. A tárgy/hős tesztesetek:
 
 - `artifacts-day1.sav`: Roxana és a felkínált Zom teszttárgyakat kap, köztük Távcsövet, kardot, Lightning Bolt-tekercset
   és az Anduran tárgyegyüttes három darabját, két hős között szétosztva.
@@ -32,7 +32,8 @@ Az eredmény négy helyi, ignorált fájl a `build/python-env-baseline/fixtures`
 - `heroes-protected-day1.sav`: ezen felül Roxana elbocsátását a natív `NOTDISMISS` jelző tiltja.
 
 A script csak ezeket a generált másolatokat írja; az eredeti baseline és a felhasználói mentések változatlanok.
-Újrageneráláskor a négy tesztmásolat cserélődik. A script külön helyi APPDATA-profilt használ.
+Ugyanez a builder már a [választási/varázslási tesztek hat másolatát](PYTHON_ENV_CHOICES.md) is létrehozza.
+Újrageneráláskor a tíz tesztmásolat cserélődik. A script külön helyi APPDATA-profilt használ.
 A tárgyas integrációs tesztek hiányzó helyi adatoknál jelzett skipet adnak, nem állítanak sikeres pozitív tárgypróbát.
 
 A példa megveszi Zomot, szabályos találkozást indít, átadja a Távcsövet és a tekercset, kardot cserél éremre,

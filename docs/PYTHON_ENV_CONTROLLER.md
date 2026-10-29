@@ -30,18 +30,19 @@ checkpointolt módon lezár a [natív felderítési mellékhatásokkal](PYTHON_E
 
 ## A döntés szerződése
 
-- `phase`: `adventure` vagy a motor által megállapított eredménynél `terminal`; `controller`: `external`; `waiting`: true.
+- `phase`: `adventure`, függő [választásnál](PYTHON_ENV_CHOICES.md) `choice`, vagy a motor által megállapított eredménynél `terminal`; `controller`: `external`; `waiting`: true.
 - `player_id`: az egyetlen emberi játékos színbites azonosítója. Az AI játékos állapota továbbra is lekérhető,
   de AI-vezérlés átvétele ebben a lépésben nincs támogatva.
 - `turn_order`: a normál játékkal közös rendezés, emberi játékosok elöl, azon belül növekvő színérték.
 - `token`: folyamatonként egyedi `session_id`, betöltési kísérletenként növekvő `episode_id`, betöltési kísérletnél és
   sikeres játékműveletnél növekvő `state_version`, új várakozásnál és sikeres játékműveletnél növekvő `decision_id`, valamint `player_id`.
-- `available_actions`: `session.stop`, `hero.move`, `turn.end`, `castle.build`, `castle.recruit`, `castle.refresh_heroes`, `castle.hire`, `market.trade`, `hero.meet`, `army.transfer`, `army.swap`, `artifact.transfer`, `artifact.swap`, `hero.end_meeting`, `army.upgrade`, `army.dismiss`, `hero.dismiss`, `hero.buy_spell_book`.
+- `available_actions`: `session.stop`, `hero.move`, `turn.end`, `castle.build`, `castle.recruit`, `castle.refresh_heroes`, `castle.hire`, `market.trade`, `hero.meet`, `army.transfer`, `army.swap`, `artifact.transfer`, `artifact.swap`, `hero.end_meeting`, `army.upgrade`, `army.dismiss`, `hero.dismiss`, `hero.buy_spell_book`, `hero.cast`.
   Terminális helyzetben `session.stop`, illetve nyitott találkozás lezárása érhető el.
 - `army_meeting`: a [seregműveletekhez](PYTHON_ENV_ARMY.md) natív mozgással létrehozott aktuális hőstalálkozás, vagy `null`.
 - `events`: a legutóbbi sikeres művelet eseményei; lekérdezése nem fogyasztja el.
 - `notifications`: stabil `decision_required` értesítés. Lekérdezése nem fogyasztja el.
-- `pending_choice`: jelenleg null. Valódi ládaválasztás/szintlépés/csata még nem lép be ebbe az útvonalba.
+- `pending_choice`: adventure/terminal helyzetben null; választásnál a [típusos leírás és válaszopciók](PYTHON_ENV_CHOICES.md).
+  Ilyenkor az `available_actions` csak `choice.answer`, `session.stop`; a natív művelet a válasz után folytatódik.
 
 A `step` paraméterei pontosan `action` (szöveg), `token` (objektum), `params` (objektum).
 A Python-kliens explicit tokent kér; nem cseréli le automatikusan egy elavult parancs azonosítóját.
@@ -61,7 +62,8 @@ A vezérlő nem írja át a `CONTROL_HUMAN`/`CONTROL_AI` értékeket, és nem in
 
 Ezt a közös döntési pontot az 5. lépéstől az offscreen megjelenítés, a 6. lépéstől a
 [korlátozott adventure műveletek és natív AI-körfolytatás](PYTHON_ENV_ADVENTURE.md) is használják.
-A konkrét választási dialógusok átalakítása a terv 9. lépésének része; helyettük itt nem választ automatikusan a motor.
+A 9. lépés [deklarált választásai és két adventure varázslata](PYTHON_ENV_CHOICES.md) már ezen a döntési ponton futnak;
+a motor nem választ automatikusan a külső vezérlő helyett. A csata továbbra is a 10. lépés feladata.
 
 ## CONTROL-elágazások auditja
 

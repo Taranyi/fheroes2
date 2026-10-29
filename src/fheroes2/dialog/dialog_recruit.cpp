@@ -32,9 +32,11 @@
 
 #include "army_troop.h"
 #include "bin_info.h"
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h" // IWYU pragma: associated
 #include "game_assets.h"
+#include "game_external_interaction.h"
 #include "game_hotkeys.h"
 #include "icn.h"
 #include "image.h"
@@ -252,6 +254,20 @@ namespace
 
 Troop Dialog::RecruitMonster( const Monster & monster0, const uint32_t available, const bool allowDowngradedMonster, const int32_t windowOffsetY )
 {
+    if ( System::isHeadlessMode() ) {
+        if ( allowDowngradedMonster ) {
+            throw System::HeadlessInteractionError( "recruitment with monster-type selection" );
+        }
+        const uint32_t maximum = CalculateMax( monster0, world.GetKingdom( Settings::Get().CurrentColor() ), available );
+        const auto count = Game::ScopedExternalInteractions::choose(
+            { "army.recruit_count",
+              -1,
+              {},
+              { { "monster_id", monster0.GetID() }, { "available", available }, { "gold_per_unit", monster0.GetCost().gold } },
+              0,
+              maximum } );
+        return Troop( monster0, static_cast<uint32_t>( count ) );
+    }
     const bool isEvilInterface = Settings::Get().isEvilInterfaceEnabled();
 
     fheroes2::Display & display = fheroes2::Display::instance();

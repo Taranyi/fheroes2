@@ -111,15 +111,15 @@ class AdventureTests(unittest.TestCase):
                 ({"hero_id": 52, "x": -1, "y": 25}, {"invalid_request"}),
                 ({"hero_id": 52, "x": 36, "y": 25}, {"invalid_request"}),
                 ({"hero_id": 52, "x": 32, "y": 24}, {"illegal_action"}),
-                ({"hero_id": 52, "x": 34, "y": 20}, {"illegal_action", "unsupported_action"}),
                 ({"hero_id": 52, "x": 3, "y": 24}, {"illegal_action", "unsupported_action"}),
                 ({"hero_id": 52, "x": 10, "y": 10}, {"illegal_action", "unsupported_action"}),
             ):
-                with self.subTest(params=params), self.assertRaises(EngineError) as failed:
-                    game.step("hero.move", token=decision["token"], params=params)
-                self.assertIn(failed.exception.code, codes)
-                self.assertEqual(game.get_state(), before)
-                self.assertEqual(game.get_decision(), decision)
+                with self.subTest(params=params):
+                    with self.assertRaises(EngineError) as failed:
+                        game.step("hero.move", token=decision["token"], params=params)
+                    self.assertIn(failed.exception.code, codes)
+                    self.assertEqual(game.get_state(), before)
+                    self.assertEqual(game.get_decision(), decision)
             # Rejected initial preparations must not prevent the next valid native move.
             self.assertEqual(game.move_hero(52, 32, 25, token=decision["token"])["events"][0]["to"], 932)
 

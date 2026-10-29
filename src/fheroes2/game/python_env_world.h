@@ -66,7 +66,8 @@ namespace fheroes2
         bool waiting() const;
         void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
         nlohmann::json getDecision() const;
-        nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params );
+        nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params, const std::function<void()> & choiceWait = {} );
+        nlohmann::json actionResult() const;
         nlohmann::json render( const nlohmann::json & params );
 
     private:
@@ -82,6 +83,9 @@ namespace fheroes2
         bool _turnPrepared{ false };
         nlohmann::json _events = nlohmann::json::array();
         nlohmann::json _armyMeeting = nullptr;
+        nlohmann::json _pendingChoice = nullptr;
+        int64_t _choiceAnswer{ 0 };
+        uint64_t _nextChoiceId{ 0 };
         const std::string _sessionId;
         uint64_t _decisionId{ 0 };
         int _controllerPlayer{ 0 };

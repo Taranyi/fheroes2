@@ -151,6 +151,21 @@ class GymPreviewTests(unittest.TestCase):
             self.assertTrue(env.spec.nondeterministic)
             check_env(env.unwrapped, skip_render_check=True)
 
+    def test_choice_boundary_is_an_explicit_error_and_can_reset(self):
+        save = support.ROOT / "build/python-env-baseline/fixtures/choices-chest-day1.sav"
+        if not save.is_file():
+            self.skipTest("Prepare native choice fixtures")
+        with self.preview(max_steps=1) as env:
+            env.unwrapped.save = save
+            env.reset()
+            with self.assertRaises(EngineError) as failed:
+                env.step(4)
+            self.assertEqual(failed.exception.code, "unsupported_choice")
+            with self.assertRaises(gym.error.ResetNeeded):
+                env.step(8)
+            env.reset()
+            self.assertEqual(env.unwrapped._decision["phase"], "adventure")
+
     def test_optional_viewer_lifecycle_without_a_desktop(self):
         try:
             import pygame

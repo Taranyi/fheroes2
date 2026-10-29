@@ -364,6 +364,14 @@ class HeroesSession:
         """Upgrade the entire specified stack at its native castle facility and price."""
         return self.step("army.upgrade", token=token, params={"source": dict(source)})
 
+    def answer_choice(self, choice_id: int, value: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Resume the suspended native action with an exact offered value."""
+        return self.step("choice.answer", token=token, params={"choice_id": choice_id, "value": value})
+
+    def cast_spell(self, hero_id: int, spell_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Cast an adventure spell supported by the current capability profile."""
+        return self.step("hero.cast", token=token, params={"hero_id": hero_id, "spell_id": spell_id})
+
     def dismiss_troop(self, source: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
         """Dismiss an entire stack, preserving the hero's last required stack."""
         return self.step("army.dismiss", token=token, params={"source": dict(source)})

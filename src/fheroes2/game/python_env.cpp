@@ -35,6 +35,7 @@
 
 #include "../../thirdparty/nlohmann/json.hpp"
 #include "core.h"
+#include "game_external_interaction.h"
 #include "python_env_world.h"
 #include "version.h"
 
@@ -98,9 +99,11 @@ namespace
                  { "castle_actions", { "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire" } },
                  { "market_actions", { "market.trade" } },
                  { "army_actions", { "hero.meet", "army.transfer", "army.swap", "army.upgrade", "army.dismiss" } },
-                 { "hero_actions", { "hero.dismiss", "hero.buy_spell_book" } },
+                 { "hero_actions", { "hero.dismiss", "hero.buy_spell_book", "hero.cast" } },
                  { "artifact_actions", { "artifact.transfer", "artifact.swap", "hero.end_meeting" } },
-                 { "choices", false },
+                 { "choices", true },
+                 { "choice_types", { "treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count" } },
+                 { "adventure_spells", { "identify_hero", "visions" } },
                  { "simulation", true },
                  { "render", true },
                  { "render_views", { "adventure" } },
@@ -144,7 +147,7 @@ namespace
         std::streambuf * _previous;
     };
 
-    Json execute( const std::string & method, const Json & params, fheroes2::PythonEnvWorld & world )
+    Json execute( const std::string & method, const Json & params, fheroes2::PythonEnvWorld & world, const std::function<void()> & choiceWait = {} )
     {
         if ( method == "load_save" ) {
             if ( params.size() != 1 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty() ) {
@@ -178,7 +181,7 @@ namespace
                 throw fheroes2::PythonEnvError( "invalid_request", "step requires action, token and params objects." );
             }
             const DiagnosticRedirect redirect;
-            return world.dispatch( params["action"].get<std::string>(), params["token"], params["params"] );
+            return world.dispatch( params["action"].get<std::string>(), params["token"], params["params"], choiceWait );
         }
         if ( method == "render" ) {
             const DiagnosticRedirect redirect;
@@ -214,7 +217,14 @@ namespace
         throw fheroes2::PythonEnvError( "unknown_method", "Unknown environment method. Use capabilities to list supported methods." );
     }
 
-    int serveRequests( std::istream & input, std::ostream & output, fheroes2::PythonEnvWorld & world, bool & finished, const bool decisionWait )
+    struct ChoiceResponse
+    {
+        Json id;
+        bool stopped{ false };
+    };
+
+    int serveRequests( std::istream & input, std::ostream & output, fheroes2::PythonEnvWorld & world, bool & finished, const bool decisionWait,
+                       ChoiceResponse * choiceResponse = nullptr )
     {
         std::string line;
 
@@ -257,7 +267,7 @@ namespace
                 continue;
             }
 
-            const Json & id = request["id"];
+            Json id = request["id"];
             if ( !request.contains( "api_version" ) || !request["api_version"].is_number_unsigned() || request["api_version"] != protocolVersion ) {
                 if ( !sendError( output, id, "unsupported_version", "Expected api_version 1." ) ) {
                     return EXIT_FAILURE;
@@ -298,6 +308,49 @@ namespace
                     }
                     continue;
                 }
+                if ( method == "step" ) {
+                    bool stopped = false;
+                    const auto choiceWait = [&]() {
+                        if ( !sendResult( output, id, world.actionResult() ) ) {
+                            finished = true;
+                            throw Game::ExternalActionCancelled{};
+                        }
+                        ChoiceResponse answer;
+                        const int result = serveRequests( input, output, world, finished, true, &answer );
+                        if ( result != EXIT_SUCCESS || finished ) {
+                            finished = true;
+                            throw Game::ExternalActionCancelled{};
+                        }
+                        id = answer.id;
+                        if ( answer.stopped ) {
+                            stopped = true;
+                            throw Game::ExternalActionCancelled{};
+                        }
+                    };
+                    Json result;
+                    try {
+                        result = execute( method, params, world, choiceWait );
+                    }
+                    catch ( const Game::ExternalActionCancelled & ) {
+                        if ( finished ) {
+                            return EXIT_SUCCESS;
+                        }
+                        if ( !stopped ) {
+                            throw;
+                        }
+                        result = world.dispatch( "session.stop", world.getDecision()["token"], Json::object() );
+                    }
+                    if ( choiceResponse != nullptr ) {
+                        // Only choice.answer/session.stop can succeed while a native choice is pending.
+                        choiceResponse->id = id;
+                        choiceResponse->stopped = params["action"] == "session.stop";
+                        return EXIT_SUCCESS;
+                    }
+                    if ( !sendResult( output, id, result ) ) {
+                        return EXIT_FAILURE;
+                    }
+                    continue;
+                }
                 if ( !sendResult( output, id, execute( method, params, world ) ) ) {
                     return EXIT_FAILURE;
                 }
@@ -333,7 +386,9 @@ int fheroes2::runPythonEnvBootstrap( std::istream & input, std::ostream & output
         const System::CoreInitializer core( std::set<System::SystemInitializationComponent>{} );
         PythonEnvWorld world( executablePath );
         bool finished = false;
-        return serveRequests( input, output, world, finished, false );
+        // Keep protocol output stable while native diagnostics temporarily redirect std::cout.
+        std::ostream protocol( output.rdbuf() );
+        return serveRequests( input, protocol, world, finished, false );
     }
     catch ( const std::exception & ) {
         // Never route protocol errors through the game's logging/UI initialization.
