@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2023                                                    *
+ *   Copyright (C) 2023 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -22,7 +22,20 @@
 
 #include <cstdint>
 
+class Kingdom;
+
 namespace fheroes2
 {
     uint32_t getTradeCost( uint32_t marketplaceCount, const int resourceFrom, const int resourceTo );
+
+    struct ResourceTradeQuote
+    {
+        uint32_t sellPerLot{ 0 };
+        uint32_t buyPerLot{ 0 };
+        uint32_t maxLots{ 0 };
+    };
+
+    // Pure quote and exact checked exchange shared by the marketplace UI and external controllers.
+    ResourceTradeQuote getResourceTradeQuote( const Kingdom & kingdom, int resourceFrom, int resourceTo, bool tradingPost = false );
+    bool tradeResources( Kingdom & kingdom, int resourceFrom, int resourceTo, uint32_t lots, bool tradingPost = false );
 }

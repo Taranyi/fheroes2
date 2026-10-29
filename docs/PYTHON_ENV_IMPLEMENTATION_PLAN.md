@@ -1,6 +1,6 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
-Dátum: 2026-10-25; frissítve: 2026-10-29. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési/építési/toborzási része kész;
+Dátum: 2026-10-25; frissítve: 2026-10-29. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
 korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
@@ -57,7 +57,8 @@ Ennek a döntéseit már most teljesen Python hozza, emberi kattintás nélkül.
 több külső vezérlő és a kizárólag beépített AI-kból álló session még nincs megvalósítva.
 A meglévő `is_human`/`is_ai` mezők a motor régi vezérléstípusát írják le; nem bizonyítják, hogy ember ül a gépnél.
 
-**Kötelező bővítés, a további vezérlőfüggő fejlesztések előtt (4/A):**
+**Rögzített kötelező bővítés (4/A):** a követelmény megőrzendő, de nem változtatja meg az egyeztetett
+fejlesztési sorrendet. A 7. lépés hősvásárlási és kereskedelmi része az eredeti sorrendben készült; a vezérlés általánosítása külön munkaszakasz.
 
 1. A résztvevő azonosítóját, motorbeli szabályprofilját, a döntést hozó vezérlőt és a megjelenítést külön kezeljük.
    A mentés emberi/AI jelölése nem lehet a Python-hozzáférés feltétele. Az eredeti nehézségi AI-bónuszok,
@@ -77,7 +78,7 @@ A meglévő `is_human`/`is_ai` mezők a motor régi vezérléstípusát írják 
 **Elfogadási esetek:** ablak nélkül beépített AI–AI futás emberinek jelölt résztvevő nélkül; Python-agent–AI;
 két külső oldal váltakozó vezérlése; vegyes beépített/külső vezérlés; minden oldal friss állapotának követése;
 rossz résztvevőhöz vagy korábbi döntéshez tartozó akció elutasítása változatlan világ mellett.
-A csata/választás elfogadási részeit a 9–10. lépéssel együtt zárjuk le; a körütemezés és a résztvevői modell bővítése előbb szükséges.
+A többoldalas csata/választás elfogadási részeit a 9–10. lépéssel és a 4/A bővítés megvalósításával kell összehangolni.
 
 Ez a követelmény az alap Python API-ra vonatkozik. A mostani egyhősös, kilencakciós Gym-példa ettől továbbra is
 korlátozott adapter. A végleges Gym-nézetet és az esetleges több agentes Python-wrapper formáját az általános sessionre építjük.
@@ -130,9 +131,10 @@ Hibás/idejétmúlt parancs a módosítás előtt elutasítandó. Külön hibaka
 
 ### 4/A. Résztvevőnként választható vezérlés
 
-**Következő prioritás a 2026-10-29-i pontosítás után:** a fenti résztvevői követelmények szerint általánosítani
+**Tervezett bővítés:** a fenti résztvevői követelmények szerint általánosítani
 a sessiont és a körütemezést; az egyetlen emberinek jelölt oldalra épülő átmeneti korlátot megszüntetni.
-A 7. lépés fennmaradó részét és a további vezérlőfüggő funkciókat erre építjük.
+A 7. lépés folytatását nem előzi meg: a hősvásárlás és a piaci kereskedelem az eredeti sorrendben készült el.
+A meglévő egy külső oldalas működés bővíthető marad, a többoldalas vezérlés kötelező célját nem hagyjuk el.
 Először a jelenleg támogatott adventure/várműveleti profilon ellenőrizzük az AI-only, vegyes és több külső oldalas eseteket;
 a csatát és a valódi választásokat a 9–10. lépés köti be ugyanebbe a modellbe.
 
@@ -253,9 +255,9 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 4 | Kész: kezdeti adventure döntési pont | `start_session`/`get_decision`, C++ mentettkör-callbackben élő parancsvárakozás, közös tokenes `step` ellenőrzés, `session.stop`, `close`/EOF kilépés. A játékos vezérléstípusa nem változik, a világ nem lép. 28 sikeres teszt. [Szerződés és CONTROL-audit](PYTHON_ENV_CONTROLLER.md). Valódi játékmeneti művelet, render és konkrét választási dialógus még nincs; ezeket az 5–10. lépés köti be. |
 | 5 | Kész: jelenlegi betöltés/döntés/render profil | Explicit headless policy; választható core-komponensek a régi alapértékekkel; önálló adventure viewport, RGB képkérés és tényleges runtime-adatok. 35 sikeres Python-teszt, C++ policy-ellenőrzés és SDL dummy/software próbák. [Leírás és korlátok](PYTHON_ENV_HEADLESS.md). A még nem bekötött játékműveleteknél ezt továbbra is ellenőrizni kell. |
 | 6 | Kész: adventure_basic profil | Natív útkeresés/mezőlépés, saját szárazföldi hős és sima erőforráskupac; `turn.end` valódi AI-körökkel, bevétellel és hétváltással. Tokenverziózás, események és teljes műveleti checkpoint/visszaállítás a nem támogatott interakcióknál. 43 sikeres Python-teszt. [Szerződés, példa és korlátok](PYTHON_ENV_ADVENTURE.md). Emberi csata, választás és hajózás még nincs bekötve. |
-| 7 | Első rész kész: várlekérdezés, építés, pontos toborzás | A natív feltételek, költségek, napi limit, faji fejlesztések, készlet és garrison/hős cél ellenőrzésével; az eredeti játékszabály-függvények változatlanok. [Szerződés és futtatható példa](PYTHON_ENV_CASTLE.md). Hősvásárlás, piaci csere és hajó még hátravan. |
-| 4/A | Következő prioritás; még nincs megvalósítva | Résztvevőnkénti vezérlő, AI-nak jelölt oldal Python-elérése, több külső oldal, kizárólag beépített AI-k futtatása és körhatáron történő követése. Az egyetlen emberinek jelölt oldalra szűkített jelenlegi profil általánosítása a további vezérlőfüggő funkciók előtt. |
-| 8–14 | Tervezett | A fenti lépések szerint, a 4/A résztvevői modelljére építve. |
+| 7 | Várlekérdezés, építés, pontos toborzás, hősvásárlás és piaci csere kész | Natív feltételek, árak, napi építési limit, faji fejlesztések, készlet és seregcél ellenőrzése. Explicit hősajánlat-frissítés; a lekérdezés változatlanul csak olvas. A piaci ablak és a Python közös, ellenőrzött kereskedelmi műveletet használ. [Szerződés és futtatható példák](PYTHON_ENV_CASTLE.md). Hajóvásárlás még nincs bekötve; az eredeti „indokolt esetben hajó” rész nem teljesült. |
+| 4/A | Rögzített követelmény; még nincs megvalósítva | Résztvevőnkénti vezérlő, AI-nak jelölt oldal Python-elérése, több külső oldal, kizárólag beépített AI-k futtatása és körhatáron történő követése. Nem írja felül a 7. lépés egyeztetett folytatását; megvalósítása külön munkaszakasz. |
+| 8–14 | Tervezett | A fenti lépéssorrend szerint, a többoldalas vezérlés rögzített követelményét megőrizve. |
 
 ### Korai, futtatható Gym-példa a 6. lépés után
 

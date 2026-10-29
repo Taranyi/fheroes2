@@ -10,7 +10,7 @@ including AI-only simulation and multiple external agents with no manual player.
 for every side, but external control is limited to one side marked human in the save. That side can already be driven entirely
 by a Python policy; the human marker is an engine limitation, not a requirement for keyboard input.
 See the [implementation plan's participant requirements](../docs/PYTHON_ENV_IMPLEMENTATION_PLAN.md), task 4/A,
-before extending controller-dependent features. This broader control model is a required goal, not an implemented capability.
+for the required broader control model. It remains unimplemented and does not change the agreed step-7 development order.
 
 Castle inspection, building and exact-count recruitment are also available through the native engine:
 
@@ -22,7 +22,19 @@ Use `game.get_castle_options(castle_id)`, `game.build_castle(castle_id, building
 `game.recruit_castle(castle_id, dwelling_id, count, token=...)`. Both actions return a fresh decision token.
 The read-only options include prices, prerequisites/statuses, available creatures, affordable quantities and army destinations.
 Queries include opponents' castles; actions require ownership by the waiting player. Recruitment is exact, with no silent clamping.
-See [the castle API and limits](../docs/PYTHON_ENV_CASTLE.md). Hero hiring, trading and ship purchases are still pending;
+Hero hiring and marketplace trading also work, with a [runnable walkthrough](examples/economy.py):
+
+```powershell
+uv run --project python python python/examples/economy.py
+```
+
+`get_castle_options` includes cached `hero_hiring` offers/conditions and `market` rates/limits for all sides.
+Use `refresh_hero_offers(castle_id, token=...)` for the native lazy offer update, then
+`hire_hero(castle_id, hero_id, token=...)` for a currently offered hero in an empty, owned castle visitor slot.
+Refreshing is an explicit action because it can change native RNG/state; read-only queries never generate offers.
+Use `trade_resources(castle_id, resource_from, resource_to, lots, token=...)` for exact quoted marketplace lots;
+rates use all marketplaces owned by that castle's kingdom. The UI and Python share checked quote/execution functions.
+See [the castle/economy API and limits](../docs/PYTHON_ENV_CASTLE.md). Ship purchases are still pending;
 the nine-action Gym preview remains unchanged.
 
 ## Runnable Gymnasium preview

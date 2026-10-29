@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2023                                                    *
+ *   Copyright (C) 2023 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,10 +20,13 @@
 
 #include "resource_trading.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <limits>
 
+#include "kingdom.h"
 #include "resource.h"
 
 namespace
@@ -58,6 +61,44 @@ namespace
 
 namespace fheroes2
 {
+    ResourceTradeQuote getResourceTradeQuote( const Kingdom & kingdom, const int resourceFrom, const int resourceTo, const bool tradingPost )
+    {
+        const auto validResource = []( const int resource ) {
+            return resource == Resource::WOOD || resource == Resource::MERCURY || resource == Resource::ORE || resource == Resource::SULFUR
+                   || resource == Resource::CRYSTAL || resource == Resource::GEMS || resource == Resource::GOLD;
+        };
+        const uint32_t markets = tradingPost ? 3 : kingdom.GetCountMarketplace();
+        if ( markets == 0 || !validResource( resourceFrom ) || !validResource( resourceTo ) || resourceFrom == resourceTo ) {
+            return {};
+        }
+        const uint32_t rate = getTradeCost( markets, resourceFrom, resourceTo );
+        if ( rate == 0 ) {
+            return {};
+        }
+        ResourceTradeQuote quote;
+        quote.sellPerLot = resourceTo == Resource::GOLD ? 1 : rate;
+        quote.buyPerLot = resourceTo == Resource::GOLD ? rate : 1;
+        const auto source = kingdom.GetFunds().Get( resourceFrom );
+        const auto target = kingdom.GetFunds().Get( resourceTo );
+        if ( source < 0 || target < 0 ) {
+            return quote;
+        }
+        quote.maxLots
+            = std::min( static_cast<uint32_t>( source ) / quote.sellPerLot, static_cast<uint32_t>( std::numeric_limits<int32_t>::max() - target ) / quote.buyPerLot );
+        return quote;
+    }
+
+    bool tradeResources( Kingdom & kingdom, const int resourceFrom, const int resourceTo, const uint32_t lots, const bool tradingPost )
+    {
+        const auto quote = getResourceTradeQuote( kingdom, resourceFrom, resourceTo, tradingPost );
+        if ( lots == 0 || lots > quote.maxLots ) {
+            return false;
+        }
+        kingdom.OddFundsResource( Funds( resourceFrom, lots * quote.sellPerLot ) );
+        kingdom.AddFundsResource( Funds( resourceTo, lots * quote.buyPerLot ) );
+        return true;
+    }
+
     uint32_t getTradeCost( uint32_t marketplaceCount, const int resourceFrom, const int resourceTo )
     {
         if ( marketplaceCount == 0 ) {

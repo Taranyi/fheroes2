@@ -320,6 +320,18 @@ class HeroesSession:
         """Recruit exactly count creatures of the base dwelling's current native tier."""
         return self.step("castle.recruit", token=token, params={"castle_id": castle_id, "dwelling_id": dwelling_id, "count": count})
 
+    def refresh_hero_offers(self, castle_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Explicitly run the native lazy hero-offer refresh; this can change world/RNG state."""
+        return self.step("castle.refresh_heroes", token=token, params={"castle_id": castle_id})
+
+    def hire_hero(self, castle_id: int, hero_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Buy one currently offered hero through the native castle recruitment path."""
+        return self.step("castle.hire", token=token, params={"castle_id": castle_id, "hero_id": hero_id})
+
+    def trade_resources(self, castle_id: int, resource_from: int, resource_to: int, lots: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Trade an exact number of native lots at the owner's kingdom marketplace rate."""
+        return self.step("market.trade", token=token, params={"castle_id": castle_id, "resource_from": resource_from, "resource_to": resource_to, "lots": lots})
+
     def close(self) -> None:
         with self._lock:
             if self._closed:

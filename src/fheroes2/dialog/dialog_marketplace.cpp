@@ -587,8 +587,10 @@ void Dialog::Marketplace( Kingdom & kingdom, bool fromTradingPost )
 
         // trade
         if ( buttonTrade.isEnabled() && le.MouseClickLeft( buttonTrade.area() ) && count_sell && count_buy ) {
-            kingdom.OddFundsResource( Funds( resourceFrom, count_sell ) );
-            kingdom.AddFundsResource( Funds( resourceTo, count_buy ) );
+            const uint32_t lots = static_cast<uint32_t>( resourceTo == Resource::GOLD ? count_sell : count_buy );
+            if ( !fheroes2::tradeResources( kingdom, resourceFrom, resourceTo, lots, fromTradingPost ) ) {
+                continue;
+            }
 
             firstExchange = false;
 

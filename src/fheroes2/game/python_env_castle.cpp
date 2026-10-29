@@ -31,12 +31,14 @@
 #include "castle.h"
 #include "castle_building_info.h"
 #include "heroes.h"
+#include "heroes_recruits.h"
 #include "kingdom.h"
 #include "maps_fileinfo.h"
 #include "monster.h"
 #include "payment.h"
 #include "python_env_world.h"
 #include "resource.h"
+#include "resource_trading.h"
 #include "settings.h"
 #include "system.h"
 #include "world.h"
@@ -163,6 +165,51 @@ namespace
                                                     : Json{ { "type", visitor == nullptr ? "garrison" : "hero" },
                                                             { "hero_id", visitor == nullptr ? Json( nullptr ) : Json( visitor->GetID() ) } } } };
     }
+
+    Json heroOffers( const Castle & castle )
+    {
+        // GetRecruits() can consume RNG and replace offers. Reading options must use the cached set only.
+        const auto & recruits = world.GetKingdom( castle.GetColor() ).GetCurrentRecruits();
+        Json offers = Json::array();
+        bool needsRefresh = false;
+        for ( int slot = 0; slot < 2; ++slot ) {
+            const Heroes * hero = slot == 0 ? recruits.GetHero1() : recruits.GetHero2();
+            const bool available = hero != nullptr && hero->isAvailableForHire();
+            needsRefresh = needsRefresh || !available;
+            offers.push_back( { { "slot", slot },
+                                { "hero_id", hero == nullptr ? Json( nullptr ) : Json( hero->GetID() ) },
+                                { "name", hero == nullptr ? Json( nullptr ) : Json( System::encLocalToUTF8( hero->GetName() ) ) },
+                                { "available", available },
+                                { "surrender_day", slot == 0 ? recruits.getSurrenderDayOfHero1() : recruits.getSurrenderDayOfHero2() } } );
+        }
+        std::string reason;
+        const bool allowed = castle.AllowBuyHero( &reason );
+        return { { "offers", offers },
+                 { "needs_refresh", needsRefresh },
+                 { "can_hire", allowed && std::any_of( offers.begin(), offers.end(), []( const Json & offer ) { return offer["available"].get<bool>(); } ) },
+                 { "blocked_reason", System::encLocalToUTF8( reason ) },
+                 { "cost", funds( PaymentConditions::RecruitHero() ) } };
+    }
+
+    Json marketOptions( const Castle & castle )
+    {
+        const Kingdom & kingdom = castle.GetKingdom();
+        Json trades = Json::array();
+        for ( const int from : { Resource::WOOD, Resource::MERCURY, Resource::ORE, Resource::SULFUR, Resource::CRYSTAL, Resource::GEMS, Resource::GOLD } ) {
+            for ( const int to : { Resource::WOOD, Resource::MERCURY, Resource::ORE, Resource::SULFUR, Resource::CRYSTAL, Resource::GEMS, Resource::GOLD } ) {
+                if ( from == to ) {
+                    continue;
+                }
+                const auto quote = fheroes2::getResourceTradeQuote( kingdom, from, to );
+                trades.push_back( { { "resource_from", from },
+                                    { "resource_to", to },
+                                    { "sell_per_lot", quote.sellPerLot },
+                                    { "buy_per_lot", quote.buyPerLot },
+                                    { "max_lots", quote.maxLots } } );
+            }
+        }
+        return { { "marketplace_count", kingdom.GetCountMarketplace() }, { "trades", trades } };
+    }
 }
 
 nlohmann::json fheroes2::pythonEnvCastleOptions( const uint32_t castleId )
@@ -187,7 +234,9 @@ nlohmann::json fheroes2::pythonEnvCastleOptions( const uint32_t castleId )
              { "owner", static_cast<int>( castle.GetColor() ) },
              { "perspective", "omniscient" },
              { "buildings", buildings },
-             { "dwellings", dwellings } };
+             { "dwellings", dwellings },
+             { "hero_hiring", heroOffers( castle ) },
+             { "market", marketOptions( castle ) } };
 }
 
 nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, const nlohmann::json & params, const int playerId )
@@ -195,6 +244,56 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
     Castle & castle = castleById( identifier( params, "castle_id" ) );
     if ( static_cast<int>( castle.GetColor() ) != playerId ) {
         throw PythonEnvError( "illegal_action", "The castle must be owned by the waiting player." );
+    }
+    if ( action == "castle.refresh_heroes" ) {
+        if ( params.size() != 1 ) {
+            throw PythonEnvError( "invalid_request", "castle.refresh_heroes requires only castle_id." );
+        }
+        castle.GetKingdom().GetRecruits();
+        return { { "type", "hero_offers_refreshed" }, { "castle_id", castle.GetIndex() }, { "hero_hiring", heroOffers( castle ) } };
+    }
+    if ( action == "castle.hire" ) {
+        if ( params.size() != 2 ) {
+            throw PythonEnvError( "invalid_request", "castle.hire requires castle_id and hero_id." );
+        }
+        const auto id = identifier( params, "hero_id" );
+        if ( id > static_cast<uint32_t>( Heroes::DEBUG_HERO ) ) {
+            throw PythonEnvError( "invalid_request", "hero_id is outside the native hero catalog." );
+        }
+        const auto & recruits = castle.GetKingdom().GetCurrentRecruits();
+        Heroes * hero = recruits.GetID1() == static_cast<int>( id ) ? recruits.GetHero1() : recruits.GetID2() == static_cast<int>( id ) ? recruits.GetHero2() : nullptr;
+        if ( hero == nullptr || !hero->isAvailableForHire() || !castle.AllowBuyHero() ) {
+            throw PythonEnvError( "illegal_action",
+                                  "The offered hero must be available, affordable and have an empty castle visitor slot; refresh stale offers explicitly." );
+        }
+        if ( castle.RecruitHero( hero ) == nullptr ) {
+            throw PythonEnvError( "engine_error", "The validated hero purchase failed." );
+        }
+        return { { "type", "hero_hired" }, { "castle_id", castle.GetIndex() }, { "hero_id", id }, { "cost", funds( PaymentConditions::RecruitHero() ) } };
+    }
+    if ( action == "market.trade" ) {
+        if ( params.size() != 4 ) {
+            throw PythonEnvError( "invalid_request", "market.trade requires castle_id, resource_from, resource_to and lots." );
+        }
+        const uint32_t from = identifier( params, "resource_from" );
+        const uint32_t to = identifier( params, "resource_to" );
+        const uint32_t lots = identifier( params, "lots" );
+        if ( from == 0 || to == 0 || from > Resource::GOLD || to > Resource::GOLD || ( from & ( from - 1 ) ) != 0 || ( to & ( to - 1 ) ) != 0 || from == to
+             || lots == 0 ) {
+            throw PythonEnvError( "invalid_request", "Use distinct native resource IDs and a positive number of whole trade lots." );
+        }
+        const auto quote = getResourceTradeQuote( castle.GetKingdom(), static_cast<int>( from ), static_cast<int>( to ) );
+        if ( !tradeResources( castle.GetKingdom(), static_cast<int>( from ), static_cast<int>( to ), lots ) ) {
+            throw PythonEnvError( "illegal_action", "Trading requires a kingdom marketplace, enough funds and room for the exact result." );
+        }
+        return { { "type", "resources_traded" },
+                 { "castle_id", castle.GetIndex() },
+                 { "player_id", playerId },
+                 { "resource_from", from },
+                 { "resource_to", to },
+                 { "lots", lots },
+                 { "sold", lots * quote.sellPerLot },
+                 { "bought", lots * quote.buyPerLot } };
     }
     if ( action == "castle.build" ) {
         if ( params.size() != 2 ) {

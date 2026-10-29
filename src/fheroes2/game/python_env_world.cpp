@@ -360,8 +360,9 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                  { "decision_id", _decisionId },
                  { "player_id", _controllerPlayer } } },
              { "turn_order", order },
-             { "available_actions",
-               GameOver::Result::Get().GetResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit" } : Json{ "session.stop" } },
+             { "available_actions", GameOver::Result::Get().GetResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit",
+                                                                                     "castle.refresh_heroes", "castle.hire", "market.trade" }
+                                                                             : Json{ "session.stop" } },
              { "events", _events },
              { "pending_choice", nullptr },
              { "notifications",
@@ -397,7 +398,8 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         _waiting = false;
         return { { "stopped", true }, { "state_version", _stateVersion } };
     }
-    const bool castleAction = action == "castle.build" || action == "castle.recruit";
+    const bool castleAction
+        = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire" || action == "market.trade";
     if ( action != "hero.move" && action != "turn.end" && !castleAction ) {
         throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }

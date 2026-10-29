@@ -1,7 +1,7 @@
 # Várlekérdezés, építés és pontos toborzás
 
-A 7. lépés első része: a meglévő `adventure_basic` profil mellett két új külső művelet,
-`castle.build` és `castle.recruit`, valamint egy csak olvasó `get_castle_options` lekérdezés működik.
+A 7. lépésben a meglévő `adventure_basic` profil mellett várépítés, pontos lénytoborzás, hősvásárlás,
+piaci kereskedelem és egy csak olvasó `get_castle_options` lekérdezés működik.
 A várablakot nem kell megnyitni. A szabályok, árak, készlet és seregfeltöltés továbbra is a natív C++ motorban maradnak.
 
 ## Futtatható példa
@@ -88,7 +88,7 @@ Sikeres események: `castle_built` (`castle_id`, `building_id`, `cost`) és `cas
 
 ## Határok és platformok
 
-Hősvásárlás, piaci csere és hajóvásárlás a 7. lépés következő része. Seregrendezés és átadás a 8. lépés feladata.
+Hősvásárlás és piaci csere az alábbi folytatásban működik. Hajóvásárlás még nincs bekötve. Seregrendezés és átadás a 8. lépés feladata.
 Várba lépő hős mozgási interakciója és a várnézet képkérése sincs még bekötve; a vár távoli kezelése már működik.
 A korai Gym-példa kilenc akciója változatlan: ezeket a várműveleteket most a gazdagabb `HeroesSession` API adja.
 
@@ -107,3 +107,76 @@ előfeltétel és fizetőképesség; teljes világ és token változatlansága e
 A bekapcsolt PC-s fejlesztői build és a külön `ENABLE_PYTHON_ENV=OFF` normál build is sikeresen lefordult.
 A normál build ellenőrzése után a helyi Python-bemutatókhoz tartozó fejlesztői futtatható fájl visszakerült a repó gyökerébe.
 Más platformok SDK-fordítását és a normál grafikus játék kézi ellenőrzését ebben a munkaszakaszban nem futtattuk.
+
+## A 7. lépés folytatása: hősvásárlás és piaci kereskedelem
+
+Futtatható bemutató a helyi The Other Side day-1 referenciamentéssel:
+
+```powershell
+uv run --project python python python/examples/economy.py
+```
+
+Roxana elhagyja a vár látogatói helyét, a script megveszi az aktuális ajánlat egyik hősét, majd két fát aranyra cserél.
+Az eredeti mentésben Zom (46) és Jojosh (12) az ajánlat: a bemutató Zomot vásárolja meg.
+Az ár 2500 arany; egy piaccal két fa 50 aranyat ad. A végén két saját hős, 5050 arany és 18 fa van, továbbra is az első napon.
+A hősazonosítót a példa lekérdezi, nem írja bele állandóként. A mentést nem menti felül.
+
+### Hősajánlatok: csak olvasás és explicit frissítés
+
+A `get_castle_options(castle_id)["hero_hiring"]` minden oldal várához elérhető. Mezői:
+
+- `offers`: két tárolt ajánlat, `slot`, `hero_id`, `name`, `available`, `surrender_day` adatokkal. Hiányzó hős értékei `null`.
+- `needs_refresh`: legalább az egyik tárolt ajánlat hiányzik vagy már nem elérhető. A teljes hőskészlet kifogyásakor frissítés után is igaz maradhat.
+- `can_hire`: a vár natív vásárlási feltétele és legalább egy elérhető tárolt ajánlat is teljesül.
+- `blocked_reason`: a natív `AllowBuyHero` indoka (foglalt látogatói hely, hőslimit, fizetőképesség), vagy üres szöveg.
+- `cost`: a natív hősvásárlási ár.
+
+A motor `GetRecruits()` függvénye hiányzó vagy már elkelt ajánlatot véletlenszerűen pótolhat; ezért ezt nem hívjuk lekérdezésből.
+A `refresh_hero_offers(castle_id, token=...)` külön `castle.refresh_heroes` művelet, `params={castle_id}`.
+Az eredeti, lusta frissítést végzi: érvényes ajánlatot nem dob el újrasorsolásért. Költsége nincs, de a világ/RNG változhat;
+sikeres műveletként új tokent ad, és `hero_offers_refreshed` eseményt küld. Utána friss lekérdezés használható.
+
+### Hősvásárlás
+
+`hire_hero(castle_id, hero_id, token=...)` → `castle.hire`, `params={castle_id, hero_id}`.
+Csak a vár tulajdonosának két tárolt, még elérhető ajánlatából lehet választani. Tetszőleges tartalék hős és más játékos hőse nem vásárolható.
+A vár látogatói helyének szabadnak kell lennie; a natív hőslimit és fizetőképesség is kötelező.
+Nem szükséges új kör vagy új épület megvásárlása; az eredeti `Castle::AllowBuyHero` és `Castle::RecruitHero` szabálya érvényes.
+
+A közös natív útvonal hozzáadja a hőst a birodalomhoz és a térképhez, kezeli seregét/mozgáspontját, levonja az árat,
+frissíti az ajánlatot, felderíti a környéket és tanítja a vár varázslatait. Headless módban a már meglévő radarvédelem miatt nem nyílik UI.
+Esemény: `hero_hired`, `castle_id`, `hero_id`, `cost` mezőkkel. A válasz új döntést és tokent tartalmaz.
+
+### Piaci árfolyam és pontos csere
+
+A `get_castle_options(castle_id)["market"]` mező az adott vár tulajdonosának összes piacával számol:
+`marketplace_count` és a 42 különböző irány `trades` listája. Ez minden résztvevőnél csak olvasó lekérdezés.
+Egy árfolyam: `resource_from`, `resource_to`, `sell_per_lot`, `buy_per_lot`, `max_lots`.
+Azonosítók: fa `1`, higany `2`, érc `4`, kén `8`, kristály `16`, drágakő `32`, arany `64`.
+
+`trade_resources(castle_id, resource_from, resource_to, lots, token=...)` → `market.trade`,
+`params={castle_id, resource_from, resource_to, lots}`. A megadott várnak sajátnak kell lennie, és a birodalomnak kell piaccal rendelkeznie;
+nem szükséges, hogy a hivatkozott várban legyen a piac. A kért pozitív, egész `lots` pontos csomagszám: mindegyik csomag
+`sell_per_lot` forrást von le és `buy_per_lot` célt ad. Nincs kerekítés vagy részleges teljesítés.
+
+Példák egy piaccal: 1 fa → 25 arany; 2500 arany → 1 fa/érc; 5000 arany → 1 ritka nyersanyag;
+20 fa → 1 ritka nyersanyag; 5 ritka nyersanyag → 1 fa/érc. A tényleges árfolyamot mindig a közös natív `getTradeCost` adja.
+A maximum a forráskészletet és a cél 32 bites előjeles tárolási korlátját is figyelembe veszi.
+
+A `getResourceTradeQuote` / `tradeResources` közös C++ műveletet a meglévő piaci ablak is használja.
+A piaci ablakban csak a végrehajtási két pénzmozgás került át a közös, ellenőrzött függvénybe; a felület és árfolyamtáblák megmaradtak.
+A kereskedőállomás eredeti, három piacnak megfelelő árfolyama a normál UI-ban megmarad; a Python-parancs nem fogad szabadon beállítható
+piacszámot vagy kereskedőállomás-jogosultságot. Esemény: `resources_traded` (`castle_id`, `player_id`, `resource_from`,
+`resource_to`, `lots`, `sold`, `bought`).
+
+Az összes új művelet a meglévő token- és checkpointellenőrzést használja. Hibás bemenet `invalid_request`,
+tiltott/megfizethetetlen művelet `illegal_action`, régi token `stale_decision`; elutasításkor a világ és a döntés változatlan.
+Hajóvásárlás és több résztvevő Python-vezérlése továbbra sincs megvalósítva. A kilencakciós Gym-példa nem bővült ezekkel az akciókkal.
+
+A hat új gazdasági integrációs teszt ellenőrzi a hősajánlatok és árfolyamok változatlan lekérdezését minden oldalon,
+a natív hősvásárlást és árat, a foglalt várat, nem felkínált/idegen hősöket és elégtelen pénzt, a kereskedési irányokat,
+a hiányzó piacot, a túl nagy csomagszámot, hibás erőforrásokat és hamis kereskedőállomás-paramétert.
+
+2026-10-29-i folytatás: összesen 63 sikeres Python-integrációs teszt és sikeres normál `ENABLE_PYTHON_ENV=OFF`
+Windows-build. A bekapcsolt fejlesztői motor is lefordult, az `economy.py` példa a fenti konkrét eredményt adta.
+A közös piaci művelet normál GUI-beli kattintásos próbája és más platformok SDK-fordítása ebben a munkaszakaszban nem történt meg.
