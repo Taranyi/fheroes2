@@ -195,7 +195,8 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 4 | Kész: kezdeti adventure döntési pont | `start_session`/`get_decision`, C++ mentettkör-callbackben élő parancsvárakozás, közös tokenes `step` ellenőrzés, `session.stop`, `close`/EOF kilépés. A játékos vezérléstípusa nem változik, a világ nem lép. 28 sikeres teszt. [Szerződés és CONTROL-audit](PYTHON_ENV_CONTROLLER.md). Valódi játékmeneti művelet, render és konkrét választási dialógus még nincs; ezeket az 5–10. lépés köti be. |
 | 5 | Kész: jelenlegi betöltés/döntés/render profil | Explicit headless policy; választható core-komponensek a régi alapértékekkel; önálló adventure viewport, RGB képkérés és tényleges runtime-adatok. 35 sikeres Python-teszt, C++ policy-ellenőrzés és SDL dummy/software próbák. [Leírás és korlátok](PYTHON_ENV_HEADLESS.md). A még nem bekötött játékműveleteknél ezt továbbra is ellenőrizni kell. |
 | 6 | Kész: adventure_basic profil | Natív útkeresés/mezőlépés, saját szárazföldi hős és sima erőforráskupac; `turn.end` valódi AI-körökkel, bevétellel és hétváltással. Tokenverziózás, események és teljes műveleti checkpoint/visszaállítás a nem támogatott interakcióknál. 43 sikeres Python-teszt. [Szerződés, példa és korlátok](PYTHON_ENV_ADVENTURE.md). Emberi csata, választás és hajózás még nincs bekötve. |
-| 7–14 | Tervezett | A fenti lépések szerint. |
+| 7 | Első rész kész: várlekérdezés, építés, pontos toborzás | A natív feltételek, költségek, napi limit, faji fejlesztések, készlet és garrison/hős cél ellenőrzésével; az eredeti játékszabály-függvények változatlanok. [Szerződés és futtatható példa](PYTHON_ENV_CASTLE.md). Hősvásárlás, piaci csere és hajó még hátravan. |
+| 8–14 | Tervezett | A fenti lépések szerint. |
 
 ### Korai, futtatható Gym-példa a 6. lépés után
 

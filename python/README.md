@@ -5,6 +5,19 @@ native land movement/resource pickup and turn progression through the built-in A
 initialization. An optional Gymnasium preview demonstrates the reset/step loop below. External battles/choices,
 other actions/views and the full Gym action/observation contract remain future steps.
 
+Castle inspection, building and exact-count recruitment are also available through the native engine:
+
+```powershell
+uv run --project python python python/examples/castle.py
+```
+
+Use `game.get_castle_options(castle_id)`, `game.build_castle(castle_id, building_id, token=...)` and
+`game.recruit_castle(castle_id, dwelling_id, count, token=...)`. Both actions return a fresh decision token.
+The read-only options include prices, prerequisites/statuses, available creatures, affordable quantities and army destinations.
+Queries include opponents' castles; actions require ownership by the waiting player. Recruitment is exact, with no silent clamping.
+See [the castle API and limits](../docs/PYTHON_ENV_CASTLE.md). Hero hiring, trading and ship purchases are still pending;
+the nine-action Gym preview remains unchanged.
+
 ## Runnable Gymnasium preview
 
 From the repository root, after building the enabled engine and preparing the local reference saves:

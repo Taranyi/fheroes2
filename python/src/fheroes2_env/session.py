@@ -291,7 +291,7 @@ class HeroesSession:
                 raise ProtocolError("Engine returned an invalid RGB frame") from error
 
     def step(self, action: str, *, token: Mapping[str, Any], params: Mapping[str, Any] | None = None) -> dict[str, Any]:
-        """Submit a token-checked command: hero.move, turn.end or session.stop.
+        """Submit a token-checked gameplay command or session.stop.
 
         Pass the token returned by start_session/get_decision explicitly; the
         client must never silently replace a stale token with the latest one.
@@ -307,6 +307,18 @@ class HeroesSession:
     def end_turn(self, *, token: Mapping[str, Any]) -> dict[str, Any]:
         """Run the remaining built-in AI turns and return at the next human decision."""
         return self.step("turn.end", token=token)
+
+    def get_castle_options(self, castle_id: int) -> dict[str, Any]:
+        """Read native building/recruitment conditions without modifying the world."""
+        return self.request("get_castle_options", {"castle_id": castle_id})
+
+    def build_castle(self, castle_id: int, building_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Buy one building using native prerequisites, prices and the daily limit."""
+        return self.step("castle.build", token=token, params={"castle_id": castle_id, "building_id": building_id})
+
+    def recruit_castle(self, castle_id: int, dwelling_id: int, count: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Recruit exactly count creatures of the base dwelling's current native tier."""
+        return self.step("castle.recruit", token=token, params={"castle_id": castle_id, "dwelling_id": dwelling_id, "count": count})
 
     def close(self) -> None:
         with self._lock:

@@ -50,6 +50,7 @@
 #include "maps_tiles.h"
 #include "maps_tiles_helper.h"
 #include "players.h"
+#include "python_env_castle.h"
 #include "race.h"
 #include "rand.h"
 #include "resource.h"
@@ -359,7 +360,8 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                  { "decision_id", _decisionId },
                  { "player_id", _controllerPlayer } } },
              { "turn_order", order },
-             { "available_actions", GameOver::Result::Get().GetResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end" } : Json{ "session.stop" } },
+             { "available_actions",
+               GameOver::Result::Get().GetResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit" } : Json{ "session.stop" } },
              { "events", _events },
              { "pending_choice", nullptr },
              { "notifications",
@@ -395,8 +397,9 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         _waiting = false;
         return { { "stopped", true }, { "state_version", _stateVersion } };
     }
-    if ( action != "hero.move" && action != "turn.end" ) {
-        throw PythonEnvError( "unsupported_action", "Only hero.move, turn.end and session.stop are currently supported." );
+    const bool castleAction = action == "castle.build" || action == "castle.recruit";
+    if ( action != "hero.move" && action != "turn.end" && !castleAction ) {
+        throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }
     if ( GameOver::Result::Get().GetResult() != 0 ) {
         throw PythonEnvError( "episode_finished", "This game has already ended." );
@@ -430,7 +433,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "illegal_action", "The hero is already on that tile." );
         }
     }
-    else if ( !params.empty() ) {
+    else if ( !castleAction && !params.empty() ) {
         throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
     }
 
@@ -464,7 +467,11 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             world.GetKingdom( static_cast<PlayerColor>( _controllerPlayer ) ).ActionBeforeTurn();
             _turnPrepared = true;
         }
-        if ( movingHero != nullptr ) {
+        if ( castleAction ) {
+            _events.push_back( pythonEnvCastleAction( action, params, _controllerPlayer ) );
+            GameOver::Result::Get().checkGameOver();
+        }
+        else if ( movingHero != nullptr ) {
             path = world.getPath( *movingHero, destination );
             if ( path.empty() || path.back().GetIndex() != destination ) {
                 throw PythonEnvError( "illegal_action", "The engine found no route to that tile." );
@@ -555,6 +562,16 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         }
         throw;
     }
+}
+
+nlohmann::json fheroes2::PythonEnvWorld::getCastleOptions( const uint32_t castleId ) const
+{
+    if ( !_loaded ) {
+        throw PythonEnvError( "no_game_loaded", "Call load_save before querying castle options." );
+    }
+    Json result = pythonEnvCastleOptions( castleId );
+    result["state_version"] = _stateVersion;
+    return result;
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )

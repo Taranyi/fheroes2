@@ -2,7 +2,8 @@
 
 A 6. lépésben az `adventure_basic` profil működik: saját hős szárazföldi mozgatása, sima erőforráskupac felvétele és
 a kör lezárása a beépített AI-játékosokkal. Nem közvetlen koordinátaátírás vagy külön Python-játékszabály hajtja végre.
-A csata, választási helyzet, hajózás és a többi külső művelet továbbra is későbbi lépés.
+A csata, választási helyzet és hajózás továbbra is későbbi lépés. A később hozzáadott várépítés és toborzás
+külön [várműveleti leírásban](PYTHON_ENV_CASTLE.md) szerepel.
 
 ## Használat
 

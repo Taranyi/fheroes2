@@ -82,7 +82,9 @@ namespace
 
     Json capabilities( const bool loaded, const bool waiting )
     {
-        return { { "commands", { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close" } },
+        return { { "commands",
+                   { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close",
+                     "get_castle_options" } },
                  { "max_request_bytes", maxRequestBytes },
                  { "max_response_bytes", maxResponseBytes },
                  { "game_initialized", loaded },
@@ -93,6 +95,7 @@ namespace
                  { "controller_active", waiting },
                  { "gameplay_actions", true },
                  { "gameplay_profile", "adventure_basic" },
+                 { "castle_actions", { "castle.build", "castle.recruit" } },
                  { "choices", false },
                  { "simulation", true },
                  { "render", true },
@@ -152,6 +155,14 @@ namespace
             }
             const DiagnosticRedirect redirect;
             return world.getState( params.value( "include_serialized", true ) );
+        }
+        if ( method == "get_castle_options" ) {
+            if ( params.size() != 1 || !params.contains( "castle_id" ) || !params["castle_id"].is_number_unsigned()
+                 || params["castle_id"].get<uint64_t>() > std::numeric_limits<uint32_t>::max() ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "get_castle_options requires an unsigned 32-bit castle_id." );
+            }
+            const DiagnosticRedirect redirect;
+            return world.getCastleOptions( params["castle_id"].get<uint32_t>() );
         }
         if ( method == "step" ) {
             if ( params.size() != 3 || !params.contains( "action" ) || !params["action"].is_string() || !params.contains( "token" ) || !params["token"].is_object()
