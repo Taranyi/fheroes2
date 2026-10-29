@@ -37,6 +37,7 @@
 #include "campaign_savedata.h"
 #include "campaign_scenariodata.h"
 #include "castle.h"
+#include "core.h"
 #include "dialog.h"
 #include "game.h"
 #include "game_auto_playtest.h"
@@ -501,7 +502,9 @@ fheroes2::GameMode GameOver::Result::checkGameOver()
                     fheroes2::AutoPlaytest::instance().setDefeatedPlayer( color, world.CountDay() );
                 }
                 else {
-                    Game::DialogPlayers( color, _( "Major Event!" ), _( "%{color} player has been vanquished!" ) );
+                    if ( !System::isHeadlessMode() ) {
+                        Game::DialogPlayers( color, _( "Major Event!" ), _( "%{color} player has been vanquished!" ) );
+                    }
                 }
             }
 
@@ -534,6 +537,9 @@ fheroes2::GameMode GameOver::Result::checkGameOver()
             }
 
             if ( result != GameOver::COND_NONE ) {
+                if ( System::isHeadlessMode() ) {
+                    return fheroes2::GameMode::MAIN_MENU;
+                }
                 // Don't show the loss dialog if player's kingdom has been vanquished due to the expired countdown of days since the loss of the last town.
                 // This case was already handled at the end of the Interface::AdventureMap::HumanTurn().
                 if ( result != GameOver::LOSS_ALL || !kingdom.GetCastles().empty() || kingdom.GetLostTownDays() != 0 ) {
@@ -549,6 +555,9 @@ fheroes2::GameMode GameOver::Result::checkGameOver()
             result = world.CheckKingdomWins( kingdom );
 
             if ( result != GameOver::COND_NONE ) {
+                if ( System::isHeadlessMode() ) {
+                    return fheroes2::GameMode::HIGHSCORES_STANDARD;
+                }
                 DialogWins( result );
 
                 if ( conf.isCampaignGameType() ) {

@@ -88,7 +88,7 @@ class EngineIntegrationTests(unittest.TestCase):
             self.assertEqual(replies[0]["result"]["engine"], "fheroes2")
             self.assertEqual(replies[0]["result"]["mode"], "bootstrap")
             self.assertFalse(replies[1]["result"]["game_initialized"])
-            self.assertFalse(replies[1]["result"]["headless_gameplay"])
+            self.assertTrue(replies[1]["result"]["headless_gameplay"])
             self.assertEqual(replies[2]["result"], {"closed": True})
             self.assertEqual(list(Path(directory).iterdir()), [])
 

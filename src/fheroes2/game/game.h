@@ -36,6 +36,8 @@ class Players;
 class Player;
 class Heroes;
 class Castle;
+struct EventDate;
+struct Funds;
 
 namespace Game
 {
@@ -74,10 +76,13 @@ namespace Game
     fheroes2::GameMode SelectScenario( const uint8_t humanPlayerCount );
     fheroes2::GameMode StartGame();
     // Resume a supported saved human turn through an external controller, before any UI initialization.
-    // The callback owns the decision wait. It must not advance to another turn in this initial integration.
+    // The callback owns the external decision/continuation loop until detach or close.
     fheroes2::GameMode StartGame( const std::function<fheroes2::GameMode( PlayerColor )> & controller );
     PlayerColor getLoadedAdventurePlayer();
     std::vector<Player *> getPlayersInTurnOrder();
+    // Continue after the external human turn, using the built-in AI and ordinary daily updates.
+    fheroes2::GameMode advanceExternalTurn( PlayerColor humanColor, std::vector<PlayerColor> & completedAI,
+                                            const std::function<void( const EventDate &, const Funds & )> & onEvent );
     fheroes2::GameMode StartBattleOnly();
     fheroes2::GameMode DisplayLoadGameDialog();
     fheroes2::GameMode CompleteCampaignScenario( const bool isLoadingSaveFile );

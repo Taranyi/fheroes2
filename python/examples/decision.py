@@ -42,11 +42,11 @@ def main():
         print(f"Decision token: {decision['token']}")
         assert game.get_decision() == decision
         try:
-            game.step("turn.end", token=decision["token"])
+            game.step("castle.build", token=decision["token"])
         except EngineError as error:
             if error.code != "unsupported_action":
                 raise
-            print("turn.end is not implemented yet; the pending decision is unchanged.")
+            print("castle.build is not implemented yet; the pending decision is unchanged.")
         else:
             raise RuntimeError("Example expects the initial controller capability set")
         assert game.get_state() == before

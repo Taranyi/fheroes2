@@ -41,6 +41,7 @@
 #include "battle_only.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h"
 #include "direction.h"
@@ -273,6 +274,9 @@ PlayerColor Game::getLoadedAdventurePlayer()
             }
             human = player->GetColor();
         }
+        else if ( player->GetControl() != CONTROL_AI && world.GetKingdom( player->GetColor() ).isPlay() ) {
+            return PlayerColor::NONE;
+        }
     }
     return human;
 }
@@ -286,6 +290,53 @@ fheroes2::GameMode Game::StartGame( const std::function<fheroes2::GameMode( Play
     // Keep this call on the engine thread/stack while the external controller services requests.
     // No NewDay, ActionBeforeTurn, UI setup or AI execution belongs to this saved-turn checkpoint.
     return controller( player );
+}
+
+fheroes2::GameMode Game::advanceExternalTurn( const PlayerColor humanColor, std::vector<PlayerColor> & completedAI,
+                                              const std::function<void( const EventDate &, const Funds & )> & onEvent )
+{
+    if ( !System::isHeadlessMode() ) {
+        throw std::logic_error( "External turn continuation requires headless execution." );
+    }
+    Settings & settings = Settings::Get();
+    auto & result = GameOver::Result::Get();
+    completedAI.clear();
+    if ( const auto state = result.checkGameOver(); state != fheroes2::GameMode::CANCEL ) {
+        return state;
+    }
+    bool afterHuman = false;
+    for ( const Player * player : getPlayersInTurnOrder() ) {
+        if ( player->GetColor() == humanColor ) {
+            afterHuman = true;
+            continue;
+        }
+        if ( !afterHuman || !world.GetKingdom( player->GetColor() ).isPlay() ) {
+            continue;
+        }
+        assert( player->GetControl() == CONTROL_AI );
+        settings.SetCurrentColor( player->GetColor() );
+        Kingdom & kingdom = world.GetKingdom( player->GetColor() );
+        kingdom.ActionNewDayResourceUpdate( nullptr );
+        kingdom.ActionBeforeTurn();
+        const auto state = AI::Planner::Get().KingdomTurn( kingdom );
+        if ( state != fheroes2::GameMode::END_TURN ) {
+            return state;
+        }
+        completedAI.push_back( player->GetColor() );
+        if ( const auto end = result.checkGameOver(); end != fheroes2::GameMode::CANCEL ) {
+            return end;
+        }
+    }
+    settings.SetCurrentColor( PlayerColor::NONE );
+    world.NewDay();
+    if ( const auto state = result.checkGameOver(); state != fheroes2::GameMode::CANCEL ) {
+        return state;
+    }
+    settings.SetCurrentColor( humanColor );
+    Kingdom & kingdom = world.GetKingdom( humanColor );
+    kingdom.ActionBeforeTurn();
+    kingdom.ActionNewDayResourceUpdate( onEvent );
+    return fheroes2::GameMode::END_TURN;
 }
 
 void Game::DialogPlayers( const PlayerColor color, std::string title, std::string message )

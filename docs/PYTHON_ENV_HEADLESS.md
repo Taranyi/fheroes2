@@ -2,7 +2,8 @@
 
 Az 5. lépésben a jelenleg támogatott mentésbetöltés, állapotlekérdezés, döntésre várakozás és adventure képkérés
 ablak, kézi input és hang nélkül működik. A világot a játék saját C++ kódja tölti be, a képet a saját rajzolója készíti.
-A `headless_gameplay` képesség továbbra is false: mozgás, körváltás és csata még nincs bekötve.
+A 6. lépéstől a [korlátozott adventure profil](PYTHON_ENV_ADVENTURE.md) mozgást és AI-val együtt körváltást is támogat;
+a `headless_gameplay` erre a profilra true. Külső csatavezérlés még nincs.
 
 ## Megvalósítás
 

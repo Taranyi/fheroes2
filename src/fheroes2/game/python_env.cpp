@@ -91,13 +91,14 @@ namespace
                  { "player_observations", false },
                  { "external_controller", true },
                  { "controller_active", waiting },
-                 { "gameplay_actions", false },
+                 { "gameplay_actions", true },
+                 { "gameplay_profile", "adventure_basic" },
                  { "choices", false },
-                 { "simulation", false },
+                 { "simulation", true },
                  { "render", true },
                  { "render_views", { "adventure" } },
                  { "render_backend", "memory_image" },
-                 { "headless_gameplay", false } };
+                 { "headless_gameplay", true } };
     }
 
     bool sendResult( std::ostream & output, const Json & id, const Json & result )
@@ -157,6 +158,7 @@ namespace
                  || !params.contains( "params" ) || !params["params"].is_object() ) {
                 throw fheroes2::PythonEnvError( "invalid_request", "step requires action, token and params objects." );
             }
+            const DiagnosticRedirect redirect;
             return world.dispatch( params["action"].get<std::string>(), params["token"], params["params"] );
         }
         if ( method == "render" ) {

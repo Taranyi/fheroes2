@@ -40,6 +40,7 @@
 #include "audio_manager.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "difficulty.h"
 #include "game.h"
 #include "game_interface.h"
@@ -667,8 +668,10 @@ fheroes2::GameMode AI::Planner::KingdomTurn( Kingdom & kingdom )
     }
 
     // Reset the turn progress indicator
-    Interface::StatusPanel & status = Interface::AdventureMap::Get().getStatusPanel();
-    status.drawAITurnProgress( 0 );
+    Interface::StatusPanel * status = System::isHeadlessMode() ? nullptr : &Interface::AdventureMap::Get().getStatusPanel();
+    if ( status != nullptr ) {
+        status->drawAITurnProgress( 0 );
+    }
 
     AudioManager::PlayMusicAsync( MUS::COMPUTER_TURN, Music::PlaybackMode::RESUME_AND_PLAY_INFINITE );
 
@@ -788,7 +791,9 @@ fheroes2::GameMode AI::Planner::KingdomTurn( Kingdom & kingdom )
     updateKingdomBudget( kingdom );
 
     uint32_t currentProgressValue = 1;
-    status.drawAITurnProgress( currentProgressValue );
+    if ( status != nullptr ) {
+        status->drawAITurnProgress( currentProgressValue );
+    }
 
     // If there is a hero who is ready to dig up the Ultimate Artifact, then it is necessary to do this at the beginning of the turn
     if ( const auto iter = std::find_if( heroes.begin(), heroes.end(),
@@ -890,7 +895,9 @@ fheroes2::GameMode AI::Planner::KingdomTurn( Kingdom & kingdom )
         break;
     }
 
-    status.drawAITurnProgress( 9 );
+    if ( status != nullptr ) {
+        status->drawAITurnProgress( 9 );
+    }
 
     // Sync the list of castles (if new ones were captured during the turn)
     if ( castles.size() != sortedCastleList.size() ) {
@@ -921,7 +928,9 @@ fheroes2::GameMode AI::Planner::KingdomTurn( Kingdom & kingdom )
         transferSlowestTroopsToGarrison( hero, castle );
     }
 
-    status.resetAITurnProgress();
+    if ( status != nullptr ) {
+        status->resetAITurnProgress();
+    }
 
     return fheroes2::GameMode::END_TURN;
 }

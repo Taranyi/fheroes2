@@ -40,6 +40,7 @@
 #include "battle_army.h"
 #include "campaign_savedata.h"
 #include "captain.h"
+#include "core.h"
 #include "dialog.h"
 #include "game.h"
 #include "heroes.h"
@@ -290,6 +291,9 @@ namespace
 
 Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const int32_t tileIndex )
 {
+    if ( System::isHeadlessMode() && ( attackingArmy.isControlHuman() || defendingArmy.isControlHuman() ) ) {
+        System::requireInteractive( "human battle requires an external battle controller" );
+    }
     Result result;
 
     // Validate the arguments - check if battle should even load
@@ -383,6 +387,9 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
 #endif
 
     const uint32_t battleSeed = computeBattleSeed( tileIndex, world.GetMapSeed(), attackingArmy, defendingArmy );
+    if ( System::isHeadlessMode() ) {
+        showBattle = false;
+    }
 
     while ( true ) {
         Rand::PCG32 randomGenerator( battleSeed );

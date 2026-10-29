@@ -30,11 +30,13 @@
 #include <utility>
 
 #include "agg.h"
+#include "ai_planner.h"
 #include "army.h"
 #include "army_troop.h"
 #include "artifact.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "game.h"
 #include "game_io.h"
 #include "game_over.h"
@@ -43,11 +45,15 @@
 #include "image.h"
 #include "image_palette.h"
 #include "interface_gamearea.h"
+#include "maps.h"
 #include "maps_fileinfo.h"
 #include "maps_tiles.h"
+#include "maps_tiles_helper.h"
 #include "players.h"
 #include "race.h"
+#include "rand.h"
 #include "resource.h"
+#include "route.h"
 #include "save_format_version.h"
 #include "serialize.h"
 #include "settings.h"
@@ -55,6 +61,7 @@
 #include "spell.h"
 #include "system.h"
 #include "world.h"
+#include "world_object_uid.h"
 
 namespace
 {
@@ -228,6 +235,8 @@ bool fheroes2::PythonEnvWorld::loaded() const
 void fheroes2::PythonEnvWorld::clear()
 {
     _loaded = false;
+    _turnPrepared = false;
+    _events = Json::array();
     _warnings.clear();
     world.Reset();
     Settings::Get().GetPlayers().clear();
@@ -241,6 +250,7 @@ nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path 
     }
     clear();
     ++_stateVersion;
+    ++_episodeId;
     const std::string path = System::encUTF8ToLocal( utf8Path );
     if ( System::encLocalToUTF8( path ) != utf8Path ) {
         throw PythonEnvError( "invalid_path", "This save path cannot be represented by the engine's filesystem encoding." );
@@ -339,19 +349,23 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
         order.push_back( static_cast<int>( player->GetColor() ) );
     }
     return { { "waiting", true },
-             { "phase", "adventure" },
+             { "phase", GameOver::Result::Get().GetResult() == 0 ? "adventure" : "terminal" },
              { "controller", "external" },
              { "player_id", _controllerPlayer },
              { "token",
                { { "session_id", _sessionId },
-                 { "episode_id", _stateVersion },
+                 { "episode_id", _episodeId },
                  { "state_version", _stateVersion },
                  { "decision_id", _decisionId },
                  { "player_id", _controllerPlayer } } },
              { "turn_order", order },
-             { "available_actions", { "session.stop" } },
+             { "available_actions", GameOver::Result::Get().GetResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end" } : Json{ "session.stop" } },
+             { "events", _events },
              { "pending_choice", nullptr },
-             { "notifications", { { { "type", "decision_required" }, { "phase", "adventure" }, { "player_id", _controllerPlayer } } } } };
+             { "notifications",
+               { { { "type", "decision_required" },
+                   { "phase", GameOver::Result::Get().GetResult() == 0 ? "adventure" : "terminal" },
+                   { "player_id", _controllerPlayer } } } } };
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params )
@@ -374,14 +388,173 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     if ( token["player_id"] != current["player_id"] ) {
         throw PythonEnvError( "wrong_player", "The action does not belong to the waiting player." );
     }
-    if ( action != "session.stop" ) {
-        throw PythonEnvError( "unsupported_action", "Gameplay actions are not enabled at this checkpoint." );
+    if ( action == "session.stop" ) {
+        if ( !params.empty() ) {
+            throw PythonEnvError( "invalid_request", "session.stop requires empty action params." );
+        }
+        _waiting = false;
+        return { { "stopped", true }, { "state_version", _stateVersion } };
     }
-    if ( !params.empty() ) {
-        throw PythonEnvError( "invalid_request", "session.stop requires empty action params." );
+    if ( action != "hero.move" && action != "turn.end" ) {
+        throw PythonEnvError( "unsupported_action", "Only hero.move, turn.end and session.stop are currently supported." );
     }
-    _waiting = false;
-    return { { "stopped", true }, { "state_version", _stateVersion } };
+    if ( GameOver::Result::Get().GetResult() != 0 ) {
+        throw PythonEnvError( "episode_finished", "This game has already ended." );
+    }
+
+    Heroes * movingHero = nullptr;
+    std::list<Route::Step> path;
+    int destination = -1;
+    if ( action == "hero.move" ) {
+        if ( params.size() != 3 || !params.contains( "hero_id" ) || !params["hero_id"].is_number_unsigned() || !params.contains( "x" )
+             || !params["x"].is_number_unsigned() || !params.contains( "y" ) || !params["y"].is_number_unsigned()
+             || params["hero_id"].get<uint64_t>() > static_cast<uint64_t>( Heroes::DEBUG_HERO ) || params["x"].get<uint64_t>() >= static_cast<uint64_t>( world.w() )
+             || params["y"].get<uint64_t>() >= static_cast<uint64_t>( world.h() ) ) {
+            throw PythonEnvError( "invalid_request", "hero.move requires a valid hero_id and zero-based x/y coordinates." );
+        }
+        const int id = params["hero_id"].get<int>();
+        for ( Heroes * hero : world.getAllHeroes() ) {
+            if ( hero->GetID() == id ) {
+                movingHero = hero;
+                break;
+            }
+        }
+        if ( movingHero == nullptr || !movingHero->isActive() || static_cast<int>( movingHero->GetColor() ) != _controllerPlayer ) {
+            throw PythonEnvError( "illegal_action", "The hero must be an active hero owned by the waiting player." );
+        }
+        if ( movingHero->isShipMaster() ) {
+            throw PythonEnvError( "unsupported_action", "External ship movement is not supported yet." );
+        }
+        destination = params["y"].get<int>() * world.w() + params["x"].get<int>();
+        if ( destination == movingHero->GetIndex() ) {
+            throw PythonEnvError( "illegal_action", "The hero is already on that tile." );
+        }
+    }
+    else if ( !params.empty() ) {
+        throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
+    }
+
+    ensureGraphicsData();
+
+    // A native AI turn may reach an interaction not yet supported by the external profile.
+    // Keep a real engine checkpoint, including RNG and object UID state, so rejection is atomic.
+    RWStreamBuf checkpoint;
+    checkpoint.setBigendian( true );
+    checkpoint << world << Settings::Get() << GameOver::Result::Get();
+    if ( checkpoint.fail() ) {
+        throw PythonEnvError( "engine_error", "Could not create the action checkpoint." );
+    }
+    const auto randomState = Rand::CurrentThreadRandomDevice();
+    const uint32_t objectUID = Maps::getLastObjectUID();
+    const auto savedVersion = Game::GetVersionOfCurrentSaveFile();
+    const bool wasPrepared = _turnPrepared;
+    const auto oldStateVersion = _stateVersion;
+    const auto oldDecisionId = _decisionId;
+    const Json oldEvents = _events;
+    try {
+        _events = Json::array();
+        Settings::Get().SetCurrentColor( static_cast<PlayerColor>( _controllerPlayer ) );
+        if ( !_turnPrepared ) {
+            if ( world.CountDay() == 1 ) {
+                for ( const Player * player : Game::getPlayersInTurnOrder() ) {
+                    world.ClearFog( player->GetColor() );
+                }
+            }
+            world.resetPathfinder();
+            world.GetKingdom( static_cast<PlayerColor>( _controllerPlayer ) ).ActionBeforeTurn();
+            _turnPrepared = true;
+        }
+        if ( movingHero != nullptr ) {
+            path = world.getPath( *movingHero, destination );
+            if ( path.empty() || path.back().GetIndex() != destination ) {
+                throw PythonEnvError( "illegal_action", "The engine found no route to that tile." );
+            }
+            uint64_t cost = 0;
+            for ( const auto & step : path ) {
+                const auto & tile = world.getTile( step.GetIndex() );
+                const auto type = tile.getMainObjectType();
+                if ( tile.isWater() || type == MP2::OBJ_EVENT || ( MP2::isInGameActionObject( type ) && !( step.GetIndex() == destination && type == MP2::OBJ_RESOURCE ) )
+                     || !Maps::getMonstersProtectingTile( step.GetIndex(), false ).empty() ) {
+                    throw PythonEnvError( "unsupported_action", "The route reaches a battle, choice or unsupported adventure object." );
+                }
+                cost += step.GetPenalty();
+            }
+            if ( cost > movingHero->GetMovePoints() ) {
+                throw PythonEnvError( "illegal_action", "The whole route must be affordable with the hero's remaining movement points." );
+            }
+            const int from = movingHero->GetIndex();
+            const int id = movingHero->GetID();
+            const uint32_t movement = movingHero->GetMovePoints();
+            const Funds before = movingHero->GetKingdom().GetFunds();
+            movingHero->GetPath().setPath( path );
+            movingHero->SetMove( true );
+            size_t remaining = path.size() + 1;
+            while ( movingHero->isActive() && movingHero->isMoveEnabled() ) {
+                if ( remaining-- == 0 ) {
+                    throw PythonEnvError( "engine_error", "Hero movement did not finish along its validated route." );
+                }
+                movingHero->Move( true );
+            }
+            movingHero->SetMove( false );
+            movingHero->ResetAction();
+            _events.push_back( { { "type", "hero_moved" },
+                                 { "hero_id", id },
+                                 { "from", from },
+                                 { "to", movingHero->GetIndex() },
+                                 { "target", destination },
+                                 { "movement_spent", movement - movingHero->GetMovePoints() } } );
+            const Funds delta = movingHero->GetKingdom().GetFunds() - before;
+            if ( delta.GetValidItemsCount() != 0 ) {
+                _events.push_back( { { "type", "resource_collected" }, { "hero_id", id }, { "tile", destination }, { "funds", funds( delta ) } } );
+            }
+            GameOver::Result::Get().checkGameOver();
+        }
+        else {
+            const uint32_t day = world.CountDay();
+            std::vector<PlayerColor> completed;
+            Game::advanceExternalTurn( static_cast<PlayerColor>( _controllerPlayer ), completed, [&]( const EventDate & event, const Funds & applied ) {
+                _events.push_back( { { "type", "daily_event" },
+                                     { "title", text( event.title ) },
+                                     { "message", text( event.message ) },
+                                     { "funds", funds( applied ) },
+                                     { "day", world.CountDay() } } );
+            } );
+            for ( const auto color : completed ) {
+                _events.push_back( { { "type", "ai_turn_completed" }, { "player_id", static_cast<int>( color ) }, { "day", day } } );
+            }
+            _events.push_back( { { "type", "turn_ended" }, { "player_id", _controllerPlayer }, { "from_day", day }, { "to_day", world.CountDay() } } );
+            if ( world.CountDay() != day && world.BeginWeek() ) {
+                _events.push_back( { { "type", "new_week" }, { "week", world.CountWeek() }, { "month", world.GetMonth() } } );
+            }
+        }
+        ++_stateVersion;
+        ++_decisionId;
+        return { { "decision", getDecision() }, { "events", _events }, { "state_version", _stateVersion }, { "game_result", GameOver::Result::Get().GetResult() } };
+    }
+    catch ( ... ) {
+        try {
+            AI::Planner::Get().resetWorldCaches();
+            Game::SetVersionOfCurrentSaveFile( CURRENT_FORMAT_VERSION );
+            checkpoint >> world >> Settings::Get() >> GameOver::Result::Get();
+            Game::SetVersionOfCurrentSaveFile( savedVersion );
+            Rand::CurrentThreadRandomDevice() = randomState;
+            Maps::setLastObjectUID( objectUID );
+            AI::Planner::Get().resetWorldCaches();
+            _turnPrepared = wasPrepared;
+            _stateVersion = oldStateVersion;
+            _decisionId = oldDecisionId;
+            _events = oldEvents;
+            if ( checkpoint.fail() ) {
+                throw std::logic_error( "Invalid action checkpoint." );
+            }
+        }
+        catch ( ... ) {
+            _loaded = false;
+            _waiting = false;
+            throw PythonEnvError( "session_faulted", "Failed to restore the action checkpoint. Load a save again." );
+        }
+        throw;
+    }
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
@@ -425,19 +598,7 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
         throw PythonEnvError( "render_failed", "Render output must be a new file in an existing directory." );
     }
 
-    if ( !_renderResources ) {
-        try {
-            _renderResources = std::make_unique<h2d::H2DInitializer>();
-        }
-        catch ( const std::exception & ) {
-            throw PythonEnvError( "assets_unavailable", "Rendering requires the matching files/data/resurrection.h2d game resources." );
-        }
-    }
-    const std::vector<uint8_t> paletteBytes = AGG::getDataFromAggFile( "KB.PAL", false );
-    if ( paletteBytes.size() != paletteSizeBytes ) {
-        throw PythonEnvError( "assets_unavailable", "The original game palette is missing or corrupt." );
-    }
-    setGamePalette( paletteBytes );
+    ensureGraphicsData();
     Image image;
     image._disableTransformLayer();
     image.resize( width, height );
@@ -473,6 +634,23 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
              { "state_version", _stateVersion } };
 }
 
+void fheroes2::PythonEnvWorld::ensureGraphicsData()
+{
+    if ( !_renderResources ) {
+        try {
+            _renderResources = std::make_unique<h2d::H2DInitializer>();
+        }
+        catch ( const std::exception & ) {
+            throw PythonEnvError( "assets_unavailable", "Gameplay/rendering requires the matching files/data/resurrection.h2d game resources." );
+        }
+    }
+    const std::vector<uint8_t> paletteBytes = AGG::getDataFromAggFile( "KB.PAL", false );
+    if ( paletteBytes.size() != paletteSizeBytes ) {
+        throw PythonEnvError( "assets_unavailable", "The original game palette is missing or corrupt." );
+    }
+    setGamePalette( paletteBytes );
+}
+
 nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized ) const
 {
     if ( !_loaded ) {
@@ -500,6 +678,8 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
                              { "race", player->GetRace() },
                              { "friends", player->GetFriends() },
                              { "funds", funds( kingdom.GetFunds() ) },
+                             { "daily_income", funds( kingdom.GetIncome() ) },
+                             { "lost_town_days", kingdom.GetLostTownDays() },
                              { "hero_ids", heroIds },
                              { "castle_ids", castleIds } } );
     }
@@ -552,7 +732,7 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
     Json result{ { "schema_version", 1 },
                  { "state_version", _stateVersion },
                  { "perspective", "omniscient" },
-                 { "phase", "adventure" },
+                 { "phase", GameOver::Result::Get().GetResult() == 0 ? "adventure" : "terminal" },
                  { "current_player", static_cast<int>( settings.GetPlayers().getCurrentColor() ) },
                  { "date",
                    { { "day", world.GetDay() },

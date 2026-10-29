@@ -49,7 +49,7 @@ namespace fheroes2
         const std::string code;
     };
 
-    // Read-only adapter over the real World/Settings objects; no gameplay rules live here.
+    // Adapter over native World/Settings and gameplay calls; game rules stay in the existing engine.
     class PythonEnvWorld final
     {
     public:
@@ -69,12 +69,16 @@ namespace fheroes2
 
     private:
         void clear();
+        void ensureGraphicsData();
 
         const std::string _executablePath;
         std::unique_ptr<AGG::AGGInitializer> _resources;
         std::unique_ptr<h2d::H2DInitializer> _renderResources;
         bool _loaded{ false };
         uint64_t _stateVersion{ 0 };
+        uint64_t _episodeId{ 0 };
+        bool _turnPrepared{ false };
+        nlohmann::json _events = nlohmann::json::array();
         const std::string _sessionId;
         uint64_t _decisionId{ 0 };
         int _controllerPlayer{ 0 };

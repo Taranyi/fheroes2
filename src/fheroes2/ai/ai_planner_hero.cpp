@@ -43,6 +43,7 @@
 #include "artifact_ultimate.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "difficulty.h"
 #include "direction.h"
 #include "game.h"
@@ -3110,7 +3111,7 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
         addHeroToMove( hero, availableHeroes );
     }
 
-    Interface::StatusPanel & status = Interface::AdventureMap::Get().getStatusPanel();
+    Interface::StatusPanel * status = System::isHeadlessMode() ? nullptr : &Interface::AdventureMap::Get().getStatusPanel();
 
     uint32_t heroesToMoveTotalCount = static_cast<uint32_t>( availableHeroes.size() );
     uint32_t startProgressValue = currentProgressValue;
@@ -3155,7 +3156,9 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
                     }
 
                     // This loop may take many time for computations, so pump the event queue and update the animation of the hourglass grains.
-                    status.drawAITurnProgress( currentProgressValue );
+                    if ( status != nullptr ) {
+                        status->drawAITurnProgress( currentProgressValue );
+                    }
                 }
 
                 if ( bestTargetIndex != -1 ) {
@@ -3170,7 +3173,9 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
                                          ( turnProgressScale * ( heroesToMoveTotalCount - static_cast<uint32_t>( availableHeroes.size() ) ) + 3 * heroesToMoveTotalCount )
                                                  / ( 4 * heroesToMoveTotalCount )
                                              + startProgressValue );
-        status.drawAITurnProgress( currentProgressValue );
+        if ( status != nullptr ) {
+            status->drawAITurnProgress( currentProgressValue );
+        }
 
         if ( bestTargetIndex == -1 ) {
             // Possibly heroes have nothing to do because one of them is blocking the way. Move a random hero randomly and see what happens.
@@ -3299,10 +3304,14 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
                                          ( turnProgressScale * ( heroesToMoveTotalCount - static_cast<uint32_t>( availableHeroes.size() ) ) + heroesToMoveTotalCount )
                                                  / ( 4 * heroesToMoveTotalCount )
                                              + startProgressValue );
-        status.drawAITurnProgress( currentProgressValue );
+        if ( status != nullptr ) {
+            status->drawAITurnProgress( currentProgressValue );
+        }
     }
 
-    status.drawAITurnProgress( endProgressValue );
+    if ( status != nullptr ) {
+        status->drawAITurnProgress( endProgressValue );
+    }
 
     moreTasksAvailable = availableHeroes.empty();
     return fheroes2::GameMode::END_TURN;

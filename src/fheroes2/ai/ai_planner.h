@@ -178,6 +178,20 @@ namespace AI
             _pathfinder.reset();
         }
 
+        // Invalidate transient references after restoring a world checkpoint.
+        void resetWorldCaches()
+        {
+            _mapActionObjects.clear();
+            _priorityTargets.clear();
+            _enemyArmies.clear();
+            _tileArmyStrengthValues.clear();
+            _regions.clear();
+            for ( auto & entry : _budget ) {
+                entry.reset();
+            }
+            _pathfinder.reset();
+        }
+
         void revealFog( const Maps::Tile & tile, const Kingdom & kingdom );
 
         bool isValidHeroObject( const Heroes & hero, const int32_t index, const bool underHero );

@@ -84,7 +84,7 @@ class HeroesSession:
     """Start ``fheroes2 --python-env`` and complete its protocol handshake.
 
     Use as a context manager, or call close(). Saves can be loaded and inspected,
-    including all AI players. This version does not execute gameplay actions.
+    including all AI players, plus the limited native adventure action profile.
     """
 
     def __init__(
@@ -291,7 +291,7 @@ class HeroesSession:
                 raise ProtocolError("Engine returned an invalid RGB frame") from error
 
     def step(self, action: str, *, token: Mapping[str, Any], params: Mapping[str, Any] | None = None) -> dict[str, Any]:
-        """Submit a token-checked command. Currently only session.stop is supported.
+        """Submit a token-checked command: hero.move, turn.end or session.stop.
 
         Pass the token returned by start_session/get_decision explicitly; the
         client must never silently replace a stale token with the latest one.
@@ -299,6 +299,14 @@ class HeroesSession:
         if not isinstance(action, str) or not isinstance(token, Mapping) or (params is not None and not isinstance(params, Mapping)):
             raise TypeError("Expected an action string, token mapping and optional params mapping")
         return self.request("step", {"action": action, "token": dict(token), "params": dict(params) if params is not None else {}})
+
+    def move_hero(self, hero_id: int, x: int, y: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Follow an affordable land route using the engine's native movement/pickup rules."""
+        return self.step("hero.move", token=token, params={"hero_id": hero_id, "x": x, "y": y})
+
+    def end_turn(self, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Run the remaining built-in AI turns and return at the next human decision."""
+        return self.step("turn.end", token=token)
 
     def close(self) -> None:
         with self._lock:

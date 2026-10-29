@@ -44,6 +44,7 @@
 #include "battle.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "dialog.h"
 #include "game.h"
 #include "game_assets.h"
@@ -254,8 +255,14 @@ namespace
 
         assert( objectUID != 0 );
 
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-        I.getGameArea().runSingleObjectAnimation( std::make_shared<Interface::ObjectFadingOutInfo>( objectUID, tile.GetIndex(), objectType ) );
+        if ( System::isHeadlessMode() ) {
+            // Keep the ordinary fade destructor's object-removal semantics, without its visual frames.
+            const Interface::ObjectFadingOutInfo completion( objectUID, tile.GetIndex(), objectType );
+        }
+        else {
+            Interface::AdventureMap::Get().getGameArea().runSingleObjectAnimation(
+                std::make_shared<Interface::ObjectFadingOutInfo>( objectUID, tile.GetIndex(), objectType ) );
+        }
 
         // If there is a map bug the Object Animation destructor is not able to properly remove this object from the map.
         if ( actualObjectType != objectType && actualObjectType != MP2::OBJ_NONE ) {
@@ -264,8 +271,11 @@ namespace
         }
 
         // Update radar in the place of the removed object.
-        I.getRadar().SetRenderArea( { Maps::GetPoint( tile.GetIndex() ), { 1, 1 } } );
-        I.setRedraw( Interface::REDRAW_RADAR );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( { Maps::GetPoint( tile.GetIndex() ), { 1, 1 } } );
+            I.setRedraw( Interface::REDRAW_RADAR );
+        }
     }
 
     void RecruitMonsterFromTile( Heroes & hero, Maps::Tile & tile, std::string msg, const Troop & troop, const bool remove )
@@ -761,7 +771,10 @@ namespace
         else {
             const Funds funds = getFundsFromTile( tile );
 
-            if ( objectType == MP2::OBJ_CAMPFIRE ) {
+            if ( System::isHeadlessMode() ) {
+                // The external caller reports the funds delta; apply the shared pickup rules below.
+            }
+            else if ( objectType == MP2::OBJ_CAMPFIRE ) {
                 const fheroes2::Text header( MP2::StringObject( objectType ), fheroes2::FontType::normalYellow() );
                 const fheroes2::Text body( _( "Ransacking an enemy camp, you discover a hidden cache of treasures." ), fheroes2::FontType::normalWhite() );
 
@@ -3728,6 +3741,9 @@ namespace
 
 void Heroes::ScoutRadar() const
 {
+    if ( System::isHeadlessMode() ) {
+        return;
+    }
     Interface::AdventureMap & I = Interface::AdventureMap::Get();
 
     if ( GetColor() != PlayerColor::NONE ) {
@@ -3771,8 +3787,9 @@ void Heroes::Action( const int tileIndex )
 
     const bool isAIAutoControlMode = player->isAIAutoControlMode();
 
-    if ( !GetKingdom().isControlAI()
-         || ( isAIAutoControlMode && ( !Settings::Get().IsGameType( Game::TYPE_AUTO_PLAYTEST ) || fheroes2::AutoPlaytest::instance().isAnimationEnabled() ) ) ) {
+    if ( !System::isHeadlessMode()
+         && ( !GetKingdom().isControlAI()
+              || ( isAIAutoControlMode && ( !Settings::Get().IsGameType( Game::TYPE_AUTO_PLAYTEST ) || fheroes2::AutoPlaytest::instance().isAnimationEnabled() ) ) ) ) {
         focusUpdater = std::make_unique<FocusUpdater>();
 
         if ( isAIAutoControlMode ) {
@@ -3793,7 +3810,7 @@ void Heroes::Action( const int tileIndex )
     assert( heroPosIndex >= 0 );
 
     // Update environment sounds and music before performing the action
-    if ( Game::UpdateSoundsOnFocusUpdate() ) {
+    if ( !System::isHeadlessMode() && Game::UpdateSoundsOnFocusUpdate() ) {
         Game::EnvironmentSoundMixer();
         AudioManager::PlayMusicAsync( MUS::FromGround( world.getTile( heroPosIndex ).GetGround() ), Music::PlaybackMode::RESUME_AND_PLAY_INFINITE );
     }
@@ -3809,7 +3826,7 @@ void Heroes::Action( const int tileIndex )
     }
 
     // Most likely there will be some action or event, immediately center the map on the hero to avoid subsequent minor screen movements
-    if ( isHeroActing || objectType == MP2::OBJ_EVENT ) {
+    if ( !System::isHeadlessMode() && ( isHeroActing || objectType == MP2::OBJ_EVENT ) ) {
         Interface::AdventureMap & I = Interface::AdventureMap::Get();
 
         I.getGameArea().SetCenter( GetCenter() );

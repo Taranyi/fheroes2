@@ -1,8 +1,8 @@
 # fheroes2 Python connection
 
-Implementation steps 2–5 provide a process connection, real save loading, a read-only world API, an initial external
-controller decision checkpoint and an offscreen adventure renderer. These work without video or audio initialization.
-Gameplay actions, turn simulation, the other render views and Gymnasium are still unavailable.
+Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
+native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
+initialization. External battles/choices, other actions/views and Gymnasium remain future steps.
 
 ## Platform separation
 
@@ -90,7 +90,8 @@ preserves events, visit flags and other persistent fields not yet projected into
 version-dependent payload, not a standalone `.sav`, restore API or snapshot of a running battle/input stack. Use
 `get_state(include_serialized=False)` for the named fields alone. Repeated queries do not advance the game or consume RNG.
 
-The state schema is version 1. `state_version` increases on each attempted load; inspection leaves it unchanged. The saved
+The state schema is version 1. `state_version` increases on each attempted load and successful gameplay action; inspection
+leaves it unchanged. The saved
 current player is metadata, not yet an external-controller decision handshake. Saves do not restore an open castle/hero UI.
 A future `observe(player_id)` will apply visibility rules separately; it is not implemented and omniscient state must not
 be mistaken for a fair player observation.
@@ -101,6 +102,33 @@ State inspection and `close()` remain available while waiting. Tokens identify t
 player; stale or wrong-player commands are rejected without changing the world. Loading another save requires stopping
 the wait first. Only the single human player of a live standard save can be attached at present. No control flags change.
 See the [controller contract and source audit](../docs/PYTHON_ENV_CONTROLLER.md) and runnable `examples/decision.py`.
+
+## Adventure actions
+
+After attaching the human player, use the explicit current decision token:
+
+```python
+result = game.move_hero(hero_id=52, x=32, y=25, token=decision["token"])
+decision = result["decision"]
+result = game.end_turn(token=decision["token"])
+decision = result["decision"]
+print(result["events"])
+```
+
+These wrap `step("hero.move", token=..., params={"hero_id":52,"x":32,"y":25})` and `step("turn.end", token=...)`.
+The first profile supports affordable complete land routes through ordinary tiles and plain resource piles. It preserves
+native path costs, fog, pickup/removal and daily/weekly rules. `turn.end` runs the real remaining AI players and returns
+at the next human decision. Events report movement, funds collected, AI turns, dates and daily events; player state exposes
+`daily_income` and `lost_town_days`. Each successful gameplay action invalidates the old token; reads/render do not.
+
+Battles involving the human, choices, ships and other external actions are not supported yet. A blocked interaction
+during an AI turn rejects and restores the entire command's world/settings/result, RNG, UID and decision checkpoint.
+The pending token remains valid. It does not silently resolve a human battle or skip the AI's intended action.
+Gameplay requires matching H2D resources as well as AGG data. See the [action contract and limits](../docs/PYTHON_ENV_ADVENTURE.md).
+
+```powershell
+uv run --project python python python/examples/adventure.py
+```
 
 ## Headless rendering
 
@@ -191,8 +219,9 @@ Error:
 * A final nonempty record without LF is rejected. Oversized records are drained with bounded retained memory.
 
 The handshake's historical `mode: "bootstrap"` label is retained. Capabilities report `state_queries` and `omniscient_state`
-as true, and `game_initialized` reflects whether a save is loaded. Full headless gameplay remains false until actions work.
-`external_controller` is true; `controller_active` reflects the decision wait. `gameplay_actions` and `choices` remain false.
+as true, and `game_initialized` reflects whether a save is loaded. `simulation`, `headless_gameplay` and `gameplay_actions`
+are true for the limited `gameplay_profile: "adventure_basic"` described above, not for every game interaction.
+`external_controller` is true; `controller_active` reflects the decision wait. `choices` remains false.
 `render` is true, `render_views` lists only `adventure`, and `render_backend` is `memory_image`.
 
 ## Verification
@@ -229,3 +258,6 @@ Step 5 adds seven render tests (35 total), including deterministic repeated fram
 invalid SDL drivers, empty profile, two independent processes, bounds/camera validation, temporary-file cleanup, file-error
 recovery and missing H2D graphics resources. Separate C++ policy checks reject display/input initialization before SDL starts.
 Dummy/software probes verify both explicit video-only initialization and the unchanged normal video+audio defaults.
+
+Step 6 adds eight adventure tests (43 total), covering native movement/pickup, rejected routes/ownership, AI progression on
+both fixtures, exact daily income, weekly dwelling growth, stop/reattach, and atomic rejection at a real human-battle boundary.

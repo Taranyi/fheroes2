@@ -217,14 +217,14 @@ class WorldStateTests(unittest.TestCase):
                 self.assertEqual(decision["controller"], "external")
                 self.assertEqual(decision["token"]["state_version"], before["state_version"])
                 self.assertEqual(decision["turn_order"], [player["id"] for player in sorted(before["players"], key=lambda p: (not p["is_human"], p["id"]))])
-                self.assertEqual(decision["available_actions"], ["session.stop"])
+                self.assertEqual(decision["available_actions"], ["session.stop", "hero.move", "turn.end"])
                 self.assertIsNone(decision["pending_choice"])
                 self.assertEqual(decision["notifications"][0]["type"], "decision_required")
                 for _ in range(3):
                     self.assertEqual(game.get_decision(), decision)
                     self.assertEqual(game.get_state(), before)
                     self.assertTrue(game.capabilities()["controller_active"])
-                    self.assertFalse(game.capabilities()["gameplay_actions"])
+                    self.assertTrue(game.capabilities()["gameplay_actions"])
                 self.assertTrue(game.step("session.stop", token=decision["token"])["stopped"])
                 self.assertFalse(game.capabilities()["controller_active"])
                 with self.assertRaises(EngineError) as failed:
@@ -292,7 +292,7 @@ class WorldStateTests(unittest.TestCase):
             game.load_save(ROOT / self.fixtures[0]["path"])
             before = game.get_state()
             decision = game.start_session(1)
-            for action in ("turn.end", "hero.move", "choice.answer", "unknown"):
+            for action in ("castle.build", "battle.attack", "choice.answer", "unknown"):
                 with self.assertRaises(EngineError) as failed:
                     game.step(action, token=decision["token"])
                 self.assertEqual(failed.exception.code, "unsupported_action")

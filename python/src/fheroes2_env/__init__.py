@@ -18,7 +18,7 @@
 #   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ###########################################################################
 
-"""Python transport for fheroes2; simulation commands are not implemented yet."""
+"""Isolated fheroes2 sessions with world inspection, adventure actions and RGB frames."""
 
 from .session import EngineError, EngineProcessError, EngineTimeoutError, HeroesSession, ProtocolError
 from .frame import RGBFrame

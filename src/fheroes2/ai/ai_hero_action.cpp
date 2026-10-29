@@ -43,6 +43,7 @@
 #include "battle.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "difficulty.h"
 #include "direction.h"
 #include "game.h"
@@ -85,6 +86,9 @@ namespace
 {
     PlayerColorsSet AIGetAllianceColors()
     {
+        if ( System::isHeadlessMode() ) {
+            return 0;
+        }
         // accumulate colors
         PlayerColorsSet colors = 0;
 
@@ -446,6 +450,9 @@ namespace
 
             Heroes * defender = castle->GetHero();
             const bool isDefenderHuman = castle->isControlHuman();
+            if ( isDefenderHuman && System::isHeadlessMode() ) {
+                System::requireInteractive( "human battle requires an external battle controller" );
+            }
 
             if ( defender && ( defender->isControlHuman() != isDefenderHuman ) ) {
                 assert( 0 );
@@ -552,6 +559,9 @@ namespace
         DEBUG_LOG( DBG_AI, DBG_INFO, hero.GetName() << " attacks " << otherHero->GetName() )
 
         const bool isDefenderHuman = otherHero->isControlHuman();
+        if ( isDefenderHuman && System::isHeadlessMode() ) {
+            System::requireInteractive( "human battle requires an external battle controller" );
+        }
 
         if ( isDefenderHuman ) {
             // Sometimes the battle action is performed without attacker movement if the defender is standing close to him.
@@ -2265,6 +2275,25 @@ fheroes2::GameMode AI::HeroesMove( Heroes & hero )
     }
 
     hero.SetMove( true );
+
+    if ( System::isHeadlessMode() ) {
+        size_t remaining = path.size() + 1;
+        while ( hero.isActive() && hero.isMoveEnabled() ) {
+            if ( remaining-- == 0 ) {
+                throw System::HeadlessInteractionError( "AI movement did not finish along its path" );
+            }
+            hero.resetHeroSprite();
+            hero.Move( true );
+            if ( hero.isAction() ) {
+                hero.ResetAction();
+                const auto result = GameOver::Result::Get().checkGameOver();
+                if ( result != fheroes2::GameMode::CANCEL ) {
+                    return result;
+                }
+            }
+        }
+        return fheroes2::GameMode::END_TURN;
+    }
 
     Interface::AdventureMap & adventureMapInterface = Interface::AdventureMap::Get();
     Interface::GameArea & gameArea = adventureMapInterface.getGameArea();

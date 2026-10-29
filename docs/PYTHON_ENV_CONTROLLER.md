@@ -24,13 +24,14 @@ nem zár le játékoskört, nem futtat AI-t és nem változtatja a betöltött v
 
 ## A döntés szerződése
 
-- `phase`: jelenleg `adventure`; `controller`: `external`; `waiting`: true.
+- `phase`: `adventure` vagy a motor által megállapított eredménynél `terminal`; `controller`: `external`; `waiting`: true.
 - `player_id`: az egyetlen emberi játékos színbites azonosítója. Az AI játékos állapota továbbra is lekérhető,
   de AI-vezérlés átvétele ebben a lépésben nincs támogatva.
 - `turn_order`: a normál játékkal közös rendezés, emberi játékosok elöl, azon belül növekvő színérték.
-- `token`: folyamatonként egyedi `session_id`, betöltésenként növekvő `episode_id`, `state_version`,
-  valamint új várakozásonként növekvő `decision_id` és `player_id`.
-- `available_actions`: jelenleg kizárólag `session.stop`.
+- `token`: folyamatonként egyedi `session_id`, betöltési kísérletenként növekvő `episode_id`, betöltési kísérletnél és
+  sikeres játékműveletnél növekvő `state_version`, új várakozásnál és sikeres játékműveletnél növekvő `decision_id`, valamint `player_id`.
+- `available_actions`: `session.stop`, `hero.move`, `turn.end`; terminális helyzetben csak `session.stop`.
+- `events`: a legutóbbi sikeres művelet eseményei; lekérdezése nem fogyasztja el.
 - `notifications`: stabil `decision_required` értesítés. Lekérdezése nem fogyasztja el.
 - `pending_choice`: jelenleg null. Valódi ládaválasztás/szintlépés/csata még nem lép be ebbe az útvonalba.
 
@@ -50,8 +51,8 @@ előtt áll meg. A nyers mentett `current_player` metaadat; a vezérlendő ját�
 az egyetlen emberi játékos adja. Ha nincs ilyen aktív játékos, vagy a mentés már lezárt eredményt tartalmaz, `unsupported_state` a válasz.
 A vezérlő nem írja át a `CONTROL_HUMAN`/`CONTROL_AI` értékeket, és nem indítja el a teljes `HumanTurn` UI-hurkot.
 
-Ez a kezdeti döntési pont és a közös parancsellenőrzés, nem teljes körszimuláció. A következő szakaszokban az offscreen
-megjelenítés, a valódi adventure műveletek és körfolytatás, később a beágyazott döntések használják tovább ezt a határt.
+Ezt a közös döntési pontot az 5. lépéstől az offscreen megjelenítés, a 6. lépéstől a
+[korlátozott adventure műveletek és natív AI-körfolytatás](PYTHON_ENV_ADVENTURE.md) is használják.
 A konkrét választási dialógusok átalakítása a terv 9. lépésének része; helyettük itt nem választ automatikusan a motor.
 
 ## CONTROL-elágazások auditja
