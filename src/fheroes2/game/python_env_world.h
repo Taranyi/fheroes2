@@ -80,6 +80,7 @@ namespace fheroes2
         uint64_t _episodeId{ 0 };
         bool _turnPrepared{ false };
         nlohmann::json _events = nlohmann::json::array();
+        nlohmann::json _armyMeeting = nullptr;
         const std::string _sessionId;
         uint64_t _decisionId{ 0 };
         int _controllerPlayer{ 0 };

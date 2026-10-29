@@ -50,6 +50,7 @@
 #include "maps_tiles.h"
 #include "maps_tiles_helper.h"
 #include "players.h"
+#include "python_env_army.h"
 #include "python_env_castle.h"
 #include "race.h"
 #include "rand.h"
@@ -237,6 +238,7 @@ void fheroes2::PythonEnvWorld::clear()
 {
     _loaded = false;
     _turnPrepared = false;
+    _armyMeeting = nullptr;
     _events = Json::array();
     _warnings.clear();
     world.Reset();
@@ -324,6 +326,7 @@ void fheroes2::PythonEnvWorld::startSession( const int playerId, const std::func
             _controllerPlayer = static_cast<int>( color );
             ++_decisionId;
             _waiting = true;
+            _armyMeeting = nullptr;
             wait( getDecision() );
             return GameMode::MAIN_MENU;
         } );
@@ -360,9 +363,11 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                  { "decision_id", _decisionId },
                  { "player_id", _controllerPlayer } } },
              { "turn_order", order },
-             { "available_actions", GameOver::Result::Get().GetResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit",
-                                                                                     "castle.refresh_heroes", "castle.hire", "market.trade" }
-                                                                             : Json{ "session.stop" } },
+             { "army_meeting", _armyMeeting },
+             { "available_actions", GameOver::Result::Get().GetResult() == 0
+                                        ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
+                                                "market.trade", "hero.meet", "army.transfer", "army.swap" }
+                                        : Json{ "session.stop" } },
              { "events", _events },
              { "pending_choice", nullptr },
              { "notifications",
@@ -396,11 +401,13 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "invalid_request", "session.stop requires empty action params." );
         }
         _waiting = false;
+        _armyMeeting = nullptr;
         return { { "stopped", true }, { "state_version", _stateVersion } };
     }
     const bool castleAction
         = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire" || action == "market.trade";
-    if ( action != "hero.move" && action != "turn.end" && !castleAction ) {
+    const bool armyAction = action == "hero.meet" || action == "army.transfer" || action == "army.swap";
+    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction ) {
         throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }
     if ( GameOver::Result::Get().GetResult() != 0 ) {
@@ -435,7 +442,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "illegal_action", "The hero is already on that tile." );
         }
     }
-    else if ( !castleAction && !params.empty() ) {
+    else if ( !castleAction && !armyAction && !params.empty() ) {
         throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
     }
 
@@ -456,8 +463,12 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     const auto oldStateVersion = _stateVersion;
     const auto oldDecisionId = _decisionId;
     const Json oldEvents = _events;
+    const Json oldMeeting = _armyMeeting;
     try {
         _events = Json::array();
+        if ( !armyAction ) {
+            _armyMeeting = nullptr;
+        }
         Settings::Get().SetCurrentColor( static_cast<PlayerColor>( _controllerPlayer ) );
         if ( !_turnPrepared ) {
             if ( world.CountDay() == 1 ) {
@@ -469,7 +480,11 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             world.GetKingdom( static_cast<PlayerColor>( _controllerPlayer ) ).ActionBeforeTurn();
             _turnPrepared = true;
         }
-        if ( castleAction ) {
+        if ( armyAction ) {
+            _events.push_back( pythonEnvArmyAction( action, params, _controllerPlayer, _armyMeeting ) );
+            GameOver::Result::Get().checkGameOver();
+        }
+        else if ( castleAction ) {
             _events.push_back( pythonEnvCastleAction( action, params, _controllerPlayer ) );
             GameOver::Result::Get().checkGameOver();
         }
@@ -553,6 +568,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             _stateVersion = oldStateVersion;
             _decisionId = oldDecisionId;
             _events = oldEvents;
+            _armyMeeting = oldMeeting;
             if ( checkpoint.fail() ) {
                 throw std::logic_error( "Invalid action checkpoint." );
             }
@@ -753,6 +769,7 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
                  { "perspective", "omniscient" },
                  { "phase", GameOver::Result::Get().GetResult() == 0 ? "adventure" : "terminal" },
                  { "current_player", static_cast<int>( settings.GetPlayers().getCurrentColor() ) },
+                 { "army_meeting", _armyMeeting },
                  { "date",
                    { { "day", world.GetDay() },
                      { "week", world.GetWeek() },

@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <set>
@@ -1753,6 +1754,27 @@ bool Army::FastestTroop( const Troop * t1, const Troop * t2 )
 void Army::SwapTroops( Troop & t1, Troop & t2 )
 {
     std::swap( t1, t2 );
+}
+
+bool Army::TransferTroops( Troop & source, Troop & target, const uint32_t count, const bool keepSource )
+{
+    if ( &source == &target || !source.isValid() || count == 0 || count > source.GetCount() || ( keepSource && count == source.GetCount() )
+         || ( target.isValid() && ( target.GetID() != source.GetID() || count > std::numeric_limits<uint32_t>::max() - target.GetCount() ) ) ) {
+        return false;
+    }
+    if ( target.isValid() ) {
+        target.SetCount( target.GetCount() + count );
+    }
+    else {
+        target.Set( source, count );
+    }
+    if ( count == source.GetCount() ) {
+        source.Reset();
+    }
+    else {
+        source.SetCount( source.GetCount() - count );
+    }
+    return true;
 }
 
 bool Army::SaveLastTroop() const

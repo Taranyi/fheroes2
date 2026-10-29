@@ -108,14 +108,7 @@ namespace
 
             if ( !useFastSplit && slots == 2 ) {
                 // This logic is used when splitting to a stack with the same unit
-                if ( isSameTroopType ) {
-                    troopTarget.SetCount( troopTarget.GetCount() + static_cast<uint32_t>( redistributeCount ) );
-                }
-                else {
-                    troopTarget.Set( troopFrom, static_cast<uint32_t>( redistributeCount ) );
-                }
-
-                troopFrom.SetCount( totalSplitTroopCount - static_cast<uint32_t>( redistributeCount ) );
+                Army::TransferTroops( troopFrom, troopTarget, static_cast<uint32_t>( redistributeCount ), saveLastTroop );
             }
             else {
                 if ( isSameTroopType ) {
@@ -418,8 +411,7 @@ bool ArmyBar::ActionBarLeftMouseSingleClick( ArmyTroop & troop )
                 return false;
             }
             else { // combine
-                troop.SetCount( troop.GetCount() + selectedTroop->GetCount() );
-                selectedTroop->Reset();
+                Army::TransferTroops( *selectedTroop, troop, selectedTroop->GetCount() );
             }
         }
         // exchange
@@ -520,15 +512,11 @@ bool ArmyBar::ActionBarLeftMouseSingleClick( ArmyTroop & destTroop, ArmyTroop & 
         else {
             if ( _saveLastTroop && selectedTroop.GetArmy()->SaveLastTroop() ) { // this is their army's only troop
                 // move all but one units to destination
-                destTroop.SetCount( destTroop.GetCount() + selectedTroop.GetCount() - 1 );
-                // leave a single unit behind
-                selectedTroop.SetCount( 1 );
+                Army::TransferTroops( selectedTroop, destTroop, selectedTroop.GetCount() - 1, true );
             }
             else { // source has other troops
                 // move all troops to the destination slot
-                destTroop.SetCount( destTroop.GetCount() + selectedTroop.GetCount() );
-                // empty the source slot
-                selectedTroop.Reset();
+                Army::TransferTroops( selectedTroop, destTroop, selectedTroop.GetCount() );
             }
         }
     }
@@ -536,8 +524,7 @@ bool ArmyBar::ActionBarLeftMouseSingleClick( ArmyTroop & destTroop, ArmyTroop & 
         // destination troop is empty, source army would be emptied by moving all
         if ( _saveLastTroop && selectedTroop.GetArmy()->SaveLastTroop() ) {
             // move all but one units into the empty destination slot
-            destTroop.Set( selectedTroop, selectedTroop.GetCount() - 1 );
-            selectedTroop.SetCount( 1 );
+            Army::TransferTroops( selectedTroop, destTroop, selectedTroop.GetCount() - 1, true );
         }
         // no risk of emptying selected troop's army, swap the troops
         else {

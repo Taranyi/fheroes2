@@ -174,6 +174,9 @@ public:
 
     static void SwapTroops( Troop &, Troop & );
 
+    // Exact move/split/merge: failure preserves both slots. keepSource protects the last unit across armies.
+    static bool TransferTroops( Troop & source, Troop & target, uint32_t count, bool keepSource = false );
+
     static NeutralMonsterJoiningCondition GetJoinSolution( const Heroes & hero, const Maps::Tile & tile, const Troop & troop );
 
     static void drawSingleDetailedMonsterLine( const Troops & troops, int32_t cx, int32_t cy, int32_t width );

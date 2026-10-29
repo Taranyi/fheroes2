@@ -88,7 +88,8 @@ Sikeres események: `castle_built` (`castle_id`, `building_id`, `cost`) és `cas
 
 ## Határok és platformok
 
-Hősvásárlás és piaci csere az alábbi folytatásban működik. Hajóvásárlás még nincs bekötve. Seregrendezés és átadás a 8. lépés feladata.
+Hősvásárlás és piaci csere az alábbi folytatásban működik. Hajóvásárlás még nincs bekötve. A 8. lépés első
+[seregrendezési és átadási része](PYTHON_ENV_ARMY.md) már elérhető; a további hős-/tárgyműveletek még hátravannak.
 Várba lépő hős mozgási interakciója és a várnézet képkérése sincs még bekötve; a vár távoli kezelése már működik.
 A korai Gym-példa kilenc akciója változatlan: ezeket a várműveleteket most a gazdagabb `HeroesSession` API adja.
 

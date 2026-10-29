@@ -35,6 +35,7 @@
 #include "army_troop.h"
 #include "artifact.h"
 #include "artifact_info.h"
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h"
 #include "game.h"
@@ -302,6 +303,10 @@ private:
 
 void Heroes::MeetingDialog( Heroes & otherHero )
 {
+    // Native movement has already charged for the meeting. External operations replace this army/artifact UI.
+    if ( System::isHeadlessMode() ) {
+        return;
+    }
     fheroes2::Display & display = fheroes2::Display::instance();
 
     // Set the cursor image. This dialog is called after hero's move and does not require a cursor restorer:

@@ -37,6 +37,21 @@ rates use all marketplaces owned by that castle's kingdom. The UI and Python sha
 See [the castle/economy API and limits](../docs/PYTHON_ENV_CASTLE.md). Ship purchases are still pending;
 the nine-action Gym preview remains unchanged.
 
+## Army management
+
+Army management is also available through `HeroesSession`:
+
+```powershell
+uv run --project python python python/examples/army.py
+```
+
+Use `transfer_troops(source, target, count, token=...)` for exact move/split/merge and
+`swap_troops(source, target, token=...)` for slot swaps. Endpoints are `{kind: "hero" | "castle", id, slot}` with slots `0..4`.
+Between two heroes, first establish a native adjacent encounter with `meet_heroes(hero_id, other_hero_id, token=...)`;
+this charges the real movement cost once. Hero/garrison transfers require the actual castle visitor.
+Ownership, last-hero-unit protection and count limits are enforced in C++; no remote transfers are allowed.
+See [the army contract and limits](../docs/PYTHON_ENV_ARMY.md). Artifact transfer remains pending.
+
 ## Runnable Gymnasium preview
 
 From the repository root, after building the enabled engine and preparing the local reference saves:

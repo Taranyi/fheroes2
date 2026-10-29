@@ -332,6 +332,18 @@ class HeroesSession:
         """Trade an exact number of native lots at the owner's kingdom marketplace rate."""
         return self.step("market.trade", token=token, params={"castle_id": castle_id, "resource_from": resource_from, "resource_to": resource_to, "lots": lots})
 
+    def meet_heroes(self, hero_id: int, other_hero_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Establish a land meeting via native adjacent movement, including its movement cost."""
+        return self.step("hero.meet", token=token, params={"hero_id": hero_id, "other_hero_id": other_hero_id})
+
+    def transfer_troops(self, source: Mapping[str, Any], target: Mapping[str, Any], count: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Move/split/merge exactly count units between {kind, id, slot} endpoints."""
+        return self.step("army.transfer", token=token, params={"source": dict(source), "target": dict(target), "count": count})
+
+    def swap_troops(self, source: Mapping[str, Any], target: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Swap two accessible army slots without emptying a hero's army."""
+        return self.step("army.swap", token=token, params={"source": dict(source), "target": dict(target)})
+
     def close(self) -> None:
         with self._lock:
             if self._closed:

@@ -97,6 +97,7 @@ namespace
                  { "gameplay_profile", "adventure_basic" },
                  { "castle_actions", { "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire" } },
                  { "market_actions", { "market.trade" } },
+                 { "army_actions", { "hero.meet", "army.transfer", "army.swap" } },
                  { "choices", false },
                  { "simulation", true },
                  { "render", true },
