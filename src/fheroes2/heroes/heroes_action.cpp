@@ -212,8 +212,14 @@ namespace
 
         AudioManager::PlaySound( M82::KILLFADE );
 
-        hero.FadeOut();
+        if ( !System::isHeadlessMode() ) {
+            hero.FadeOut();
+        }
         hero.Dismiss( reason );
+
+        if ( System::isHeadlessMode() ) {
+            return;
+        }
 
         Interface::AdventureMap & I = Interface::AdventureMap::Get();
         if ( !hero.GetKingdom().isLoss() ) {
@@ -554,11 +560,17 @@ namespace
             Kingdom & enemyKingdom = castle->GetKingdom();
             enemyKingdom.RemoveCastle( castle );
             hero.GetKingdom().AddCastle( castle );
-            Interface::AdventureMap::Get().GetIconsPanel().resetIcons( ICON_CASTLES );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().GetIconsPanel().resetIcons( ICON_CASTLES );
+            }
 
             world.CaptureObject( dstIndex, hero.GetColor() );
 
             castle->Scout();
+
+            if ( System::isHeadlessMode() ) {
+                return;
+            }
 
             Interface::AdventureMap & I = Interface::AdventureMap::Get();
 
@@ -590,7 +602,9 @@ namespace
             castle->ActionAfterBattle( res.isAttackerWin() );
 
             // Hero' spell points and army could have changed. Update heroes icons and status area.
-            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            }
 
             // The defender was defeated
             if ( !res.isDefenderWin() && defender ) {
@@ -665,7 +679,9 @@ namespace
         const Battle::Result res = Battle::Loader( hero.GetArmy(), otherHero->GetArmy(), dstIndex );
 
         // Hero' spell points and army could have changed. Update heroes icons and status area.
-        Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+        }
 
         // TODO: make fading animation of both heroes together.
 

@@ -30,10 +30,14 @@ namespace
 }
 
 Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int64_t( const ExternalChoice & )> choose,
-                                                              std::function<void( const std::string &, const std::string & )> notify )
+                                                              std::function<void( const std::string &, const std::string & )> notify,
+                                                              std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle,
+                                                              std::function<void( const Battle::Result &, int32_t )> battleFinished )
     : _previous( current )
     , _choose( std::move( choose ) )
     , _notify( std::move( notify ) )
+    , _battle( std::move( battle ) )
+    , _battleFinished( std::move( battleFinished ) )
 {
     current = this;
 }
@@ -57,4 +61,24 @@ void Game::ScopedExternalInteractions::notify( const std::string & title, const 
         throw System::HeadlessInteractionError( "external notification without a controller" );
     }
     current->_notify( title, message );
+}
+
+bool Game::ScopedExternalInteractions::hasBattleController()
+{
+    return current != nullptr && static_cast<bool>( current->_battle );
+}
+
+void Game::ScopedExternalInteractions::battle( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions )
+{
+    if ( !hasBattleController() ) {
+        throw System::HeadlessInteractionError( "battle without an external controller" );
+    }
+    current->_battle( arena, unit, actions );
+}
+
+void Game::ScopedExternalInteractions::battleFinished( const Battle::Result & result, const int32_t tile )
+{
+    if ( current != nullptr && current->_battleFinished ) {
+        current->_battleFinished( result, tile );
+    }
 }

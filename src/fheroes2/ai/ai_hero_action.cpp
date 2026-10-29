@@ -49,6 +49,7 @@
 #include "game.h"
 #include "game_auto_playtest.h"
 #include "game_delays.h"
+#include "game_external_interaction.h"
 #include "game_interface.h"
 #include "game_mode.h"
 #include "game_over.h"
@@ -450,7 +451,7 @@ namespace
 
             Heroes * defender = castle->GetHero();
             const bool isDefenderHuman = castle->isControlHuman();
-            if ( isDefenderHuman && System::isHeadlessMode() ) {
+            if ( isDefenderHuman && System::isHeadlessMode() && !Game::ScopedExternalInteractions::hasBattleController() ) {
                 System::requireInteractive( "human battle requires an external battle controller" );
             }
 
@@ -465,7 +466,7 @@ namespace
                 }
             }
 
-            if ( isDefenderHuman ) {
+            if ( isDefenderHuman && !System::isHeadlessMode() ) {
                 // Sometimes the battle action is performed without attacker movement if the defender is standing close to him.
                 // Update the game area before the battle to show the dueling heroes.
                 Interface::AdventureMap::Get().redraw( Interface::REDRAW_GAMEAREA );
@@ -476,7 +477,9 @@ namespace
             const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dstIndex );
 
             // Human controlled castle or hero in this castle was in the battle. Update icons.
-            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_ICONS );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_ICONS );
+            }
 
             castle->ActionAfterBattle( res.isAttackerWin() );
 
@@ -486,7 +489,7 @@ namespace
                     AIBattleLose( *defender, res, false, nullptr, isDefenderHuman );
                 }
 
-                if ( isDefenderHuman ) {
+                if ( isDefenderHuman && !System::isHeadlessMode() ) {
                     // Update interface heroes and castles icons after the defeat.
                     Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_ICONS );
                 }
@@ -559,11 +562,11 @@ namespace
         DEBUG_LOG( DBG_AI, DBG_INFO, hero.GetName() << " attacks " << otherHero->GetName() )
 
         const bool isDefenderHuman = otherHero->isControlHuman();
-        if ( isDefenderHuman && System::isHeadlessMode() ) {
+        if ( isDefenderHuman && System::isHeadlessMode() && !Game::ScopedExternalInteractions::hasBattleController() ) {
             System::requireInteractive( "human battle requires an external battle controller" );
         }
 
-        if ( isDefenderHuman ) {
+        if ( isDefenderHuman && !System::isHeadlessMode() ) {
             // Sometimes the battle action is performed without attacker movement if the defender is standing close to him.
             // Update the game area before the battle to show the dueling heroes.
             Interface::AdventureMap::Get().redraw( Interface::REDRAW_GAMEAREA );
@@ -572,13 +575,15 @@ namespace
         const Battle::Result res = Battle::Loader( hero.GetArmy(), otherHero->GetArmy(), dstIndex );
 
         // Human controlled hero could be in the battle. Update icons.
-        Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES );
+        }
 
         // The defender was defeated
         if ( !res.isDefenderWin() ) {
             AIBattleLose( *otherHero, res, false, nullptr, isDefenderHuman );
 
-            if ( isDefenderHuman ) {
+            if ( isDefenderHuman && !System::isHeadlessMode() ) {
                 // Update interface heroes and castles icons after the defeat.
                 Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_HEROES );
             }

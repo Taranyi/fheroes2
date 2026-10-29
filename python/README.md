@@ -2,8 +2,8 @@
 
 Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
-initialization. An optional Gymnasium preview demonstrates the reset/step loop below. Selected native choices and two adventure spells work through the session API. External battles,
-other actions/views and the full Gym action/observation contract remain future steps.
+initialization. Selected native choices, two adventure spells and native battles work through the session API.
+An optional Gymnasium preview demonstrates the reset/step loop below. Further actions/views and the full Gym action/observation contract remain future steps.
 
 Participant-control requirement (2026-10-29): the final session must support a built-in AI or Python controller per side,
 including AI-only simulation and multiple external agents with no manual player. Currently the state is already omniscient
@@ -99,6 +99,23 @@ The supported profile includes treasure gold/experience, secondary skills, neutr
 All heroes expose `adventure_spell_options`; player state exposes `identify_hero` and `vision_monster_indices`.
 See [choice protocol, partial state, rollback and spell limits](../docs/PYTHON_ENV_CHOICES.md).
 The nine-action Gym preview reports `unsupported_choice` and requires reset at a choice boundary; it never chooses on the agent's behalf.
+
+## Native adventure battles
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File script/windows/python-env-artifact-fixture.ps1
+uv run --project python python python/examples/battle.py
+uv run --project python python python/examples/battle.py --spells
+```
+
+Movement, a refused monster offer or an AI attack during `turn.end` can return `phase="battle"`.
+Read `decision["battle"]`: both forces, the 99-cell board, current unit/round, commander mana and supported legal `actions`.
+Select a candidate and call `battle_action(action["action_id"], token=decision["token"])` until the next battle/choice/adventure/terminal decision.
+The same native arena handles movement, melee directions, shooting, a basic targeted spell profile, retreat and surrender.
+Native casualties, experience, necromancy and castle capture persist back to the adventure world; level-up choices remain external.
+During combat, `battle.units` is the live force; world hero armies are synchronized by the engine when battle ends.
+The nine-action Gym preview raises `unsupported_battle` at an external combat decision and requires reset.
+See [the battle contract, fixtures, spell coverage and limits](../docs/PYTHON_ENV_BATTLE.md).
 
 ## Runnable Gymnasium preview
 
@@ -287,7 +304,7 @@ native path costs, fog, pickup/removal and daily/weekly rules. `turn.end` runs t
 at the next human decision. Events report movement, funds collected, AI turns, dates and daily events; player state exposes
 `daily_income` and `lost_town_days`. Each successful gameplay action invalidates the old token; reads/render do not.
 
-Battles involving the human, ships and actions outside the declared choice/adventure profile are not supported yet. A blocked interaction
+Ships and actions outside the declared choice/adventure/battle profile are not supported yet. A blocked interaction
 during an AI turn rejects and restores the entire command's world/settings/result, RNG, UID and decision checkpoint.
 The pending token remains valid. It does not silently resolve a human battle or skip the AI's intended action.
 Gameplay requires matching H2D resources as well as AGG data. See the [action contract and limits](../docs/PYTHON_ENV_ADVENTURE.md).
@@ -428,3 +445,8 @@ Dummy/software probes verify both explicit video-only initialization and the unc
 
 Step 6 adds eight adventure tests (43 total), covering native movement/pickup, rejected routes/ownership, AI progression on
 both fixtures, exact daily income, weekly dwelling growth, stop/reattach, and atomic rejection at a real human-battle boundary.
+
+Step 10 replaces the old unsupported-battle expectation with live external battle decisions and full-action cancellation.
+On 2026-10-29, all 111 integration tests passed, including 12 new battle tests, AI-initiated defense, offensive siege/capture,
+combat spell costs, surrender payment, loss, battle-to-level-up continuation, read-only snapshots and Gym battle boundaries.
+Both the enabled and feature-disabled normal Windows builds compiled. Other platform SDK builds and manual GUI battle checks were not run.

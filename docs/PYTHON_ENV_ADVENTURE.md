@@ -68,8 +68,8 @@ Az `available_actions` parancsneveket jelez; még nem ad minden paraméterezett 
 
 A [9. lépés deklarált választásai](PYTHON_ENV_CHOICES.md) már Pythonból megválaszolhatók; az adventure profil
 ezért kincsesládával, semleges lényekkel, dzsinnlámpával és Wagon Camp toborzással bővült. Más akcióobjektum és a hajózás még nem támogatott.
-Emberi részvételű csata továbbra sem automatikus döntés. Ha például az AI megtámadja az emberi várat,
-`unsupported_interaction` a válasz, és a teljes külső művelet visszaáll. A későbbi csatavezérlő nélkül a kör ezen a ponton nem folytatható.
+A [10. lépéstől a csata](PYTHON_ENV_BATTLE.md) is külső döntés. Ellenséges hős/vár megtámadható;
+ha az AI megtámadja a saját várat, a `turn.end` a védő egység döntésénél tér vissza, majd a csata után folytatódik.
 Más, még leválasztatlan interaktív motorútvonal ugyanezzel a hibakategóriával állhat meg. Ez nem kész, tetszőleges pályát végigjátszó Gym env.
 
 A parancs előtt a motor saját szerializálójával világ/settings/game-result checkpoint készül; emellett megőrizzük a

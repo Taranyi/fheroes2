@@ -39,6 +39,7 @@
 #include "battle_interface.h" // IWYU pragma: associated
 #include "battle_interface_settings.h"
 #include "color.h"
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h"
 #include "dialog_audio.h"
@@ -46,6 +47,7 @@
 #include "game.h"
 #include "game_assets.h"
 #include "game_delays.h"
+#include "game_external_interaction.h"
 #include "game_hotkeys.h"
 #include "heroes.h"
 #include "heroes_base.h"
@@ -785,6 +787,10 @@ bool Battle::Arena::DialogBattleSummary( const Result & res, const std::vector<A
 
 void Battle::Arena::DialogBattleNecromancy( const uint32_t raiseCount )
 {
+    if ( System::isHeadlessMode() ) {
+        Game::ScopedExternalInteractions::notify( "necromancy", std::to_string( raiseCount ) );
+        return;
+    }
     // Set the cursor image. This dialog does not require a cursor restorer.
     Cursor::Get().SetThemes( Cursor::POINTER );
 

@@ -26,6 +26,14 @@
 #include <string>
 #include <vector>
 
+namespace Battle
+{
+    class Arena;
+    class Unit;
+    class Actions;
+    struct Result;
+}
+
 namespace Game
 {
     // UI-independent description. Options are exact native return values; an empty list describes an integer range.
@@ -45,17 +53,24 @@ namespace Game
     class ScopedExternalInteractions final
     {
     public:
-        ScopedExternalInteractions( std::function<int64_t( const ExternalChoice & )> choose, std::function<void( const std::string &, const std::string & )> notify );
+        ScopedExternalInteractions( std::function<int64_t( const ExternalChoice & )> choose, std::function<void( const std::string &, const std::string & )> notify,
+                                    std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle = {},
+                                    std::function<void( const Battle::Result &, int32_t )> battleFinished = {} );
         ~ScopedExternalInteractions();
         ScopedExternalInteractions( const ScopedExternalInteractions & ) = delete;
         ScopedExternalInteractions & operator=( const ScopedExternalInteractions & ) = delete;
 
         static int64_t choose( const ExternalChoice & choice );
         static void notify( const std::string & title, const std::string & message );
+        static bool hasBattleController();
+        static void battle( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions );
+        static void battleFinished( const Battle::Result & result, int32_t tile );
 
     private:
         ScopedExternalInteractions * _previous;
         std::function<int64_t( const ExternalChoice & )> _choose;
         std::function<void( const std::string &, const std::string & )> _notify;
+        std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> _battle;
+        std::function<void( const Battle::Result &, int32_t )> _battleFinished;
     };
 }

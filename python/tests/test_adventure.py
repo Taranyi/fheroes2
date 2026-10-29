@@ -175,29 +175,47 @@ class AdventureTests(unittest.TestCase):
             self.assertEqual(after_turn["token"]["episode_id"], attached["token"]["episode_id"])
             self.assertEqual(after_turn["token"]["state_version"], before["state_version"] + 1)
 
-    def test_unsupported_native_ai_interaction_rolls_back_entire_turn_and_rng(self):
+    def test_native_ai_attack_suspends_for_external_defense_and_can_roll_back(self):
         with self.session() as (game, _):
             decision, _ = self.start(game)
             for _ in range(60):
                 before = game.get_state()
-                try:
-                    decision = game.end_turn(token=decision["token"])["decision"]
-                except EngineError as error:
-                    self.assertEqual(error.code, "unsupported_interaction")
-                    self.assertIn("battle", str(error))
-                    self.assertEqual(game.get_state(), before)
-                    self.assertEqual(game.get_decision(), decision)
-                    with self.assertRaises(EngineError) as retry:
-                        game.end_turn(token=decision["token"])
-                    self.assertEqual(str(retry.exception), str(error))
-                    self.assertEqual(game.get_state(), before)
-                    self.assertEqual(game.get_decision(), decision)
+                result = game.end_turn(token=decision["token"])
+                decision = result["decision"]
+                if decision["phase"] == "terminal":
+                    self.assertTrue(any(e["type"] == "battle_completed" for e in result["events"]))
+                    self.assertNotEqual(game.get_state()["game_result"], 0)
                     game.step("session.stop", token=decision["token"])
+                    self.start(game)
+                    break
+                if decision["phase"] == "battle":
+                    battle = decision["battle"]
+                    self.assertEqual(battle["defender_color"], 1)
+                    game.step("session.stop", token=decision["token"])
+                    self.assertEqual(game.get_state(), before)
+                    decision = game.start_session(1)
+                    result = game.end_turn(token=decision["token"])
+                    self.assertEqual(result["decision"]["battle"], battle)
+                    for _ in range(500):
+                        decision = result["decision"]
+                        if decision["phase"] == "battle":
+                            action = next(a for a in decision["battle"]["actions"] if a["kind"] == "skip")
+                            result = game.battle_action(action["action_id"], token=decision["token"])
+                        elif decision["phase"] == "choice":
+                            choice = decision["pending_choice"]
+                            result = game.answer_choice(choice["choice_id"], choice["options"][0], token=decision["token"])
+                        else:
+                            break
+                    else:
+                        self.fail("Native AI defense battle did not complete")
+                    self.assertTrue(any(e["type"] == "battle_completed" for e in result["events"]))
+                    self.assertIn(result["decision"]["phase"], ("adventure", "terminal"))
+                    game.step("session.stop", token=result["decision"]["token"])
                     self.start(game)
                     self.assertEqual(game.get_state()["date"]["total_days"], 1)
                     break
             else:
-                self.fail("Reference scenario did not exercise the pending unsupported AI interaction within 60 turns")
+                self.fail("Reference scenario did not exercise external battle defense within 60 turns")
 
 
 if __name__ == "__main__":

@@ -115,6 +115,11 @@ namespace Battle
             return _turnNumber;
         }
 
+        int32_t getMapIndex() const
+        {
+            return _mapIndex;
+        }
+
         Result & GetResult()
         {
             return _battleResult;
@@ -344,6 +349,7 @@ namespace Battle
         const Castle * castle;
         // Is the battle taking place in a town or a castle
         const bool _isTown;
+        const int32_t _mapIndex;
 
         std::array<std::unique_ptr<Tower>, 3> _towers;
         std::unique_ptr<Catapult> _catapult;

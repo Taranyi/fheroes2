@@ -30,7 +30,7 @@ checkpointolt módon lezár a [natív felderítési mellékhatásokkal](PYTHON_E
 
 ## A döntés szerződése
 
-- `phase`: `adventure`, függő [választásnál](PYTHON_ENV_CHOICES.md) `choice`, vagy a motor által megállapított eredménynél `terminal`; `controller`: `external`; `waiting`: true.
+- `phase`: `adventure`, függő [választásnál](PYTHON_ENV_CHOICES.md) `choice`, [egységkörnél](PYTHON_ENV_BATTLE.md) `battle`, vagy valódi motoreredménynél `terminal`; `controller`: `external`; `waiting`: true.
 - `player_id`: az egyetlen emberi játékos színbites azonosítója. Az AI játékos állapota továbbra is lekérhető,
   de AI-vezérlés átvétele ebben a lépésben nincs támogatva.
 - `turn_order`: a normál játékkal közös rendezés, emberi játékosok elöl, azon belül növekvő színérték.
@@ -43,6 +43,7 @@ checkpointolt módon lezár a [natív felderítési mellékhatásokkal](PYTHON_E
 - `notifications`: stabil `decision_required` értesítés. Lekérdezése nem fogyasztja el.
 - `pending_choice`: adventure/terminal helyzetben null; választásnál a [típusos leírás és válaszopciók](PYTHON_ENV_CHOICES.md).
   Ilyenkor az `available_actions` csak `choice.answer`, `session.stop`; a natív művelet a válasz után folytatódik.
+- `battle`: a csata aktuális egysége, mindkét sereg, board és akciójelöltek; más fázisban null. `battle` fázisban `battle.act`, `session.stop` érhető el.
 
 A `step` paraméterei pontosan `action` (szöveg), `token` (objektum), `params` (objektum).
 A Python-kliens explicit tokent kér; nem cseréli le automatikusan egy elavult parancs azonosítóját.
@@ -63,7 +64,7 @@ A vezérlő nem írja át a `CONTROL_HUMAN`/`CONTROL_AI` értékeket, és nem in
 Ezt a közös döntési pontot az 5. lépéstől az offscreen megjelenítés, a 6. lépéstől a
 [korlátozott adventure műveletek és natív AI-körfolytatás](PYTHON_ENV_ADVENTURE.md) is használják.
 A 9. lépés [deklarált választásai és két adventure varázslata](PYTHON_ENV_CHOICES.md) már ezen a döntési ponton futnak;
-a motor nem választ automatikusan a külső vezérlő helyett. A csata továbbra is a 10. lépés feladata.
+a motor nem választ automatikusan a külső vezérlő helyett. A [10. lépés csatái](PYTHON_ENV_BATTLE.md) ugyanitt, élő C++ veremben várnak a Python-agentre.
 
 ## CONTROL-elágazások auditja
 

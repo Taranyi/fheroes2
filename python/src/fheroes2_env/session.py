@@ -372,6 +372,10 @@ class HeroesSession:
         """Cast an adventure spell supported by the current capability profile."""
         return self.step("hero.cast", token=token, params={"hero_id": hero_id, "spell_id": spell_id})
 
+    def battle_action(self, action_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Execute a candidate from the current battle decision's actions list."""
+        return self.step("battle.act", token=token, params={"action_id": action_id})
+
     def dismiss_troop(self, source: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
         """Dismiss an entire stack, preserving the hero's last required stack."""
         return self.step("army.dismiss", token=token, params={"source": dict(source)})

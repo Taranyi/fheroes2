@@ -52,7 +52,8 @@ int main( int argc, char ** argv )
         std::filesystem::create_directories( output );
         for ( const char * name :
               { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav", "choices-chest-day1.sav", "choices-join-day1.sav",
-                "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav", "choices-paid-join-day1.sav" } ) {
+                "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav", "choices-paid-join-day1.sav", "battles-melee-day1.sav",
+                "battles-ranged-day1.sav", "battles-heroes-day1.sav", "battles-loss-day1.sav", "battles-boss-day1.sav", "battles-siege-day1.sav" } ) {
             const auto file = output / name;
             if ( std::filesystem::exists( file ) && std::filesystem::equivalent( input, file ) ) {
                 throw std::runtime_error( "The output must not overwrite the input save." );
@@ -155,6 +156,45 @@ int main( int argc, char ** argv )
         hero->AppendSpellToBook( Spell::VISIONS, true );
         Maps::setMonsterOnTile( world.getTile( 968 ), Monster::PEASANT, 5 );
         save( "choices-spells-day1.sav" );
+        for ( const int profile : { 0, 1, 2, 3, 4 } ) {
+            Heroes * fighter = load();
+            fighter->GetArmy().Reset();
+            fighter->GetArmy().JoinTroop( profile == 1   ? Monster::ARCHER
+                                          : profile == 3 ? Monster::PEASANT
+                                          : profile == 4 ? Monster::BONE_DRAGON
+                                                         : Monster::SKELETON,
+                                          profile == 3   ? 1
+                                          : profile == 4 ? 100
+                                                         : 40,
+                                          false );
+            fighter->AppendSpellToBook( Spell::ARROW, true );
+            fighter->AppendSpellToBook( Spell::HASTE, true );
+            fighter->AppendSpellToBook( Spell::LIGHTNINGBOLT, true );
+            fighter->SetSpellPoints( 30 );
+            if ( profile == 2 ) {
+                Heroes * opponent = world.GetHeroes( 42 );
+                opponent->Move2Dest( 932 );
+                opponent->GetArmy().Reset();
+                opponent->GetArmy().JoinTroop( Monster::PEASANT, 30, false );
+                save( "battles-heroes-day1.sav" );
+                continue;
+            }
+            auto & tile = world.getTile( 932 );
+            Maps::setMonsterOnTile( tile,
+                                    profile == 3   ? Monster::BLACK_DRAGON
+                                    : profile == 4 ? Monster::RED_DRAGON
+                                                   : Monster::PEASANT,
+                                    profile == 3   ? 5
+                                    : profile == 4 ? 10
+                                                   : 40 );
+            Maps::setMonsterOnTileJoinCondition( tile, Monster::JOIN_CONDITION_SKIP );
+            save( profile == 0 ? "battles-melee-day1.sav" : profile == 1 ? "battles-ranged-day1.sav" : profile == 3 ? "battles-loss-day1.sav" : "battles-boss-day1.sav" );
+        }
+        Heroes * attacker = load();
+        attacker->Move2Dest( 903 );
+        attacker->GetArmy().Reset();
+        attacker->GetArmy().JoinTroop( Monster::BONE_DRAGON, 100, false );
+        save( "battles-siege-day1.sav" );
         std::cout << "Native environment fixtures saved in " << output.string() << '\n';
         return EXIT_SUCCESS;
     }

@@ -33,7 +33,8 @@ Az eredmény helyi, ignorált fájlok a `build/python-env-baseline/fixtures` kö
 
 A script csak ezeket a generált másolatokat írja; az eredeti baseline és a felhasználói mentések változatlanok.
 Ugyanez a builder már a [választási/varázslási tesztek hat másolatát](PYTHON_ENV_CHOICES.md) is létrehozza.
-Újrageneráláskor a tíz tesztmásolat cserélődik. A script külön helyi APPDATA-profilt használ.
+Ugyanez a builder a [hat csatamentést](PYTHON_ENV_BATTLE.md) is létrehozza; újrageneráláskor összesen tizenhat másolat cserélődik.
+A script külön helyi APPDATA-profilt használ.
 A tárgyas integrációs tesztek hiányzó helyi adatoknál jelzett skipet adnak, nem állítanak sikeres pozitív tárgypróbát.
 
 A példa megveszi Zomot, szabályos találkozást indít, átadja a Távcsövet és a tekercset, kardot cserél éremre,

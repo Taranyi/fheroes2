@@ -153,6 +153,11 @@ namespace Battle
             return _uid;
         }
 
+        uint32_t getModeMask() const
+        {
+            return modes;
+        }
+
         bool isUID( const uint32_t uid ) const
         {
             return _uid == uid;

@@ -3,7 +3,7 @@
 A 9. lépés kezdeti, deklarált profilja: szárazföldi kincsesláda arany/tapasztalat választása,
 az abból következő natív szintlépések képességválasztásai, semleges lények ingyenes/fizetős csatlakozása és üldözése,
 valamint a dzsinnlámpa és a Wagon Camp toborzási döntései. Az első két varázslat az Identify Hero és a Visions.
-A csata még nem támogatott; a többi pályaobjektumot és varázslatot nem állítjuk késznek.
+A [10. lépés csatái](PYTHON_ENV_BATTLE.md) már ugyanebben a döntési folyamatban vezérelhetők; a többi pályaobjektumot és varázslatot nem állítjuk késznek.
 
 ## Futtatás
 
@@ -79,9 +79,10 @@ Függő választásnál a `session.stop` megszakítja és a kiindulási checkpoi
 az addig megválaszolt szintlépésekkel együtt, majd lecsatlakozik. Új sessionből az eredeti világ folytatható.
 A `close`, EOF és a Python-resethez tartozó folyamateldobás is megszakíthatja a várakozást; nem marad UI-inputvárakozás.
 
-Ha egy szabályos válasz folytatása még nem támogatott csatához jut, `unsupported_interaction` érkezik a válaszkérésre.
-Ilyenkor is az egész eredeti lépés világ/settings/RNG/UID/döntési checkpointja áll vissza. A függő choice megszűnik;
-a folytatáshoz új `get_decision()` kell. A hiba nem vereség és nem időlimit.
+A szabályos választás folytatása csatához is vezethet: ilyenkor `phase="battle"`, a [csata saját akcióival](PYTHON_ENV_BATTLE.md).
+Egyéb, még nem támogatott interakciónál `unsupported_interaction` érkezhet. Ilyenkor az egész eredeti lépés
+világ/settings/RNG/UID/döntési checkpointja áll vissza. A függő döntés megszűnik; új `get_decision()` kell.
+A hiba nem vereség és nem időlimit.
 Nem támogatott köztes akcióobjektumon/őrzött útvonalon továbbra sem haladunk át.
 
 ## Adventure varázslatok

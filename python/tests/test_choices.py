@@ -174,11 +174,10 @@ class ChoiceTests(unittest.TestCase):
             first = self.start(game, "join")
             before = game.get_state()
             decision = self.encounter(game, first)
-            with self.assertRaises(EngineError) as error:
-                self.answer(game, decision, decision["pending_choice"]["options"][1])
-            self.assertEqual(error.exception.code, "unsupported_interaction")
+            result = self.answer(game, decision, decision["pending_choice"]["options"][1])
+            self.assertEqual(result["decision"]["phase"], "battle")
+            game.step("session.stop", token=result["decision"]["token"])
             self.assertEqual(game.get_state(), before)
-            self.assertEqual(game.get_decision(), first)
 
     def test_neutral_pursuit_can_be_declined_without_starting_a_battle(self):
         with self.session() as (game, _):

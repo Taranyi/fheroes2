@@ -49,6 +49,8 @@
 #include "battle_tower.h"
 #include "battle_troop.h"
 #include "castle.h"
+#include "core.h"
+#include "game_external_interaction.h"
 #include "ground.h"
 #include "heroes.h"
 #include "heroes_base.h"
@@ -346,6 +348,7 @@ bool Battle::Arena::isAnyTowerPresent()
 Battle::Arena::Arena( Army & attackingArmy, Army & defendingArmy, const int32_t tileIndex, const bool isShowInterface, Rand::PCG32 & randomGenerator )
     : castle( world.getCastleEntrance( Maps::GetPoint( tileIndex ) ) )
     , _isTown( castle != nullptr )
+    , _mapIndex( tileIndex )
     , _randomGenerator( randomGenerator )
 {
     _usedSpells.reserve( 20 );
@@ -369,7 +372,7 @@ Battle::Arena::Arena( Army & attackingArmy, Army & defendingArmy, const int32_t 
         _orderOfUnits->reserve( 25 );
         _interface->SetOrderOfUnits( _orderOfUnits );
     }
-    else {
+    else if ( !System::isHeadlessMode() || !Game::ScopedExternalInteractions::hasBattleController() ) {
         // There is no interface - force the auto combat mode for the human player
         if ( attackingArmy.isControlHuman() ) {
             _autoCombatColors |= attackingArmy.GetColor();
@@ -506,6 +509,9 @@ void Battle::Arena::UnitTurn( const Units & orderHistory )
 
             if ( ( _currentUnit->GetCurrentControl() & CONTROL_AI ) || ( _autoCombatColors & _currentUnit->GetCurrentColor() ) ) {
                 AI::BattlePlanner::Get().BattleTurn( *this, *_currentUnit, actions );
+            }
+            else if ( System::isHeadlessMode() ) {
+                Game::ScopedExternalInteractions::battle( *this, *_currentUnit, actions );
             }
             else {
                 assert( _interface != nullptr );

@@ -136,6 +136,9 @@ class AdventurePreviewEnv(gym.Env):
             if self._decision["phase"] == "choice":
                 self._needs_reset = True
                 raise EngineError("unsupported_choice", "The nine-action preview cannot answer choices; use HeroesSession or reset")
+            if self._decision["phase"] == "battle":
+                self._needs_reset = True
+                raise EngineError("unsupported_battle", "The nine-action preview cannot control battles; use HeroesSession or reset")
         except EngineError as error:
             if error.code not in ("illegal_action", "unsupported_action"):
                 # A battle boundary, engine failure or bad protocol is not an episode result/time limit.

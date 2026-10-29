@@ -73,6 +73,7 @@ namespace fheroes2
     private:
         void clear();
         void ensureGraphicsData();
+        const char * decisionPhase() const;
 
         const std::string _executablePath;
         std::unique_ptr<AGG::AGGInitializer> _resources;
@@ -84,6 +85,7 @@ namespace fheroes2
         nlohmann::json _events = nlohmann::json::array();
         nlohmann::json _armyMeeting = nullptr;
         nlohmann::json _pendingChoice = nullptr;
+        nlohmann::json _battleState = nullptr;
         int64_t _choiceAnswer{ 0 };
         uint64_t _nextChoiceId{ 0 };
         const std::string _sessionId;

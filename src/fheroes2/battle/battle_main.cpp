@@ -43,6 +43,7 @@
 #include "core.h"
 #include "dialog.h"
 #include "game.h"
+#include "game_external_interaction.h"
 #include "heroes.h"
 #include "heroes_base.h"
 #include "kingdom.h"
@@ -291,7 +292,7 @@ namespace
 
 Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const int32_t tileIndex )
 {
-    if ( System::isHeadlessMode() && ( attackingArmy.isControlHuman() || defendingArmy.isControlHuman() ) ) {
+    if ( System::isHeadlessMode() && !Game::ScopedExternalInteractions::hasBattleController() && ( attackingArmy.isControlHuman() || defendingArmy.isControlHuman() ) ) {
         System::requireInteractive( "human battle requires an external battle controller" );
     }
     Result result;
@@ -414,7 +415,7 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
             arena.FadeArena( clearMessageLog );
         }
 
-        if ( isHumanBattle
+        if ( isHumanBattle && !System::isHeadlessMode()
              && arena.DialogBattleSummary( result,
                                            shouldTransferArtifacts ? getArtifactsToTransfer( winnerHero->GetBagArtifacts(), loserHero->GetBagArtifacts() )
                                                                    : std::vector<Artifact>{},
@@ -490,6 +491,9 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
     DEBUG_LOG( DBG_BATTLE, DBG_INFO,
                "attacker: " << ( result.attacker & RESULT_WINS ? "wins" : "loss" ) << ", defender: " << ( result.defender & RESULT_WINS ? "wins" : "loss" ) )
 
+    if ( System::isHeadlessMode() ) {
+        Game::ScopedExternalInteractions::battleFinished( result, tileIndex );
+    }
     return result;
 }
 

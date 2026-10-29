@@ -119,20 +119,23 @@ class GymPreviewTests(unittest.TestCase):
                     env.step(action)
             self.assertEqual(env.unwrapped._session.get_state(), before)
 
-    def test_human_battle_boundary_remains_an_error_with_rollback(self):
+    def test_native_ai_battle_yields_an_explicit_boundary_or_a_real_terminal_result(self):
         with self.preview(max_steps=100) as env:
             env.reset()
             for _ in range(60):
-                before = env.unwrapped._session.get_state()
                 try:
-                    _, _, terminated, truncated, _ = env.step(8)
+                    _, _, terminated, truncated, info = env.step(8)
                 except EngineError as error:
-                    self.assertEqual(error.code, "unsupported_interaction")
-                    self.assertIn("human battle", str(error))
-                    self.assertEqual(env.unwrapped._session.get_state(), before)
-                    self.assertFalse(env.unwrapped._needs_reset)
+                    self.assertEqual(error.code, "unsupported_battle")
+                    self.assertEqual(env.unwrapped._session.get_decision()["phase"], "battle")
+                    self.assertTrue(env.unwrapped._needs_reset)
                     break
-                self.assertFalse(terminated or truncated)
+                self.assertFalse(truncated)
+                if terminated:
+                    self.assertEqual(info["state"]["phase"], "terminal")
+                    self.assertNotEqual(info["state"]["game_result"], 0)
+                    self.assertTrue(any(e["type"] == "battle_completed" for e in info["events"]))
+                    break
             else:
                 self.fail("The reference scenario should reach a human battle boundary")
 
@@ -161,6 +164,21 @@ class GymPreviewTests(unittest.TestCase):
             with self.assertRaises(EngineError) as failed:
                 env.step(4)
             self.assertEqual(failed.exception.code, "unsupported_choice")
+            with self.assertRaises(gym.error.ResetNeeded):
+                env.step(8)
+            env.reset()
+            self.assertEqual(env.unwrapped._decision["phase"], "adventure")
+
+    def test_battle_boundary_is_an_explicit_error_and_can_reset(self):
+        save = support.ROOT / "build/python-env-baseline/fixtures/battles-heroes-day1.sav"
+        if not save.is_file():
+            self.skipTest("Prepare native battle fixtures")
+        with self.preview(max_steps=1) as env:
+            env.unwrapped.save = save
+            env.reset()
+            with self.assertRaises(EngineError) as failed:
+                env.step(4)
+            self.assertEqual(failed.exception.code, "unsupported_battle")
             with self.assertRaises(gym.error.ResetNeeded):
                 env.step(8)
             env.reset()
