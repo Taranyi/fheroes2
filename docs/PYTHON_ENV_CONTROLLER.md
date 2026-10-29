@@ -36,7 +36,7 @@ checkpointolt módon lezár a [natív felderítési mellékhatásokkal](PYTHON_E
 - `turn_order`: a normál játékkal közös rendezés, emberi játékosok elöl, azon belül növekvő színérték.
 - `token`: folyamatonként egyedi `session_id`, betöltési kísérletenként növekvő `episode_id`, betöltési kísérletnél és
   sikeres játékműveletnél növekvő `state_version`, új várakozásnál és sikeres játékműveletnél növekvő `decision_id`, valamint `player_id`.
-- `available_actions`: `session.stop`, `hero.move`, `turn.end`, `castle.build`, `castle.recruit`, `castle.refresh_heroes`, `castle.hire`, `market.trade`, `hero.meet`, `army.transfer`, `army.swap`, `artifact.transfer`, `artifact.swap`, `hero.end_meeting`.
+- `available_actions`: `session.stop`, `hero.move`, `turn.end`, `castle.build`, `castle.recruit`, `castle.refresh_heroes`, `castle.hire`, `market.trade`, `hero.meet`, `army.transfer`, `army.swap`, `artifact.transfer`, `artifact.swap`, `hero.end_meeting`, `army.upgrade`, `army.dismiss`, `hero.dismiss`, `hero.buy_spell_book`.
   Terminális helyzetben `session.stop`, illetve nyitott találkozás lezárása érhető el.
 - `army_meeting`: a [seregműveletekhez](PYTHON_ENV_ARMY.md) natív mozgással létrehozott aktuális hőstalálkozás, vagy `null`.
 - `events`: a legutóbbi sikeres művelet eseményei; lekérdezése nem fogyasztja el.
@@ -49,7 +49,7 @@ Minden ellenőrzés a módosítás előtt fut: `wrong_session`, `stale_decision`
 Nem támogatott játékmeneti parancs: `unsupported_action`. Ezek a hibák megőrzik a függő döntést és a világot.
 Aktív várakozás alatt az újabb `start_session` és a `load_save` hibája `session_active`; előbb a várakozásból kell kilépni.
 
-Az állapotlekérdezés, handshake és képességlista várakozás közben is elérhető. Az 5. lépéstől az adventure
+Az állapotlekérdezés, handshake, képességlista, `get_castle_options` és a [minden oldali seregopciók](PYTHON_ENV_HERO_OPERATIONS.md) lekérdezése várakozás közben is elérhető. Az 5. lépéstől az adventure
 [képkérés](PYTHON_ENV_HEADLESS.md) is működik itt. A láthatóságra szűrt `observe` továbbra sincs implementálva.
 
 ## Pontos határ és további bekötés

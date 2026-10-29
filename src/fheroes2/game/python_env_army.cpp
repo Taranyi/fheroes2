@@ -32,7 +32,10 @@
 #include "artifact_info.h"
 #include "castle.h"
 #include "heroes.h"
+#include "kingdom.h"
+#include "payment.h"
 #include "python_env_world.h"
+#include "resource.h"
 #include "route.h"
 #include "world.h"
 
@@ -48,16 +51,31 @@ namespace
         return params[key].get<uint32_t>();
     }
 
-    Heroes & ownedHero( const uint32_t id, const int playerId )
+    Heroes & activeHero( const uint32_t id )
     {
         if ( id > static_cast<uint32_t>( Heroes::DEBUG_HERO ) ) {
             throw fheroes2::PythonEnvError( "invalid_request", "hero_id is outside the native hero catalog." );
         }
         Heroes * hero = world.GetHeroes( static_cast<int>( id ) );
-        if ( hero == nullptr || !hero->isActive() || static_cast<int>( hero->GetColor() ) != playerId ) {
-            throw fheroes2::PythonEnvError( "illegal_action", "The hero must be active and owned by the waiting player." );
+        if ( hero == nullptr || !hero->isActive() ) {
+            throw fheroes2::PythonEnvError( "illegal_action", "The hero must be active." );
         }
         return *hero;
+    }
+
+    Heroes & ownedHero( const uint32_t id, const int playerId )
+    {
+        Heroes & hero = activeHero( id );
+        if ( static_cast<int>( hero.GetColor() ) != playerId ) {
+            throw fheroes2::PythonEnvError( "illegal_action", "The hero must be owned by the waiting player." );
+        }
+        return hero;
+    }
+
+    Json funds( const Funds & value )
+    {
+        return { { "wood", value.wood },       { "mercury", value.mercury }, { "ore", value.ore },  { "sulfur", value.sulfur },
+                 { "crystal", value.crystal }, { "gems", value.gems },       { "gold", value.gold } };
     }
 
     struct Endpoint
@@ -68,7 +86,7 @@ namespace
         Troop * troop;
     };
 
-    Endpoint endpoint( const Json & value, const int playerId )
+    Endpoint resolveEndpoint( const Json & value )
     {
         if ( !value.is_object() || value.size() != 3 || !value.contains( "kind" ) || !value["kind"].is_string() ) {
             throw fheroes2::PythonEnvError( "invalid_request", "An army endpoint requires kind (hero/castle), id and slot." );
@@ -79,7 +97,7 @@ namespace
             throw fheroes2::PythonEnvError( "invalid_request", "Army slots are numbered 0 through 4." );
         }
         if ( value["kind"] == "hero" ) {
-            Heroes & hero = ownedHero( id, playerId );
+            Heroes & hero = activeHero( id );
             return { &hero.GetArmy(), &hero, nullptr, hero.GetArmy().GetTroop( slot ) };
         }
         if ( value["kind"] == "castle" ) {
@@ -87,14 +105,21 @@ namespace
                 if ( static_cast<uint32_t>( castle->GetIndex() ) != id ) {
                     continue;
                 }
-                if ( static_cast<int>( castle->GetColor() ) != playerId ) {
-                    throw fheroes2::PythonEnvError( "illegal_action", "The castle must be owned by the waiting player." );
-                }
                 return { &castle->GetArmy(), nullptr, castle, castle->GetArmy().GetTroop( slot ) };
             }
             throw fheroes2::PythonEnvError( "invalid_request", "No castle exists with that id." );
         }
         throw fheroes2::PythonEnvError( "invalid_request", "Army endpoint kind must be hero or castle." );
+    }
+
+    Endpoint endpoint( const Json & value, const int playerId )
+    {
+        const auto result = resolveEndpoint( value );
+        const auto color = result.hero != nullptr ? result.hero->GetColor() : result.castle->GetColor();
+        if ( static_cast<int>( color ) != playerId ) {
+            throw fheroes2::PythonEnvError( "illegal_action", "The army must be owned by the waiting player." );
+        }
+        return result;
     }
 
     bool inMeeting( const Heroes & a, const Heroes & b, const Json & meeting )
@@ -185,6 +210,39 @@ namespace
     }
 }
 
+nlohmann::json fheroes2::pythonEnvArmyOptions( const nlohmann::json & params )
+{
+    if ( params.size() != 2 ) {
+        throw PythonEnvError( "invalid_request", "get_army_options requires kind and id." );
+    }
+    Json reference = params;
+    reference["slot"] = 0U;
+    const auto entity = resolveEndpoint( reference );
+    Json slots = Json::array();
+    for ( size_t slot = 0; slot < entity.army->Size(); ++slot ) {
+        const Troop & troop = *entity.army->GetTroop( slot );
+        const bool upgradable = troop.isValid() && troop.isAllowUpgrade();
+        Funds cost;
+        const bool priced = Army::getTroopUpgradeCost( troop, cost );
+        slots.push_back( { { "slot", slot },
+                           { "occupied", troop.isValid() },
+                           { "count", troop.GetCount() },
+                           { "monster_id", troop.isValid() ? Json( troop.GetID() ) : Json( nullptr ) },
+                           { "upgrade_monster_id", upgradable ? Json( troop.GetUpgrade().GetID() ) : Json( nullptr ) },
+                           { "upgrade_cost", priced ? funds( cost ) : Json( nullptr ) },
+                           { "can_upgrade", entity.army->canUpgradeTroop( troop ) },
+                           { "can_dismiss", troop.isValid() && !entity.army->SaveLastTroop() } } );
+    }
+    const Castle * castle = entity.army->inCastle();
+    const auto color = entity.hero != nullptr ? entity.hero->GetColor() : entity.castle->GetColor();
+    return { { "kind", params["kind"] },
+             { "id", params["id"] },
+             { "owner", static_cast<int>( color ) },
+             { "perspective", "omniscient" },
+             { "castle_id", castle != nullptr ? Json( castle->GetIndex() ) : Json( nullptr ) },
+             { "slots", slots } };
+}
+
 nlohmann::json fheroes2::pythonEnvEndMeeting( nlohmann::json & meeting )
 {
     if ( meeting.is_null() ) {
@@ -209,6 +267,54 @@ nlohmann::json fheroes2::pythonEnvEndMeeting( nlohmann::json & meeting )
 
 nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const nlohmann::json & params, const int playerId, nlohmann::json & meeting )
 {
+    if ( action == "hero.dismiss" || action == "hero.buy_spell_book" ) {
+        if ( params.size() != 1 ) {
+            throw PythonEnvError( "invalid_request", "This hero operation requires only hero_id." );
+        }
+        Heroes & hero = ownedHero( identifier( params, "hero_id" ), playerId );
+        if ( action == "hero.dismiss" ) {
+            if ( !hero.canDismissVoluntarily() ) {
+                throw PythonEnvError( "illegal_action", "This hero cannot be dismissed: leave the castle and respect scenario restrictions." );
+            }
+            const int index = hero.GetIndex();
+            hero.Dismiss( 0 );
+            world.resetPathfinder();
+            return { { "type", "hero_dismissed" }, { "hero_id", hero.GetID() }, { "from", index } };
+        }
+        const Castle * castle = hero.inCastle();
+        if ( castle == nullptr || static_cast<int>( castle->GetColor() ) != playerId || world.GetHero( *castle ) != &hero ) {
+            throw PythonEnvError( "illegal_action", "The hero must occupy an owned castle's visitor slot to buy a spell book." );
+        }
+        if ( !hero.purchaseSpellBook( *castle ) ) {
+            throw PythonEnvError( "illegal_action", "Buying a spell book requires a mage guild, enough funds, a free artifact slot and no existing spell book." );
+        }
+        return { { "type", "spell_book_bought" },
+                 { "hero_id", hero.GetID() },
+                 { "castle_id", castle->GetIndex() },
+                 { "cost", funds( PaymentConditions::BuySpellBook() ) } };
+    }
+    if ( action == "army.upgrade" || action == "army.dismiss" ) {
+        if ( params.size() != 1 || !params.contains( "source" ) ) {
+            throw PythonEnvError( "invalid_request", "This army operation requires only a source endpoint." );
+        }
+        const auto source = endpoint( params["source"], playerId );
+        const int monster = source.troop->GetID();
+        const uint32_t count = source.troop->GetCount();
+        if ( action == "army.dismiss" ) {
+            if ( !source.army->dismissTroop( *source.troop ) ) {
+                throw PythonEnvError( "illegal_action", "Dismissal requires a nonempty slot and cannot remove the hero's last stack." );
+            }
+            world.resetPathfinder();
+            return { { "type", "army_dismissed" }, { "source", params["source"] }, { "monster_id", monster }, { "count", count } };
+        }
+        Funds cost;
+        if ( !Army::getTroopUpgradeCost( *source.troop, cost ) || !source.army->upgradeTroop( *source.troop ) ) {
+            throw PythonEnvError( "illegal_action", "Upgrade requires an upgradable stack, the matching upgraded castle dwelling and enough funds for the whole stack." );
+        }
+        world.resetPathfinder();
+        return { { "type", "army_upgraded" }, { "source", params["source"] }, { "from_monster_id", monster }, { "monster_id", source.troop->GetID() },
+                 { "count", count },          { "cost", funds( cost ) } };
+    }
     if ( action == "hero.end_meeting" ) {
         if ( !params.empty() ) {
             throw PythonEnvError( "invalid_request", "hero.end_meeting requires empty params." );

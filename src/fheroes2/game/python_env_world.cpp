@@ -49,6 +49,7 @@
 #include "maps_fileinfo.h"
 #include "maps_tiles.h"
 #include "maps_tiles_helper.h"
+#include "payment.h"
 #include "players.h"
 #include "python_env_army.h"
 #include "python_env_castle.h"
@@ -157,6 +158,11 @@ namespace
                  { "max_spell_points", hero.GetMaxSpellPoints() },
                  { "move_points", hero.GetMovePoints() },
                  { "scouting_distance", hero.GetScoutingDistance() },
+                 { "has_spell_book", hero.HaveSpellBook() },
+                 { "can_dismiss", hero.canDismissVoluntarily() },
+                 { "dismissal_prohibited", hero.Modes( Heroes::NOTDISMISS ) },
+                 { "can_buy_spell_book", castle != nullptr && castle->GetColor() == hero.GetColor() && hero.canPurchaseSpellBook( *castle ) },
+                 { "spell_book_cost", funds( PaymentConditions::BuySpellBook() ) },
                  { "army", army( hero.GetArmy() ) },
                  { "secondary_skills", skills },
                  { "artifacts", artifacts },
@@ -368,7 +374,8 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
              { "army_meeting", _armyMeeting },
              { "available_actions", GameOver::Result::Get().GetResult() == 0
                                         ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
-                                                "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting" }
+                                                "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting",
+                                                "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book" }
                                         : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
              { "events", _events },
              { "pending_choice", nullptr },
@@ -412,8 +419,9 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     const bool castleAction
         = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire" || action == "market.trade";
     const bool armyAction = action == "hero.meet" || action == "army.transfer" || action == "army.swap" || action == "artifact.transfer" || action == "artifact.swap"
-                            || action == "hero.end_meeting";
-    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction ) {
+                            || action == "hero.end_meeting" || action == "army.upgrade" || action == "army.dismiss";
+    const bool heroAction = action == "hero.dismiss" || action == "hero.buy_spell_book";
+    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction && !heroAction ) {
         throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }
     if ( GameOver::Result::Get().GetResult() != 0 && action != "hero.end_meeting" ) {
@@ -448,7 +456,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "illegal_action", "The hero is already on that tile." );
         }
     }
-    else if ( !castleAction && !armyAction && !params.empty() ) {
+    else if ( !castleAction && !armyAction && !heroAction && !params.empty() ) {
         throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
     }
 
@@ -489,7 +497,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             world.GetKingdom( static_cast<PlayerColor>( _controllerPlayer ) ).ActionBeforeTurn();
             _turnPrepared = true;
         }
-        if ( armyAction ) {
+        if ( armyAction || heroAction ) {
             _events.push_back( pythonEnvArmyAction( action, params, _controllerPlayer, _armyMeeting ) );
             GameOver::Result::Get().checkGameOver();
         }
@@ -597,6 +605,16 @@ nlohmann::json fheroes2::PythonEnvWorld::getCastleOptions( const uint32_t castle
         throw PythonEnvError( "no_game_loaded", "Call load_save before querying castle options." );
     }
     Json result = pythonEnvCastleOptions( castleId );
+    result["state_version"] = _stateVersion;
+    return result;
+}
+
+nlohmann::json fheroes2::PythonEnvWorld::getArmyOptions( const nlohmann::json & params ) const
+{
+    if ( !_loaded ) {
+        throw PythonEnvError( "no_game_loaded", "Call load_save before querying army options." );
+    }
+    Json result = pythonEnvArmyOptions( params );
     result["state_version"] = _stateVersion;
     return result;
 }

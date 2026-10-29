@@ -559,7 +559,7 @@ bool ArmyBar::ActionBarLeftMouseDoubleClick( ArmyTroop & troop )
                 if ( castle && castle->GetRace() == troop.GetRace() && castle->isBuild( troop.GetUpgrade().GetDwelling() ) ) {
                     flags |= Dialog::UPGRADE;
 
-                    if ( !world.GetKingdom( _army->GetColor() ).AllowPayment( troop.GetTotalUpgradeCost() ) ) {
+                    if ( !_army->canUpgradeTroop( troop ) ) {
                         flags |= Dialog::UPGRADE_DISABLE;
                     }
                 }
@@ -571,12 +571,11 @@ bool ArmyBar::ActionBarLeftMouseDoubleClick( ArmyTroop & troop )
             // If this assertion blows up then you are executing this code for a monster which has no upgrades.
             assert( troop.isAllowUpgrade() );
 
-            world.GetKingdom( _army->GetColor() ).OddFundsResource( troop.GetTotalUpgradeCost() );
-            troop.Upgrade();
+            _army->upgradeTroop( troop );
             break;
 
         case Dialog::DISMISS:
-            troop.Reset();
+            _army->dismissTroop( troop, _saveLastTroop );
             break;
 
         default:

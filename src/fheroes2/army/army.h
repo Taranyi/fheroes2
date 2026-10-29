@@ -40,6 +40,7 @@ class Castle;
 class HeroBase;
 class Heroes;
 class Troop;
+struct Funds;
 
 namespace Maps
 {
@@ -176,6 +177,11 @@ public:
 
     // Exact move/split/merge: failure preserves both slots. keepSource protects the last unit across armies.
     static bool TransferTroops( Troop & source, Troop & target, uint32_t count, bool keepSource = false );
+
+    static bool getTroopUpgradeCost( const Troop & troop, Funds & cost );
+    bool canUpgradeTroop( const Troop & troop ) const;
+    bool upgradeTroop( Troop & troop );
+    bool dismissTroop( Troop & troop, bool keepLastTroop = true ) const;
 
     static NeutralMonsterJoiningCondition GetJoinSolution( const Heroes & hero, const Maps::Tile & tile, const Troop & troop );
 

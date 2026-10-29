@@ -307,6 +307,7 @@ public:
     bool isAvailableForHire() const;
     // Dismisses the hero (makes him available for hire) because of a 'reason'. See the implementation for details.
     void Dismiss( const int reason );
+    bool canDismissVoluntarily() const;
 
     bool isLosingGame() const;
     const Castle * inCastle() const override;
@@ -504,6 +505,8 @@ public:
     void ActionPreBattle() override;
 
     bool BuySpellBook( const Castle & castle );
+    bool canPurchaseSpellBook( const Castle & castle ) const;
+    bool purchaseSpellBook( const Castle & castle );
 
     const Route::Path & GetPath() const
     {

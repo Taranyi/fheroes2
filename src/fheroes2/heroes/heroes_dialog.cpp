@@ -372,7 +372,7 @@ int Heroes::OpenDialog( const bool readonly, const bool fade, const bool disable
             = std::make_unique<fheroes2::ButtonSprite>( dst_pt.x, dst_pt.y - dismissReleased.height() / 2, dismissReleased,
                                                         Assets::getImage( ICN::BUTTON_VERTICAL_DISMISS, 1 ), Assets::getImage( ICN::DISMISS_HERO_DISABLED_BUTTON, 0 ) );
 
-        if ( inCastle() || readonly || disableDismiss || Modes( NOTDISMISS ) ) {
+        if ( !canDismissVoluntarily() || readonly || disableDismiss ) {
             buttonDismiss->disable();
         }
 

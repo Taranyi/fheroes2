@@ -92,7 +92,8 @@ várbeli átadást és utolsó csapat védelmét mindkét csereirányban, hős�
 oda-vissza átadást, lejárt kontextust, mozgáspont hiányát, távoli/idegen hozzáférést és hibás bemeneteket.
 A futtatható bemutató ablak és hang nélkül sikeres. A normál GUI érintett ágait kézzel és más platformok SDK-fordítását itt nem teszteltük.
 
-A tárgyátadás már elérhető; teljes seregek automatikus szétosztása, fejlesztés/elbocsátás/varázskönyv-vétel és a teljes 8. lépés még hátravan.
+A tárgyátadás és a [fejlesztés/elbocsátás/varázskönyv-vétel](PYTHON_ENV_HERO_OPERATIONS.md) is elérhető.
+A 8. lépés a deklarált profilon elkészült; a teljes seregek automatikus szétosztása külön kényelmi bővítés lehet.
 A korai Gym-példa kilenc akciója változatlan; az új műveleteket a `HeroesSession` adja.
 
 2026-10-29, Windows: mind a 70 Python-integrációs teszt sikeres, beleértve a Gymnasium ellenőrzőjét és a hét új seregműveleti tesztet.

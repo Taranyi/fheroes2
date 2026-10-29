@@ -62,6 +62,7 @@ namespace fheroes2
         nlohmann::json loadSave( const std::string & path );
         nlohmann::json getState( bool includeSerialized ) const;
         nlohmann::json getCastleOptions( uint32_t castleId ) const;
+        nlohmann::json getArmyOptions( const nlohmann::json & params ) const;
         bool waiting() const;
         void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
         nlohmann::json getDecision() const;

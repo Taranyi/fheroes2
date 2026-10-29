@@ -83,8 +83,8 @@ namespace
     Json capabilities( const bool loaded, const bool waiting )
     {
         return { { "commands",
-                   { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close",
-                     "get_castle_options" } },
+                   { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options",
+                     "get_army_options" } },
                  { "max_request_bytes", maxRequestBytes },
                  { "max_response_bytes", maxResponseBytes },
                  { "game_initialized", loaded },
@@ -97,7 +97,8 @@ namespace
                  { "gameplay_profile", "adventure_basic" },
                  { "castle_actions", { "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire" } },
                  { "market_actions", { "market.trade" } },
-                 { "army_actions", { "hero.meet", "army.transfer", "army.swap" } },
+                 { "army_actions", { "hero.meet", "army.transfer", "army.swap", "army.upgrade", "army.dismiss" } },
+                 { "hero_actions", { "hero.dismiss", "hero.buy_spell_book" } },
                  { "artifact_actions", { "artifact.transfer", "artifact.swap", "hero.end_meeting" } },
                  { "choices", false },
                  { "simulation", true },
@@ -158,6 +159,10 @@ namespace
             }
             const DiagnosticRedirect redirect;
             return world.getState( params.value( "include_serialized", true ) );
+        }
+        if ( method == "get_army_options" ) {
+            const DiagnosticRedirect redirect;
+            return world.getArmyOptions( params );
         }
         if ( method == "get_castle_options" ) {
             if ( params.size() != 1 || !params.contains( "castle_id" ) || !params["castle_id"].is_number_unsigned()

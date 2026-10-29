@@ -67,7 +67,19 @@ uv run --project python python python/examples/artifacts.py
 ```
 
 The builder is an explicit optional test target, absent from disabled/default game builds and the production protocol.
-See [the artifact API, fixture preparation and limits](../docs/PYTHON_ENV_ARTIFACTS.md). Further hero operations remain pending.
+See [the artifact API, fixture preparation and limits](../docs/PYTHON_ENV_ARTIFACTS.md).
+
+Native upgrades, dismissals and spell-book purchases are available too:
+
+```powershell
+uv run --project python python python/examples/hero_operations.py
+```
+
+`get_army_options(kind, entity_id)` reads five slots, whole-stack upgrade prices and current upgrade/dismiss conditions,
+including AI armies. `upgrade_troop(source, token=...)` and `dismiss_troop(source, token=...)` act on an owned army endpoint.
+`dismiss_hero(hero_id, token=...)` respects castle/scenario restrictions; `buy_spell_book(hero_id, token=...)` requires an owned
+castle visitor, mage guild, funds and free artifact space. The full state includes book/purchase/dismissal flags for every hero.
+See [the API, native side effects and limits](../docs/PYTHON_ENV_HERO_OPERATIONS.md). The Gym preview still exposes nine actions.
 
 ## Runnable Gymnasium preview
 
@@ -339,12 +351,12 @@ Error:
 
 * `id`: unsigned 32-bit integer; replies echo it. Invalid/unreadable IDs produce `null` in the error response.
 * `api_version`: integer 1. Unsupported versions are rejected rather than interpreted as another protocol.
-* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
+* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `get_castle_options`, `get_army_options`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
   `params` is optional and must be an object.
   `load_save` requires exactly `{"path":"absolute save path"}`; `get_state` accepts only `{"include_serialized":true}`
   (optional, default true). `start_session` requires `{"player_id":1}` (one color bit); `step` requires `action`, `token`
   and `params`, as described in the controller contract. `render` uses the frame parameters described above.
-  Other methods require empty parameters.
+  `get_castle_options` requires `{castle_id}`; `get_army_options` requires `{kind,id}`. Other methods require empty parameters.
 * Request limit: 65,536 bytes before the terminating LF. CRLF is accepted as JSON trailing whitespace plus LF.
 * Response limit: 64 MiB including the terminating LF. A larger state returns `response_too_large`; retry without the payload.
 * Nesting is limited to a shallow request envelope. Malformed/deep/oversized records return an error; the next record can run.

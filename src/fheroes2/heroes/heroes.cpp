@@ -1639,15 +1639,23 @@ bool Heroes::BuySpellBook( const Castle & castle )
         }
     }
 
-    if ( SpellBookActivate() ) {
-        kingdom.OddFundsResource( payment );
+    return purchaseSpellBook( castle );
+}
 
-        castle.trainHeroInMageGuild( *this );
+bool Heroes::canPurchaseSpellBook( const Castle & castle ) const
+{
+    return !HaveSpellBook() && GetColor() != PlayerColor::NONE && castle.GetLevelMageGuild() >= 1 && !IsFullBagArtifacts()
+           && GetKingdom().AllowPayment( PaymentConditions::BuySpellBook() );
+}
 
-        return true;
+bool Heroes::purchaseSpellBook( const Castle & castle )
+{
+    if ( !canPurchaseSpellBook( castle ) || !SpellBookActivate() ) {
+        return false;
     }
-
-    return false;
+    GetKingdom().OddFundsResource( PaymentConditions::BuySpellBook() );
+    castle.trainHeroInMageGuild( *this );
+    return true;
 }
 
 bool Heroes::isMoveEnabled() const
@@ -1999,6 +2007,11 @@ void Heroes::Dismiss( const int reason )
             kingdom.appendSurrenderedHero( *this );
         }
     }
+}
+
+bool Heroes::canDismissVoluntarily() const
+{
+    return isActive() && inCastle() == nullptr && !Modes( NOTDISMISS );
 }
 
 int Heroes::GetControl() const

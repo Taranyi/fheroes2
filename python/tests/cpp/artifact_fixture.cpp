@@ -44,7 +44,7 @@ int main( int argc, char ** argv )
         const auto input = std::filesystem::absolute( std::filesystem::u8path( argv[1] ) );
         const auto output = std::filesystem::absolute( std::filesystem::u8path( argv[2] ) );
         std::filesystem::create_directories( output );
-        for ( const char * name : { "artifacts-day1.sav", "artifacts-full-day1.sav" } ) {
+        for ( const char * name : { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav" } ) {
             const auto file = output / name;
             if ( std::filesystem::exists( file ) && std::filesystem::equivalent( input, file ) ) {
                 throw std::runtime_error( "The output must not overwrite the input save." );
@@ -77,6 +77,20 @@ int main( int argc, char ** argv )
         }
         if ( !Game::Save( ( output / "artifacts-full-day1.sav" ).string() ) ) {
             throw std::runtime_error( "Could not save the native full-bag fixture." );
+        }
+        Heroes * jojosh = world.GetHeroes( 12 );
+        if ( jojosh == nullptr || jojosh->HaveSpellBook() ) {
+            throw std::runtime_error( "Expected the offered bookless Jojosh." );
+        }
+        for ( Artifact & artifact : jojosh->GetBagArtifacts() ) {
+            artifact = Artifact::MEDAL_COURAGE;
+        }
+        if ( !Game::Save( ( output / "heroes-full-day1.sav" ).string() ) ) {
+            throw std::runtime_error( "Could not save the native bookless full-bag fixture." );
+        }
+        roxana->SetModes( Heroes::NOTDISMISS );
+        if ( !Game::Save( ( output / "heroes-protected-day1.sav" ).string() ) ) {
+            throw std::runtime_error( "Could not save the native dismissal-protection fixture." );
         }
         std::cout << "Native artifact fixtures saved in " << output.string() << '\n';
         return EXIT_SUCCESS;

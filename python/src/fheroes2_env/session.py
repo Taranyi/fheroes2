@@ -356,6 +356,26 @@ class HeroesSession:
         """Finish the encounter and apply native net-gain scouting effects once."""
         return self.step("hero.end_meeting", token=token)
 
+    def get_army_options(self, kind: str, entity_id: int) -> dict[str, Any]:
+        """Read native upgrade costs/conditions and stack-dismissal availability for any side."""
+        return self.request("get_army_options", {"kind": kind, "id": entity_id})
+
+    def upgrade_troop(self, source: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Upgrade the entire specified stack at its native castle facility and price."""
+        return self.step("army.upgrade", token=token, params={"source": dict(source)})
+
+    def dismiss_troop(self, source: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Dismiss an entire stack, preserving the hero's last required stack."""
+        return self.step("army.dismiss", token=token, params={"source": dict(source)})
+
+    def dismiss_hero(self, hero_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Voluntarily dismiss an owned hero outside castles, subject to scenario restrictions."""
+        return self.step("hero.dismiss", token=token, params={"hero_id": hero_id})
+
+    def buy_spell_book(self, hero_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Buy a book and learn native mage-guild spells at the hero's owned castle."""
+        return self.step("hero.buy_spell_book", token=token, params={"hero_id": hero_id})
+
     def close(self) -> None:
         with self._lock:
             if self._closed:

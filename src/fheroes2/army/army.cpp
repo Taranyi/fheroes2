@@ -1782,6 +1782,57 @@ bool Army::SaveLastTroop() const
     return commander && commander->isHeroes() && 1 == GetOccupiedSlotCount();
 }
 
+bool Army::getTroopUpgradeCost( const Troop & troop, Funds & cost )
+{
+    cost.Reset();
+    if ( !troop.isValid() || !troop.isAllowUpgrade() ) {
+        return false;
+    }
+    const Funds unit = Troop( troop.GetMonster(), 1 ).GetTotalUpgradeCost();
+    for ( const int resource : { Resource::WOOD, Resource::MERCURY, Resource::ORE, Resource::SULFUR, Resource::CRYSTAL, Resource::GEMS, Resource::GOLD } ) {
+        const int64_t total = static_cast<int64_t>( unit.Get( resource ) ) * troop.GetCount();
+        if ( total < 0 || total > std::numeric_limits<int32_t>::max() ) {
+            return false;
+        }
+        *cost.GetPtr( resource ) = static_cast<int32_t>( total );
+    }
+    return true;
+}
+
+bool Army::canUpgradeTroop( const Troop & troop ) const
+{
+    Funds cost;
+    if ( !getTroopUpgradeCost( troop, cost ) ) {
+        return false;
+    }
+    const Castle * castle = inCastle();
+    return castle != nullptr && castle->GetRace() == troop.GetRace() && castle->isBuild( troop.GetUpgrade().GetDwelling() )
+           && world.GetKingdom( GetColor() ).AllowPayment( cost );
+}
+
+bool Army::upgradeTroop( Troop & troop )
+{
+    if ( !canUpgradeTroop( troop ) ) {
+        return false;
+    }
+    Funds cost;
+    if ( !getTroopUpgradeCost( troop, cost ) ) {
+        return false;
+    }
+    world.GetKingdom( GetColor() ).OddFundsResource( cost );
+    troop.Upgrade();
+    return true;
+}
+
+bool Army::dismissTroop( Troop & troop, const bool keepLastTroop ) const
+{
+    if ( !troop.isValid() || ( keepLastTroop && SaveLastTroop() ) ) {
+        return false;
+    }
+    troop.Reset();
+    return true;
+}
+
 Monster Army::GetStrongestMonster() const
 {
     Monster monster( Monster::UNKNOWN );
