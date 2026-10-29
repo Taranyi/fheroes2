@@ -24,6 +24,7 @@
 
 #include <array>
 #include <filesystem>
+#include <fstream>
 #include <random>
 #include <system_error>
 #include <utility>
@@ -37,7 +38,11 @@
 #include "game.h"
 #include "game_io.h"
 #include "game_over.h"
+#include "h2d.h"
 #include "heroes.h"
+#include "image.h"
+#include "image_palette.h"
+#include "interface_gamearea.h"
 #include "maps_fileinfo.h"
 #include "maps_tiles.h"
 #include "players.h"
@@ -377,6 +382,95 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     }
     _waiting = false;
     return { { "stopped", true }, { "state_version", _stateVersion } };
+}
+
+nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
+{
+    if ( !_loaded ) {
+        throw PythonEnvError( "no_game_loaded", "Call load_save before rendering." );
+    }
+    for ( const auto & item : params.items() ) {
+        if ( item.key() != "view" && item.key() != "width" && item.key() != "height" && item.key() != "center_x" && item.key() != "center_y"
+             && item.key() != "output_path" ) {
+            throw PythonEnvError( "invalid_request", "Unexpected render parameter." );
+        }
+    }
+    if ( !params.contains( "view" ) || !params["view"].is_string() || !params.contains( "width" ) || !params["width"].is_number_unsigned() || !params.contains( "height" )
+         || !params["height"].is_number_unsigned() || !params.contains( "output_path" ) || !params["output_path"].is_string() || params["width"].get<uint64_t>() < 32
+         || params["width"].get<uint64_t>() > 1024 || params["height"].get<uint64_t>() < 32 || params["height"].get<uint64_t>() > 1024 ) {
+        throw PythonEnvError( "invalid_request", "Render requires view, width/height between 32 and 1024, and output_path." );
+    }
+    if ( params["view"] != "adventure" ) {
+        throw PythonEnvError( "unsupported_view", "Only the adventure viewport is supported at this stage." );
+    }
+    const int width = params["width"].get<int>();
+    const int height = params["height"].get<int>();
+    int centerX = world.w() / 2;
+    int centerY = world.h() / 2;
+    if ( params.contains( "center_x" ) || params.contains( "center_y" ) ) {
+        if ( !params.contains( "center_x" ) || !params.contains( "center_y" ) || !params["center_x"].is_number_unsigned() || !params["center_y"].is_number_unsigned()
+             || params["center_x"].get<uint64_t>() >= static_cast<uint64_t>( world.w() ) || params["center_y"].get<uint64_t>() >= static_cast<uint64_t>( world.h() ) ) {
+            throw PythonEnvError( "invalid_request", "Render center must be one valid tile coordinate pair." );
+        }
+        centerX = params["center_x"].get<int>();
+        centerY = params["center_y"].get<int>();
+    }
+    const std::string utf8Path = params["output_path"].get<std::string>();
+    const std::string path = System::encUTF8ToLocal( utf8Path );
+    if ( utf8Path.empty() || utf8Path.find( '\0' ) != std::string::npos || System::encLocalToUTF8( path ) != utf8Path ) {
+        throw PythonEnvError( "invalid_path", "The output path cannot be represented by the engine's filesystem encoding." );
+    }
+    std::error_code error;
+    if ( std::filesystem::exists( std::filesystem::path{ path }, error ) || error ) {
+        throw PythonEnvError( "render_failed", "Render output must be a new file in an existing directory." );
+    }
+
+    if ( !_renderResources ) {
+        try {
+            _renderResources = std::make_unique<h2d::H2DInitializer>();
+        }
+        catch ( const std::exception & ) {
+            throw PythonEnvError( "assets_unavailable", "Rendering requires the matching files/data/resurrection.h2d game resources." );
+        }
+    }
+    const std::vector<uint8_t> paletteBytes = AGG::getDataFromAggFile( "KB.PAL", false );
+    if ( paletteBytes.size() != paletteSizeBytes ) {
+        throw PythonEnvError( "assets_unavailable", "The original game palette is missing or corrupt." );
+    }
+    setGamePalette( paletteBytes );
+    Image image;
+    image._disableTransformLayer();
+    image.resize( width, height );
+    image.fill( 0 );
+    Interface::GameArea area;
+    area.generate( { width, height }, true );
+    area.SetCenter( { centerX, centerY } );
+    area.Redraw( image, Interface::LEVEL_OBJECTS | Interface::LEVEL_HEROES );
+
+    const auto palette = getNormalizedRGBGamePalette();
+    std::vector<uint8_t> pixels( static_cast<size_t>( width ) * height * 3 );
+    for ( size_t i = 0; i < pixels.size() / 3; ++i ) {
+        const auto & color = palette[image.image()[i]];
+        pixels[i * 3] = color.r;
+        pixels[i * 3 + 1] = color.g;
+        pixels[i * 3 + 2] = color.b;
+    }
+    std::ofstream output( std::filesystem::path{ path }, std::ios::binary );
+    output.write( reinterpret_cast<const char *>( pixels.data() ), static_cast<std::streamsize>( pixels.size() ) );
+    output.close();
+    if ( !output ) {
+        throw PythonEnvError( "render_failed", "Could not write the RGB frame." );
+    }
+    return { { "view", "adventure" },
+             { "perspective", "omniscient" },
+             { "format", "rgb8" },
+             { "width", width },
+             { "height", height },
+             { "channels", 3 },
+             { "byte_count", pixels.size() },
+             { "output_path", utf8Path },
+             { "center", { { "x", centerX }, { "y", centerY } } },
+             { "state_version", _stateVersion } };
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized ) const

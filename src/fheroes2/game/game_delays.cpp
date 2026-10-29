@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "core.h"
 #include "settings.h"
 #include "timing.h"
 
@@ -138,6 +139,9 @@ void Game::AnimateResetDelay( const DelayType delayType )
 
 bool Game::validateCustomAnimationDelay( const uint64_t delayMs )
 {
+    if ( System::isHeadlessMode() ) {
+        return true;
+    }
     if ( delays[static_cast<size_t>( DelayType::CUSTOM_DELAY )].isPassed( delayMs ) ) {
         delays[static_cast<size_t>( DelayType::CUSTOM_DELAY )].reset();
         return true;
@@ -148,6 +152,9 @@ bool Game::validateCustomAnimationDelay( const uint64_t delayMs )
 
 bool Game::validateAnimationDelay( const DelayType delayType )
 {
+    if ( System::isHeadlessMode() ) {
+        return true;
+    }
     assert( delayType != DelayType::CUSTOM_DELAY );
 
     if ( delays[static_cast<size_t>( delayType )].isPassed() ) {
@@ -224,6 +231,9 @@ uint32_t Game::ApplyBattleSpeed( const uint32_t delay )
 
 bool Game::hasEveryDelayPassed( const std::vector<DelayType> & delayTypes )
 {
+    if ( System::isHeadlessMode() ) {
+        return true;
+    }
     for ( const DelayType type : delayTypes ) {
         if ( !delays[static_cast<size_t>( type )].isPassed() ) {
             return false;
@@ -235,6 +245,9 @@ bool Game::hasEveryDelayPassed( const std::vector<DelayType> & delayTypes )
 
 bool Game::isDelayNeeded( const std::vector<DelayType> & delayTypes )
 {
+    if ( System::isHeadlessMode() ) {
+        return false;
+    }
     for ( const DelayType type : delayTypes ) {
         assert( type != DelayType::CUSTOM_DELAY );
 
@@ -248,6 +261,9 @@ bool Game::isDelayNeeded( const std::vector<DelayType> & delayTypes )
 
 bool Game::isCustomDelayNeeded( const uint64_t delayMs )
 {
+    if ( System::isHeadlessMode() ) {
+        return false;
+    }
     return !delays[static_cast<size_t>( DelayType::CUSTOM_DELAY )].isPassed( delayMs );
 }
 

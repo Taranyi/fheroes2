@@ -35,6 +35,7 @@
 
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "cursor.h"
 #include "direction.h"
 #include "game_assets.h"
@@ -326,7 +327,7 @@ namespace
 }
 
 Interface::GameArea::GameArea( BaseInterface & interface )
-    : _interface( interface )
+    : _interface( &interface )
 {
     // Do nothing.
 }
@@ -489,7 +490,7 @@ void Interface::GameArea::Redraw( fheroes2::Image & dst, int flag, bool isPuzzle
     const int32_t roiToRenderMaxX = std::min( maxX + 2, worldWidth );
     const int32_t roiToRenderMaxY = std::min( maxY + 2, worldHeight );
 
-    const bool isEditor = _interface.isEditor();
+    const bool isEditor = _interface != nullptr && _interface->isEditor();
 
     std::vector<fheroes2::Point> ghostAnimationPos;
 
@@ -902,7 +903,9 @@ void Interface::GameArea::Scroll()
 
 void Interface::GameArea::SetRedraw() const
 {
-    _interface.setRedraw( REDRAW_GAMEAREA );
+    if ( _interface != nullptr ) {
+        _interface->setRedraw( REDRAW_GAMEAREA );
+    }
 }
 
 fheroes2::Image Interface::GameArea::GenerateUltimateArtifactAreaSurface( const int32_t index, const fheroes2::Point & offset )
@@ -1071,6 +1074,10 @@ bool Interface::GameArea::mouseIndicatesFastScroll( const fheroes2::Point & mous
 
 void Interface::GameArea::QueueEventProcessing()
 {
+    System::requireInteractive( "map input" );
+    if ( _interface == nullptr ) {
+        throw System::HeadlessInteractionError( "standalone viewport input" );
+    }
     LocalEvent & le = LocalEvent::Get();
     const fheroes2::Point & mousePosition = le.getMouseCursorPos();
     const Settings & conf = Settings::Get();
@@ -1083,7 +1090,7 @@ void Interface::GameArea::QueueEventProcessing()
         _mouseDraggingMovement = false;
         _needRedrawByMouseDragging = false;
     }
-    else if ( _interface.useMouseDragMovement() ) {
+    else if ( _interface->useMouseDragMovement() ) {
         if ( !_mouseDraggingInitiated ) {
             _mouseDraggingInitiated = true;
             _lastMouseDragPosition = mousePosition;
@@ -1120,7 +1127,7 @@ void Interface::GameArea::QueueEventProcessing()
     if ( !Maps::isValidAbsIndex( index ) ) {
         // Change the cursor image when it gets out of the map boundaries or by 'updateCursor' flag.
         if ( updateCursor || index != _prevIndexPos ) {
-            _interface.updateCursor( index );
+            _interface->updateCursor( index );
 
             _prevIndexPos = index;
             updateCursor = false;
@@ -1140,13 +1147,13 @@ void Interface::GameArea::QueueEventProcessing()
     const fheroes2::Rect tileROI( tilePos.x, tilePos.y, fheroes2::tileWidthPx, fheroes2::tileWidthPx );
 
     if ( le.MouseClickLeft( tileROI ) ) {
-        _interface.mouseCursorAreaClickLeft( index );
+        _interface->mouseCursorAreaClickLeft( index );
     }
     else if ( le.isMouseRightButtonPressedInArea( tileROI ) ) {
-        _interface.mouseCursorAreaPressRight( index );
+        _interface->mouseCursorAreaPressRight( index );
     }
     else if ( le.MouseLongPressLeft( tileROI ) ) {
-        _interface.mouseCursorAreaLongPressLeft( index );
+        _interface->mouseCursorAreaLongPressLeft( index );
     }
 
     // The cursor may have moved after mouse click events.
@@ -1154,7 +1161,7 @@ void Interface::GameArea::QueueEventProcessing()
 
     // Change the cursor image if needed.
     if ( updateCursor || index != _prevIndexPos ) {
-        _interface.updateCursor( index );
+        _interface->updateCursor( index );
 
         _prevIndexPos = index;
         updateCursor = false;

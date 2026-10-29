@@ -21,5 +21,6 @@
 """Python transport for fheroes2; simulation commands are not implemented yet."""
 
 from .session import EngineError, EngineProcessError, EngineTimeoutError, HeroesSession, ProtocolError
+from .frame import RGBFrame
 
-__all__ = ["EngineError", "EngineProcessError", "EngineTimeoutError", "HeroesSession", "ProtocolError"]
+__all__ = ["EngineError", "EngineProcessError", "EngineTimeoutError", "HeroesSession", "ProtocolError", "RGBFrame"]

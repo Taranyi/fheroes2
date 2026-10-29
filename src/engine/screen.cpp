@@ -61,6 +61,7 @@
 #include <vita2d.h>
 #endif
 
+#include "core.h"
 #include "image_palette.h"
 #include "logging.h"
 #include "math_tools.h"
@@ -1473,6 +1474,7 @@ namespace fheroes2
 
     void Display::setResolution( ResolutionInfo info )
     {
+        System::requireInteractive( "display allocation" );
         if ( width() > 0 && height() > 0 && info.gameWidth == width() && info.gameHeight == height() && info.screenWidth == _screenSize.width
              && info.screenHeight == _screenSize.height ) // nothing to resize
             return;
@@ -1497,6 +1499,7 @@ namespace fheroes2
 
     void Display::resetRenderer()
     {
+        System::requireInteractive( "display allocation" );
         const bool isFullScreen = _engine->isFullScreen();
 
         // deallocate engine resources
@@ -1519,6 +1522,7 @@ namespace fheroes2
 
     Display & Display::instance()
     {
+        System::requireInteractive( "display access" );
         static Display display;
         return display;
     }

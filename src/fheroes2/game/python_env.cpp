@@ -34,6 +34,7 @@
 #include <string>
 
 #include "../../thirdparty/nlohmann/json.hpp"
+#include "core.h"
 #include "python_env_world.h"
 #include "version.h"
 
@@ -81,7 +82,7 @@ namespace
 
     Json capabilities( const bool loaded, const bool waiting )
     {
-        return { { "commands", { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "close" } },
+        return { { "commands", { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close" } },
                  { "max_request_bytes", maxRequestBytes },
                  { "max_response_bytes", maxResponseBytes },
                  { "game_initialized", loaded },
@@ -93,7 +94,9 @@ namespace
                  { "gameplay_actions", false },
                  { "choices", false },
                  { "simulation", false },
-                 { "render", false },
+                 { "render", true },
+                 { "render_views", { "adventure" } },
+                 { "render_backend", "memory_image" },
                  { "headless_gameplay", false } };
     }
 
@@ -156,6 +159,10 @@ namespace
             }
             return world.dispatch( params["action"].get<std::string>(), params["token"], params["params"] );
         }
+        if ( method == "render" ) {
+            const DiagnosticRedirect redirect;
+            return world.render( params );
+        }
         if ( !params.empty() ) {
             throw fheroes2::PythonEnvError( "invalid_request", "This method requires empty params." );
         }
@@ -170,6 +177,15 @@ namespace
         }
         if ( method == "get_decision" ) {
             return world.getDecision();
+        }
+        if ( method == "runtime_info" ) {
+            return { { "headless", System::isHeadlessMode() },
+                     { "video_initialized", System::isComponentInitialized( System::SystemInitializationComponent::Video ) },
+                     { "audio_initialized", System::isComponentInitialized( System::SystemInitializationComponent::Audio ) },
+                     { "controller_initialized", System::isComponentInitialized( System::SystemInitializationComponent::GameController ) },
+                     { "render_backend", "memory_image" },
+                     { "animation_waits", false },
+                     { "interactive_input", false } };
         }
         if ( method == "close" ) {
             return { { "closed", true } };
@@ -274,6 +290,11 @@ namespace
                     return EXIT_FAILURE;
                 }
             }
+            catch ( const System::HeadlessInteractionError & error ) {
+                if ( !sendError( output, id, "unsupported_interaction", error.what() ) ) {
+                    return EXIT_FAILURE;
+                }
+            }
             catch ( const std::exception & ) {
                 if ( !sendError( output, id, "engine_error", "The engine could not complete the request." ) ) {
                     return EXIT_FAILURE;
@@ -287,6 +308,8 @@ namespace
 int fheroes2::runPythonEnvBootstrap( std::istream & input, std::ostream & output, std::ostream & diagnostics, const char * executablePath )
 {
     try {
+        const System::ScopedHeadlessMode headless;
+        const System::CoreInitializer core( std::set<System::SystemInitializationComponent>{} );
         PythonEnvWorld world( executablePath );
         bool finished = false;
         return serveRequests( input, output, world, finished, false );

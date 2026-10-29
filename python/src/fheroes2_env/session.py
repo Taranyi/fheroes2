@@ -33,6 +33,8 @@ import tempfile
 import threading
 from typing import Any, Mapping
 
+from .frame import RGBFrame
+
 API_VERSION = 1
 MAX_REQUEST_BYTES = 65536
 MAX_RESPONSE_BYTES = 64 * 1024 * 1024
@@ -241,6 +243,52 @@ class HeroesSession:
     def get_decision(self) -> dict[str, Any]:
         """Inspect the pending decision and its explicit action token."""
         return self.request("get_decision")
+
+    def runtime_info(self) -> dict[str, Any]:
+        """Report the actual presentation subsystem state of this process."""
+        return self.request("runtime_info")
+
+    def render(self, *, view: str = "adventure", width: int = 640, height: int = 480, center: tuple[int, int] | None = None) -> RGBFrame:
+        """Render the omniscient adventure viewport directly into RGB memory.
+
+        No game time passes. Castle/hero/battle views are not supported yet.
+        Pixels use HWC order, three uint8 channels, with no row padding.
+        """
+        if type(width) is not int or type(height) is not int or not 32 <= width <= 1024 or not 32 <= height <= 1024:
+            raise ValueError("width and height must be integers between 32 and 1024")
+        if not isinstance(view, str):
+            raise TypeError("view must be a string")
+        params = {"view": view, "width": width, "height": height}
+        if center is not None:
+            if not isinstance(center, (tuple, list)) or len(center) != 2 or any(type(value) is not int or value < 0 for value in center):
+                raise ValueError("center must be a pair of nonnegative tile coordinates")
+            params.update(center_x=center[0], center_y=center[1])
+        with self._lock, tempfile.TemporaryDirectory(prefix="fheroes2-frame-") as directory:
+            path = Path(directory) / "frame.rgb"
+            params["output_path"] = str(path)
+            result = self.request("render", params)
+            try:
+                if (
+                    result.get("format") != "rgb8" or result.get("perspective") != "omniscient"
+                    or type(result.get("width")) is not int or result["width"] != width
+                    or type(result.get("height")) is not int or result["height"] != height
+                    or type(result.get("channels")) is not int or result["channels"] != 3
+                    or type(result.get("byte_count")) is not int or result["byte_count"] != width * height * 3
+                    or result.get("output_path") != str(path)
+                    or type(result.get("state_version")) is not int
+                    or not isinstance(result.get("center"), dict)
+                    or any(type(result["center"].get(key)) is not int for key in ("x", "y"))
+                    or path.stat().st_size != width * height * 3
+                ):
+                    raise ProtocolError("Invalid RGB frame metadata or size")
+                with path.open("rb") as source:
+                    pixels = source.read(width * height * 3 + 1)
+                if len(pixels) != width * height * 3:
+                    raise ProtocolError("RGB frame size changed while reading")
+                return RGBFrame(width, height, pixels, (result["center"]["x"], result["center"]["y"]), result["state_version"])
+            except (OSError, ProtocolError) as error:
+                self._dispose()
+                raise ProtocolError("Engine returned an invalid RGB frame") from error
 
     def step(self, action: str, *, token: Mapping[str, Any], params: Mapping[str, Any] | None = None) -> dict[str, Any]:
         """Submit a token-checked command. Currently only session.stop is supported.

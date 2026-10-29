@@ -56,6 +56,16 @@ int _newlib_heap_size_user = 192 * 1024 * 1024;
 
 namespace
 {
+    bool headlessMode{ false };
+
+    std::set<System::SystemInitializationComponent> defaultComponents()
+    {
+        std::set<System::SystemInitializationComponent> components{ System::SystemInitializationComponent::Audio, System::SystemInitializationComponent::Video };
+#if defined( TARGET_PS_VITA ) || defined( TARGET_NINTENDO_SWITCH )
+        components.emplace( System::SystemInitializationComponent::GameController );
+#endif
+        return components;
+    }
 #if defined( TARGET_PS_VITA )
     void initHardwareInternally()
     {
@@ -159,6 +169,32 @@ namespace
 
 namespace System
 {
+    ScopedHeadlessMode::ScopedHeadlessMode()
+        : _previous( headlessMode )
+    {
+        if ( isComponentInitialized( SystemInitializationComponent::Video ) || isComponentInitialized( SystemInitializationComponent::Audio )
+             || isComponentInitialized( SystemInitializationComponent::GameController ) ) {
+            throw std::logic_error( "Headless mode must be selected before presentation initialization." );
+        }
+        headlessMode = true;
+    }
+
+    ScopedHeadlessMode::~ScopedHeadlessMode()
+    {
+        headlessMode = _previous;
+    }
+
+    bool isHeadlessMode()
+    {
+        return headlessMode;
+    }
+
+    void requireInteractive( const char * operation )
+    {
+        if ( headlessMode ) {
+            throw HeadlessInteractionError( operation );
+        }
+    }
     HardwareInitializer::HardwareInitializer()
     {
         initHardwareInternally();
@@ -170,21 +206,26 @@ namespace System
     }
 
     CoreInitializer::CoreInitializer()
+        : CoreInitializer( defaultComponents() )
+    {}
+
+    CoreInitializer::CoreInitializer( const std::set<SystemInitializationComponent> & components )
     {
-        std::set<SystemInitializationComponent> components{ SystemInitializationComponent::Audio, SystemInitializationComponent::Video };
-
-#if defined( TARGET_PS_VITA ) || defined( TARGET_NINTENDO_SWITCH )
-        components.emplace( SystemInitializationComponent::GameController );
-#endif
-
+        if ( components.empty() ) {
+            return;
+        }
+        requireInteractive( "presentation initialization" );
         if ( !initCoreInternally( components ) ) {
             throw std::logic_error( "Core module initialization failed." );
         }
+        _initialized = true;
     }
 
     CoreInitializer::~CoreInitializer()
     {
-        freeCoreInternally();
+        if ( _initialized ) {
+            freeCoreInternally();
+        }
     }
 
     bool isComponentInitialized( const SystemInitializationComponent component )

@@ -30,6 +30,7 @@
 #include <utility>
 
 #include "army_troop.h"
+#include "core.h"
 #include "cursor.h"
 #include "dialog.h"
 #include "experience.h"
@@ -92,6 +93,7 @@ namespace fheroes2
 {
     int showMessage( const TextBase & header, const TextBase & body, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
+        System::requireInteractive( "modal dialog" );
         outputInTextSupportMode( header, body, buttons );
 
         const bool isProperDialog = ( buttons != 0 );
@@ -321,6 +323,7 @@ namespace fheroes2
 
     int showStandardTextMessage( std::string headerText, std::string messageBody, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
+        System::requireInteractive( "modal dialog" );
         const Text header( std::move( headerText ), FontType::normalYellow() );
         const Text body( std::move( messageBody ), FontType::normalWhite() );
         return showMessage( header, body, buttons, elements );

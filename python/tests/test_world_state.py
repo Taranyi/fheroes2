@@ -24,10 +24,12 @@ from contextlib import contextmanager
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from fheroes2_env import EngineError, HeroesSession
 
@@ -349,6 +351,147 @@ class WorldStateTests(unittest.TestCase):
         self.assertEqual(replies[2]["error"]["code"], "invalid_request")
         self.assertEqual(replies[1]["result"], replies[3]["result"])
         self.assertEqual(replies[4]["result"]["date"]["total_days"], 1)
+
+    def test_headless_render_preserves_world_and_never_initializes_presentation(self):
+        for fixture in self.fixtures:
+            with self.subTest(fixture=fixture["id"]), self.session() as (game, directory):
+                info = game.runtime_info()
+                self.assertTrue(info["headless"])
+                self.assertFalse(info["video_initialized"])
+                self.assertFalse(info["audio_initialized"])
+                self.assertFalse(info["controller_initialized"])
+                game.load_save(ROOT / fixture["path"])
+                before = game.get_state()
+                human = next(player for player in before["players"] if player["is_human"])
+                decision = game.start_session(human["id"])
+                frames = [game.render(width=192, height=160) for _ in range(3)]
+                self.assertEqual(frames[0], frames[1])
+                self.assertEqual(frames[1], frames[2])
+                self.assertEqual(frames[0].shape, (160, 192, 3))
+                self.assertEqual(len(frames[0].pixels), 192 * 160 * 3)
+                self.assertGreater(len(set(frames[0].pixels)), 20)
+                self.assertEqual(game.get_state(), before)
+                self.assertEqual(game.get_decision(), decision)
+                self.assertEqual(game.runtime_info(), info)
+                game.step("session.stop", token=decision["token"])
+                self.assertEqual(list(directory.iterdir()), [])
+
+    def test_headless_render_sizes_camera_and_independent_processes(self):
+        with self.session() as (first, _), self.session() as (second, _):
+            first.load_save(ROOT / self.fixtures[0]["path"])
+            second.load_save(ROOT / self.fixtures[1]["path"])
+            castle = first.render(width=320, height=256, center=(32, 24))
+            corner = first.render(width=320, height=256, center=(0, 0))
+            self.assertNotEqual(castle.pixels, corner.pixels)
+            self.assertEqual(castle.center, (32, 24))
+            tiny = first.render(width=32, height=32, center=(35, 35))
+            self.assertEqual(tiny.shape, (32, 32, 3))
+            large = second.render(width=1024, height=1024, center=(71, 71))
+            self.assertEqual(len(large.pixels), 1024 * 1024 * 3)
+            reference = second.render(width=320, height=256, center=(32, 24))
+            self.assertNotEqual(castle.pixels, reference.pixels)
+            first.close()
+            self.assertEqual(second.render(width=320, height=256, center=(32, 24)), reference)
+
+    def test_invalid_render_requests_preserve_loaded_state_and_pending_decision(self):
+        with self.session() as (game, directory):
+            with self.assertRaises(EngineError) as failed:
+                game.render()
+            self.assertEqual(failed.exception.code, "no_game_loaded")
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            before = game.get_state()
+            decision = game.start_session(1)
+            params = {"view": "adventure", "width": 192, "height": 160, "output_path": str(directory / "frame.rgb")}
+            for change, code in (
+                ({"view": "battle"}, "unsupported_view"),
+                ({"view": "castle"}, "unsupported_view"),
+                ({"view": "hero"}, "unsupported_view"),
+                ({"width": True}, "invalid_request"),
+                ({"width": -1}, "invalid_request"),
+                ({"width": 1025}, "invalid_request"),
+                ({"center_x": 36, "center_y": 0}, "invalid_request"),
+                ({"center_x": 0}, "invalid_request"),
+                ({"extra": 1}, "invalid_request"),
+                ({"output_path": "bad\0path"}, "invalid_path"),
+            ):
+                with self.subTest(change=change), self.assertRaises(EngineError) as failed:
+                    game.request("render", {**params, **change})
+                self.assertEqual(failed.exception.code, code)
+            self.assertEqual(list(directory.iterdir()), [])
+            self.assertEqual(game.get_state(), before)
+            self.assertEqual(game.get_decision(), decision)
+            game.render(width=64, height=64)
+
+    def test_render_output_failures_do_not_overwrite_existing_files_and_can_recover(self):
+        with self.session() as (game, directory):
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            before = game.get_state()
+            existing = directory / "existing.rgb"
+            existing.write_bytes(b"preserve this file")
+            for path in (existing, directory / "missing" / "frame.rgb"):
+                with self.assertRaises(EngineError) as failed:
+                    game.request("render", {"view": "adventure", "width": 64, "height": 64, "output_path": str(path)})
+                self.assertEqual(failed.exception.code, "render_failed")
+            self.assertEqual(existing.read_bytes(), b"preserve this file")
+            self.assertEqual(game.get_state(), before)
+            game.render(width=64, height=64)
+
+    def test_render_temporary_files_are_cleaned_on_success_and_rejection(self):
+        with self.session() as (game, directory):
+            game.load_save(ROOT / self.fixtures[0]["path"])
+            temporary_directory = tempfile.TemporaryDirectory
+            paths = []
+
+            def create_frame_directory(**kwargs):
+                result = temporary_directory(dir=directory, **kwargs)
+                paths.append(Path(result.name))
+                return result
+
+            with mock.patch("fheroes2_env.session.tempfile.TemporaryDirectory", side_effect=create_frame_directory):
+                frame = game.render(width=64, height=64)
+                with self.assertRaises(EngineError):
+                    game.render(view="battle")
+                another = game.render(width=64, height=64)
+            self.assertEqual(frame, another)
+            self.assertEqual(len(paths), 3)
+            self.assertTrue(all(not path.exists() for path in paths))
+            image = directory / "frame.ppm"
+            frame.save_ppm(image)
+            self.assertEqual(image.read_bytes(), b"P6\n64 64\n255\n" + frame.pixels)
+
+    def test_render_client_validates_geometry_before_sending_request(self):
+        with self.session() as (game, _):
+            for kwargs in ({"width": True}, {"height": 0}, {"width": 1025}, {"center": (0,)}, {"center": (-1, 0)}, {"center": (True, 0)}):
+                with self.assertRaises(ValueError):
+                    game.render(**kwargs)
+            self.assertFalse(game.capabilities()["game_initialized"])
+            self.assertTrue(game.capabilities()["render"])
+
+    @unittest.skipUnless(os.name == "nt", "This missing-asset fixture isolates the Windows runtime layout")
+    def test_render_reports_missing_graphics_package_without_crashing(self):
+        with self.session() as (_, directory):
+            isolated = directory / "isolated"
+            (isolated / "DATA").mkdir(parents=True)
+            executable = isolated / EXECUTABLE.name
+            shutil.copy2(EXECUTABLE, executable)
+            if os.name == "nt":
+                for library in EXECUTABLE.parent.glob("*.dll"):
+                    shutil.copy2(library, isolated / library.name)
+            for asset in ("HEROES2.AGG", "HEROES2X.AGG"):
+                source = ROOT / "DATA" / asset
+                if source.is_file():
+                    os.link(source, isolated / "DATA" / asset)
+            env = dict(os.environ)
+            env.pop("HOME", None)
+            env.update(APPDATA=str(directory / "profile"), FHEROES2_DATA=str(isolated), SDL_VIDEODRIVER="nonexistent-driver", SDL_AUDIODRIVER="nonexistent-driver")
+            with HeroesSession(executable, env=env, cwd=isolated, timeout=20) as game:
+                game.load_save(ROOT / self.fixtures[0]["path"])
+                before = game.get_state()
+                with self.assertRaises(EngineError) as failed:
+                    game.render(width=64, height=64)
+                self.assertEqual(failed.exception.code, "assets_unavailable")
+                self.assertEqual(game.get_state(), before)
+                self.assertFalse(game.runtime_info()["video_initialized"])
 
 
 if __name__ == "__main__":

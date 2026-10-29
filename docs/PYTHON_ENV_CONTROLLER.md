@@ -40,8 +40,8 @@ Minden ellenőrzés a módosítás előtt fut: `wrong_session`, `stale_decision`
 Nem támogatott játékmeneti parancs: `unsupported_action`. Ezek a hibák megőrzik a függő döntést és a világot.
 Aktív várakozás alatt az újabb `start_session` és a `load_save` hibája `session_active`; előbb a várakozásból kell kilépni.
 
-Az állapotlekérdezés, handshake és képességlista várakozás közben is elérhető. A render és a láthatóságra szűrt
-`observe` továbbra sincs implementálva; nem állítjuk róluk, hogy már működnek a várakozás alatt.
+Az állapotlekérdezés, handshake és képességlista várakozás közben is elérhető. Az 5. lépéstől az adventure
+[képkérés](PYTHON_ENV_HEADLESS.md) is működik itt. A láthatóságra szűrt `observe` továbbra sincs implementálva.
 
 ## Pontos határ és további bekötés
 

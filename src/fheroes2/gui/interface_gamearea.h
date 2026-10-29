@@ -152,6 +152,8 @@ namespace Interface
     class GameArea
     {
     public:
+        // A standalone viewport can render to Image without constructing an interactive interface.
+        GameArea() = default;
         explicit GameArea( BaseInterface & interface );
 
         void generate( const fheroes2::Size & screenSize, const bool withoutBorders );
@@ -273,7 +275,7 @@ namespace Interface
         }
 
     private:
-        BaseInterface & _interface;
+        BaseInterface * _interface{ nullptr };
 
         fheroes2::Rect _windowROI; // visible to draw area of World Map in pixels
         fheroes2::Point _topLeftTileOffset; // offset of tiles to be drawn (from here we can find any tile ID)

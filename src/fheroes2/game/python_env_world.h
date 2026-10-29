@@ -38,6 +38,10 @@ namespace AGG
 
 namespace fheroes2
 {
+    namespace h2d
+    {
+        class H2DInitializer;
+    }
     class PythonEnvError final : public std::runtime_error
     {
     public:
@@ -61,12 +65,14 @@ namespace fheroes2
         void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
         nlohmann::json getDecision() const;
         nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params );
+        nlohmann::json render( const nlohmann::json & params );
 
     private:
         void clear();
 
         const std::string _executablePath;
         std::unique_ptr<AGG::AGGInitializer> _resources;
+        std::unique_ptr<h2d::H2DInitializer> _renderResources;
         bool _loaded{ false };
         uint64_t _stateVersion{ 0 };
         const std::string _sessionId;

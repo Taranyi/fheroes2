@@ -1,6 +1,6 @@
 ###########################################################################
 #   fheroes2: https://github.com/ihhub/fheroes2                           #
-#   Copyright (C) 2022 - 2025                                             #
+#   Copyright (C) 2022 - 2026                                             #
 #                                                                         #
 #   This program is free software; you can redistribute it and/or modify  #
 #   it under the terms of the GNU General Public License as published by  #
@@ -23,6 +23,11 @@ file(GLOB_RECURSE FHEROES2_SOURCES CONFIGURE_DEPENDS *.cpp)
 if(ENABLE_PYTHON_ENV)
 	# Only the entry point and environment adapters need this opt-in. Game rules stay shared.
 	set_property(SOURCE game/fheroes2.cpp game/python_env.cpp game/python_env_world.cpp APPEND PROPERTY COMPILE_DEFINITIONS FHEROES2_ENABLE_PYTHON_ENV)
+
+	# Explicit test target: excluded from game builds and absent when the desktop adapter is disabled.
+	add_executable(fheroes2_headless_checks EXCLUDE_FROM_ALL ${PROJECT_SOURCE_DIR}/python/tests/cpp/headless_checks.cpp)
+	target_link_libraries(fheroes2_headless_checks PRIVATE engine)
+	set_target_properties(fheroes2_headless_checks PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endif()
 
 add_compile_options("$<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:${GNU_CC_WARN_OPTS}>")

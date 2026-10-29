@@ -1,8 +1,8 @@
 # fheroes2 Python connection
 
-Implementation steps 2–4 provide a process connection, real save loading, a read-only world API and an initial external
-controller decision checkpoint. These work without video or audio initialization. Gameplay actions, turn simulation,
-rendering and Gymnasium are still unavailable.
+Implementation steps 2–5 provide a process connection, real save loading, a read-only world API, an initial external
+controller decision checkpoint and an offscreen adventure renderer. These work without video or audio initialization.
+Gameplay actions, turn simulation, the other render views and Gymnasium are still unavailable.
 
 ## Platform separation
 
@@ -102,6 +102,44 @@ player; stale or wrong-player commands are rejected without changing the world. 
 the wait first. Only the single human player of a live standard save can be attached at present. No control flags change.
 See the [controller contract and source audit](../docs/PYTHON_ENV_CONTROLLER.md) and runnable `examples/decision.py`.
 
+## Headless rendering
+
+```python
+with HeroesSession("fheroes2.exe", timeout=20) as game:
+    game.load_save("build/python-env-baseline/fixtures/other-side-day1.sav")
+    frame = game.render(width=640, height=480, center=(32, 24))
+    print(frame.shape)  # (480, 640, 3)
+    frame.save_ppm("build/frame.ppm")
+    # Optional, if NumPy is installed: rgb_array = frame.to_numpy()
+    print(game.runtime_info())  # video/audio/controller initialization all false
+```
+
+`render()` returns an immutable `RGBFrame` with RGB uint8 bytes in HWC order, a camera tile coordinate and state version.
+Dimensions must be integers from 32 to 1024; the optional center is a valid zero-based tile pair (default: map center).
+The current view is `adventure`, explicitly omniscient, with terrain, objects and heroes. It uses the real engine's
+`GameArea::Redraw` into an independent `Image`, without constructing a window, radar or interactive interface.
+Castle, hero and battle screens will be added in step 11 and currently return `unsupported_view`.
+
+Rendering requires the original AGG data and matching `files/data/resurrection.h2d`; missing graphics resources return
+`assets_unavailable`. Pure state loading still needs only the original AGG files. The client owns a short-lived output
+directory, reads a bounded RGB file and cleans it on success/error. Pixels do not travel as JSON number arrays.
+The low-level `render` request uses `view`, `width`, `height`, `output_path` and optional `center_x`/`center_y`; output must
+be a new file in an existing directory. Always prefer the Python method, which manages those files automatically.
+
+Frame requests work while waiting for a decision and do not advance the day, consume a decision, change player flags,
+update animation frames or write the player profile. `runtime_info()` reports the actual SDL subsystem state.
+The headless execution policy rejects display access, modal dialogs and interactive event loops with
+`unsupported_interaction`. Animation delay checks do not wait. This is infrastructure for future gameplay operations;
+unsupported actions still fail explicitly and the guard does not substitute answers for game choices.
+
+Runnable example:
+
+```powershell
+uv run --project python python python/examples/render.py build/python-env-baseline/fixtures/other-side-day1.sav
+```
+
+See [headless implementation and verification](../docs/PYTHON_ENV_HEADLESS.md).
+
 `hello()` repeats the handshake. `request(method, params)` exposes the underlying connection; unknown commands raise
 `EngineError` without breaking the session. A timeout, invalid reply or unexpected process exit stops the process and raises
 `EngineTimeoutError`, `ProtocolError` or `EngineProcessError`. The request deadline covers both writing and reading.
@@ -138,11 +176,12 @@ Error:
 
 * `id`: unsigned 32-bit integer; replies echo it. Invalid/unreadable IDs produce `null` in the error response.
 * `api_version`: integer 1. Unsupported versions are rejected rather than interpreted as another protocol.
-* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `start_session`, `get_decision`, `step`, `close`.
+* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
   `params` is optional and must be an object.
   `load_save` requires exactly `{"path":"absolute save path"}`; `get_state` accepts only `{"include_serialized":true}`
   (optional, default true). `start_session` requires `{"player_id":1}` (one color bit); `step` requires `action`, `token`
-  and `params`, as described in the controller contract. Other methods require empty parameters.
+  and `params`, as described in the controller contract. `render` uses the frame parameters described above.
+  Other methods require empty parameters.
 * Request limit: 65,536 bytes before the terminating LF. CRLF is accepted as JSON trailing whitespace plus LF.
 * Response limit: 64 MiB including the terminating LF. A larger state returns `response_too_large`; retry without the payload.
 * Nesting is limited to a shallow request envelope. Malformed/deep/oversized records return an error; the next record can run.
@@ -154,6 +193,7 @@ Error:
 The handshake's historical `mode: "bootstrap"` label is retained. Capabilities report `state_queries` and `omniscient_state`
 as true, and `game_initialized` reflects whether a save is loaded. Full headless gameplay remains false until actions work.
 `external_controller` is true; `controller_active` reflects the decision wait. `gameplay_actions` and `choices` remain false.
+`render` is true, `render_views` lists only `adventure`, and `render_backend` is `memory_image`.
 
 ## Verification
 
@@ -184,3 +224,8 @@ saves remain ignored; world tests skip with an explanation when the fixtures are
 Step 4 adds seven decision tests (28 total), covering repeated state reads while the real C++ decision callback waits,
 unchanged player control flags and serialized world, rejection of wrong/stale/cross-process tokens, unsupported actions,
 reload/reentry protection, close and EOF unwinding, and malformed requests inside the decision wait.
+
+Step 5 adds seven render tests (35 total), including deterministic repeated frames, full serialized world/decision equality,
+invalid SDL drivers, empty profile, two independent processes, bounds/camera validation, temporary-file cleanup, file-error
+recovery and missing H2D graphics resources. Separate C++ policy checks reject display/input initialization before SDL starts.
+Dummy/software probes verify both explicit video-only initialization and the unchanged normal video+audio defaults.

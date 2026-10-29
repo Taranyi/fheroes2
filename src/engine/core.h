@@ -20,6 +20,10 @@
 
 #pragma once
 
+#include <set>
+#include <stdexcept>
+#include <string>
+
 #include "component_base.h"
 
 namespace System
@@ -30,6 +34,31 @@ namespace System
         Video,
         GameController
     };
+
+    class HeadlessInteractionError final : public std::logic_error
+    {
+    public:
+        explicit HeadlessInteractionError( const std::string & operation )
+            : std::logic_error( "Interactive operation is unavailable in headless mode: " + operation )
+        {}
+    };
+
+    // Process-local execution policy. Enter before initializing any presentation component.
+    // The engine and its caller use one thread; nested scopes restore the previous policy.
+    class ScopedHeadlessMode final
+    {
+    public:
+        ScopedHeadlessMode();
+        ~ScopedHeadlessMode();
+        ScopedHeadlessMode( const ScopedHeadlessMode & ) = delete;
+        ScopedHeadlessMode & operator=( const ScopedHeadlessMode & ) = delete;
+
+    private:
+        bool _previous;
+    };
+
+    bool isHeadlessMode();
+    void requireInteractive( const char * operation );
 
     class HardwareInitializer final : public ComponentBase
     {
@@ -45,10 +74,15 @@ namespace System
     {
     public:
         explicit CoreInitializer();
+        // An empty set leaves SDL and event handling completely uninitialized.
+        explicit CoreInitializer( const std::set<SystemInitializationComponent> & components );
         CoreInitializer( const CoreInitializer & ) = delete;
         CoreInitializer & operator=( const CoreInitializer & ) = delete;
 
         ~CoreInitializer();
+
+    private:
+        bool _initialized{ false };
     };
 
     bool isComponentInitialized( const SystemInitializationComponent component );

@@ -60,6 +60,7 @@
 #endif
 
 #include "audio.h"
+#include "core.h"
 #include "exception.h"
 #include "image.h"
 #include "logging.h"
@@ -1242,6 +1243,7 @@ LocalEvent & LocalEvent::Get()
 
 bool LocalEvent::HandleEvents( const bool sleepAfterEventProcessing /* = true */, const bool allowExit /* = false */ )
 {
+    System::requireInteractive( "input event loop" );
     // Event processing might be computationally heavy.
     // We want to make sure that we do not slow down by going into sleep mode when it is not needed.
     const fheroes2::Time eventProcessingTimer;
