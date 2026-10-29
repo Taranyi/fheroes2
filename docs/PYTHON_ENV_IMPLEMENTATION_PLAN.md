@@ -196,3 +196,16 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 5 | Kész: jelenlegi betöltés/döntés/render profil | Explicit headless policy; választható core-komponensek a régi alapértékekkel; önálló adventure viewport, RGB képkérés és tényleges runtime-adatok. 35 sikeres Python-teszt, C++ policy-ellenőrzés és SDL dummy/software próbák. [Leírás és korlátok](PYTHON_ENV_HEADLESS.md). A még nem bekötött játékműveleteknél ezt továbbra is ellenőrizni kell. |
 | 6 | Kész: adventure_basic profil | Natív útkeresés/mezőlépés, saját szárazföldi hős és sima erőforráskupac; `turn.end` valódi AI-körökkel, bevétellel és hétváltással. Tokenverziózás, események és teljes műveleti checkpoint/visszaállítás a nem támogatott interakcióknál. 43 sikeres Python-teszt. [Szerződés, példa és korlátok](PYTHON_ENV_ADVENTURE.md). Emberi csata, választás és hajózás még nincs bekötve. |
 | 7–14 | Tervezett | A fenti lépések szerint. |
+
+### Korai, futtatható Gym-példa a 6. lépés után
+
+A felhasználó kérésére már most készült egy opcionális `AdventurePreviewEnv` és
+[futtatható bemutató](../python/examples/gym_loop.py), [használati leírással](../python/README.md#runnable-gymnasium-preview).
+A meglévő C++ motor köré kerül: egy saját hős nyolc iránya és kör vége, valódi RGB-kép, teljes világállapot az `info` mezőben,
+friss folyamatból történő reset, ötértékű `step`, külön Python-megjelenítő vagy teljesen ablak nélküli futás.
+A jutalom egyelőre mindig nulla, nincs akciómaszk, a seed nem vezérli a motor véletlenét; a nem támogatott csata/választás
+továbbra is kivétel. A 12 próbálkozásos bemutató-időlimit `truncated`, a valódi motorbeli végállapot `terminated`.
+A Gymnasium saját ellenőrzőjének sikeres futása ezt a szűk profilt igazolja; a 13. lépés teljes szerződése továbbra is tervezett.
+Ez a kiegészítés csak Python-kódot és opcionális Python-függőségeket ad, új C++-módosítás nélkül.
+Windows alatt mind az 51 Python-teszt sikeres (ebből 8 az opcionális Gym-példát ellenőrzi); a látható bemutató
+két epizódon át lefutott. A base Python-csomag külső függőség nélkül is importálható maradt.

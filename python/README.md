@@ -2,7 +2,78 @@
 
 Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
-initialization. External battles/choices, other actions/views and Gymnasium remain future steps.
+initialization. An optional Gymnasium preview demonstrates the reset/step loop below. External battles/choices,
+other actions/views and the full Gym action/observation contract remain future steps.
+
+## Runnable Gymnasium preview
+
+From the repository root, after building the enabled engine and preparing the local reference saves:
+
+```powershell
+uv run --project python --extra viewer python python/examples/gym_loop.py
+```
+
+This opens a Python viewer of the real engine's adventure image. Roxana walks out and back on the recorded
+The Other Side day-1 save; end-turn runs the native AI, then the 12-action episode limit triggers a reset.
+The default demonstration runs 120 actions. Esc or closing the window exits. No mouse/keyboard control of the
+original game is involved. The C++ engine remains headless; only the optional Python viewer opens a window.
+
+For the random action loop, including completely windowless operation:
+
+```powershell
+uv run --project python --extra viewer python python/examples/gym_loop.py --policy random
+uv run --project python --extra gym python python/examples/gym_loop.py --headless --policy random --steps 10000
+```
+
+The adapter and example are [gym_preview.py](src/fheroes2_env/gym_preview.py) and
+[gym_loop.py](examples/gym_loop.py). The essential calling pattern is:
+
+```python
+from fheroes2_env.gym_preview import make_preview
+
+with make_preview(executable="fheroes2.exe",
+                  save="build/python-env-baseline/fixtures/other-side-day1.sav",
+                  render_mode=None, max_steps=12) as env:
+    obs, info = env.reset(seed=123)
+    for _ in range(10000):
+        action = env.action_space.sample()
+        obs, reward, terminated, truncated, info = env.step(action)
+        if terminated or truncated:
+            obs, info = env.reset()
+```
+
+* `obs`: omniscient adventure RGB image, NumPy `uint8`, shape `(480, 640, 3)` by default. Camera follows one owned hero.
+  `width` and `height` configure it at construction. This image is requested even with `render_mode=None`.
+* `info["state"]`: the full structured omniscient world, including opponents, heroes, castles, resources and hidden tiles.
+  `info["events"]` exposes native action/AI events. This is currently **not** an observation restricted to player visibility.
+* `Discrete(9)` actions: `0` north, `1` north-east, `2` east, `3` south-east, `4` south, `5` south-west,
+  `6` west, `7` north-west, `8` end turn. Movement requests the adjacent destination using native route validation;
+  obstacles can cause a rejection or a longer route, so an accepted request is not a promise of a single tile cost.
+* Rejected illegal/unsupported actions leave the world unchanged and return `action_accepted=False` plus `rejection` in `info`.
+  Sampling can select them: this preview has no legal-action mask. Attempts still count toward the episode limit.
+* Reward is always `0.0`; a learning objective and final reward rules have not been implemented.
+* `terminated` means an actual native terminal state; `truncated` means the configured action limit (12 by default).
+  `reset()` closes the previous engine process and reloads the original save in a fresh process. It does not overwrite it.
+* A human battle/choice boundary, engine failure or transport error raises an exception. It is never disguised as game over
+  or a time limit. The current engine rolls back unsupported gameplay interactions. Longer random runs can encounter these
+  limits; this is not yet an adapter for complete arbitrary games.
+* `reset(seed=...)` seeds the Python action sampler, **not** the native RNG. Registration is explicitly marked
+  `nondeterministic=True`. The Gymnasium checker passes without claiming seeded native transitions.
+* `render_mode="rgb_array"` returns a copy of the observation via `render()`; `"human"` needs the `viewer` extra.
+  Use one human viewer per Python process. The CLI also checks `env.unwrapped.window_closed`; window closing is not a game result.
+
+The `gym` and `viewer` extras install only into the separate Python environment. Importing the base `fheroes2_env` package
+still requires only the Python standard library. No C++ or mobile build changes were needed for this preview.
+On Linux/macOS, supply your enabled desktop executable with `--executable`; current runtime verification was on Windows.
+Assets and local reference saves are required, as described in [the baseline instructions](../docs/PYTHON_ENV_BASELINE.md).
+This early example does not complete implementation-plan step 13 (full observation/action coverage and RL contract).
+
+The calling convention follows the [official Gymnasium basic loop](https://gymnasium.farama.org/main/content/basic_usage/).
+To run the optional checks together with the existing suite:
+
+```powershell
+uv run --project python --extra viewer python -m unittest discover -s python/tests -v
+```
 
 ## Platform separation
 
