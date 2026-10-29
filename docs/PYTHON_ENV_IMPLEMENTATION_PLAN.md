@@ -1,6 +1,7 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
-Dátum: 2026-10-25. Állapot: az 1. és 2. lépés elkészült 2026-10-26-án; játékállapot-lekérés és szimuláció még nincs.
+Dátum: 2026-10-25; frissítve: 2026-10-29. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési/építési/toborzási része kész;
+korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
 
@@ -14,6 +15,10 @@ Előzmény és kódfeltérképezés: [PYTHON_SIMULATION_RESEARCH.md](PYTHON_SIMU
 Pythonból lehessen betölteni/újraindítani és léptetni egy teljes játékmenetet, adatokat lekérni, parancsokat küldeni és kérésre képet kapni. A környezet működjön ablak, hang és animációs várakozások nélkül is. Legyen egy általános Python API és egy erre épülő, ellenőrzött Gymnasium adapter.
 
 A támogatás nem korlátozódik csatára. Az első kész verzió elfogadási pályáján legyen kalandtérképi mozgás, erőforrásfelvétel, körváltás és beépített AI ellenfél, várépítés/toborzás, hős/sereg/tárgy kezelés, valódi választás és kalandtérképről induló, onnan visszatérő csata. A kalandtérkép, vár, hős és csata nézetéről legyen RGB-kép.
+
+További kötelező cél a résztvevőnként választható vezérlő és a kézi játékos nélküli futás: beépített AI-k egymás ellen,
+Python-agent beépített AI ellen, illetve több Python-agent egymás ellen is ugyanazt a motort használhassa.
+Ez nem a mostani egyetlen külső játékosra korlátozott bemutató már elkészült képessége; a szükséges vezérlőbővítés lent külön feladat.
 
 Az „alap env” nem egyenlő minden eredeti pálya, kampány és speciális objektum teljes támogatásával. Az első kiadás egy dokumentált standardjáték-profilon és tesztpályán garantálja a működést. A támogatott műveletek és objektumtípusok név szerinti listát kapnak. Nem támogatott helyzetnél egyértelmű hiba és esemény érkezik; sem csendes AI-döntés, sem végtelen UI-várakozás nem elfogadható. Kampányok, pályaszerkesztő, hálózatos játék, teljes speciálisobjektum-lefedettség és optimalizált nagyléptékű RL későbbi bővítés.
 
@@ -32,9 +37,50 @@ Az eredeti játékadatokat kezdetben használjuk. A headless azt jelenti, hogy n
 - Első kapcsolat: Python által indított gyermekfolyamat, stdin/stdout felett UTF-8 JSON-sorok. A stdout kizárólag protokoll, minden log stderr vagy külön fájl. A Windows standard streamek/SDL indítás viselkedését az első működő próbán igazoljuk; ha nem használhatók megbízhatóan, ugyanazt a protokollt helyi pipe-ra visszük át.
 - Nagy RGB-képekhez kezdetben bináris képfájl a session saját ideiglenes könyvtárában és metaadat a protokollban. Python NumPy tömbbé olvassa. Nem adunk pixeleket JSON-számok millióiként. A közvetlen bináris/megosztott memóriás átadás későbbi mért optimalizálás.
 - Minden játékállapot-olvasás és -módosítás ugyanazon motorvégrehajtási szálon történik. A döntésre váró parancshurok a beágyazott hívási vermet életben tartja.
-- A motor a következő külső döntésig fut. Lekérdezés/render nem lépteti a világot. Az ellenfeleket a session konfigurációja szerint a meglévő AI vezérli.
+- A motor a következő külső döntésig fut. Lekérdezés/render nem lépteti a világot. Minden résztvevő vezérlőjét külön a session konfigurációja választja ki: beépített AI vagy külső Python-agent.
 - Külső vezérlő, játékosi jogosultság és megjelenítési mód külön fogalom. Az AI-nak jelölés nem lehet a külső vezérlés helyettesítője.
 - A normál ablakos játék továbbra is működik; a szimulációs eltérések explicit módban lépnek életbe.
+
+## Résztvevők és AI-vezérlés: kötelező pontosítás, 2026-10-29
+
+A „játékos” a motorban egy résztvevő/birodalom/szín azonosítója, nem feltétlenül ember.
+A Python-agent is lehet tanított vagy szabályalapú AI. A headless futás semmilyen emberi résztvevőt vagy kézi inputot nem követelhet meg.
+Az ablak és a renderelés választása ettől független: megfigyeléshez lehet kép, attól még minden oldalt algoritmus vezérelhet.
+
+**Már működik:** a `get_state` minden résztvevő adatait lekéri: beépített AI-k, erőforrások, hősök, seregek, várak és
+teljes térkép, a köd mögötti adatokkal együtt. A Gym-példa `info["state"]` mezője is ezt adja.
+A `turn.end` ténylegesen végrehajtja az AI-k köreit, a következő teljes lekérdezés ezek eredményét is tartalmazza.
+Az `ai_turn_completed` események azonosítják a lefutott résztvevőket; ez jelenleg nem minden egyes belső AI-mozdulat részletes eseménynaplója.
+
+**Jelenlegi korlát:** a `start_session` egyetlen, a mentésben emberinek jelölt aktív résztvevőhöz kapcsolódik.
+Ennek a döntéseit már most teljesen Python hozza, emberi kattintás nélkül. Az AI-nak jelölt oldal külső átvétele,
+több külső vezérlő és a kizárólag beépített AI-kból álló session még nincs megvalósítva.
+A meglévő `is_human`/`is_ai` mezők a motor régi vezérléstípusát írják le; nem bizonyítják, hogy ember ül a gépnél.
+
+**Kötelező bővítés, a további vezérlőfüggő fejlesztések előtt (4/A):**
+
+1. A résztvevő azonosítóját, motorbeli szabályprofilját, a döntést hozó vezérlőt és a megjelenítést külön kezeljük.
+   A mentés emberi/AI jelölése nem lehet a Python-hozzáférés feltétele. Az eredeti nehézségi AI-bónuszok,
+   eseményjogosultságok és körsorrend szemantikáját meg kell őrizni, illetve a konfigurációban egyértelműen rögzíteni;
+   puszta `CONTROL_HUMAN`/`CONTROL_AI` átjelölés nem elfogadható megoldás.
+2. Session-szinten minden aktív résztvevőhöz beépített AI vagy külső vezérlő rendelhető.
+   Az első session-beli hozzárendelés elegendő; kör közbeni tetszőleges átadás nem előfeltétel.
+3. Több külső résztvevőnél a motor a soron következő külső döntésnél áll meg. A válasz azonosítja az aktuális
+   résztvevőt; csak hozzá tartozó tokennel és jogosult entitásokra küldhető akció. Egy Python-program több oldalt is vezérelhet.
+4. Ha nincs külső vezérlő, korlátozott ideig/körszámig/döntésszámig lehessen előreléptetni a beépített AI-k játékát,
+   majd állapotot és képet kérni. Ne egy korlátlan automatikus ciklus blokkolja a lekérdezést, lezárást vagy timeoutkezelést.
+5. Az állapotváltozásokat minden oldalra követni kell. AI-körhatáron kérhető állapot/esemény tegye lehetővé az egyes
+   ellenfelek lépéseinek elkülönített követését; a natív AI stratégiáját továbbra sem másoljuk Pythonba.
+6. A hozzárendelés csatánál és választásnál is érvényes. Beépített AI oldalnál a motor döntsön; külső oldalnál a
+   megfelelő Python-agent kapja a döntést. Hiányzó külső műveletet továbbra sem helyettesítünk csendes automatikus döntéssel.
+
+**Elfogadási esetek:** ablak nélkül beépített AI–AI futás emberinek jelölt résztvevő nélkül; Python-agent–AI;
+két külső oldal váltakozó vezérlése; vegyes beépített/külső vezérlés; minden oldal friss állapotának követése;
+rossz résztvevőhöz vagy korábbi döntéshez tartozó akció elutasítása változatlan világ mellett.
+A csata/választás elfogadási részeit a 9–10. lépéssel együtt zárjuk le; a körütemezés és a résztvevői modell bővítése előbb szükséges.
+
+Ez a követelmény az alap Python API-ra vonatkozik. A mostani egyhősös, kilencakciós Gym-példa ettől továbbra is
+korlátozott adapter. A végleges Gym-nézetet és az esetleges több agentes Python-wrapper formáját az általános sessionre építjük.
 
 ## Tervezett API-szerződés
 
@@ -81,6 +127,14 @@ Hibás/idejétmúlt parancs a módosítás előtt elutasítandó. Külön hibaka
 **Fő kód:** `game_startgame.cpp`, `players.*`, `heroes_action.cpp`; új vezérlő/decision egységek.
 
 **Kész, ha:** az aktuális játékos, az állapot és a várakozás kiszámítható; egy nem megfelelő játékos/elavult állapot parancsa nem fut le. A várakozás alatt az `observe`, `render` és `close` feldolgozható.
+
+### 4/A. Résztvevőnként választható vezérlés
+
+**Következő prioritás a 2026-10-29-i pontosítás után:** a fenti résztvevői követelmények szerint általánosítani
+a sessiont és a körütemezést; az egyetlen emberinek jelölt oldalra épülő átmeneti korlátot megszüntetni.
+A 7. lépés fennmaradó részét és a további vezérlőfüggő funkciókat erre építjük.
+Először a jelenleg támogatott adventure/várműveleti profilon ellenőrizzük az AI-only, vegyes és több külső oldalas eseteket;
+a csatát és a valódi választásokat a 9–10. lépés köti be ugyanebbe a modellbe.
 
 ### 5. Valódi headless működés
 
@@ -148,7 +202,9 @@ Hibás/idejétmúlt parancs a módosítás előtt elutasítandó. Külön hibaka
 
 ### 13. Gymnasium adapter
 
-**Munka:** `HeroesEnv` a session köré: `reset`, `step`, `render`, `close`, `observation_space`, `action_space`, epizódlimit és egyszerű reward. Az adapter egy külső játékost vezérel, a többit a beépített AI. Minden felmerülő választás/csata ugyanabban az epizódban marad.
+**Munka:** `HeroesEnv` a session köré: `reset`, `step`, `render`, `close`, `observation_space`, `action_space`, epizódlimit és egyszerű reward.
+Az egy agentes Gym-nézet egy kijelölt külső résztvevőt vezérelhet; ez nem korlátozhatja az alap session több külső résztvevős
+és kizárólag beépített AI-s működését. Minden felmerülő választás/csata ugyanabban az epizódban marad.
 
 Az alap Gym-profil fix felső korlátokat rögzít (térképméret, entitások és választási opciók). A megfigyelés fix alakú, kitöltött `Dict` tömböket, érvényességi maszkokat, döntéstípust és a szabályos akciók leírását tartalmazza. Az első action space `Discrete(K)` lehet a megfigyelésben szereplő akciójelöltekhez: a jelöltleírások és a maszk együtt határozzák meg a slotok aktuális jelentését. A sorrend determinisztikus, az epizódon belüli space nem változik. A korlát feletti pályát/állapotot egyértelműen elutasítjuk, érvényes akciókat nem vágunk le csendben. Az általános Python API továbbra is strukturált parancsokat és gazdag lekérdezést ad.
 
@@ -168,7 +224,9 @@ Győzelem/vereség: `terminated=True`. Külső lépésszámkorlát: `truncated=T
 
 - [ ] Pythonból elindítható és lezárható, menükézi kezelés nélkül.
 - [ ] Ablak/hang nélkül betölt és léptet; grafikus felhasználói munkamenetre nincs szükség.
-- [ ] Játékosi állapot és saját hős/vár/sereg/tárgy adatok lekérdezhetők.
+- [ ] Minden résztvevő, köztük az AI-k állapota, hősei, várai, seregei és tárgyai lekérdezhetők és változásuk követhető.
+- [ ] Résztvevőnként választható beépített AI vagy Python-vezérlő; több külső oldal szabályosan válthatja egymást.
+- [ ] Emberinek jelölt résztvevő nélkül is fut beépített AI–AI játék, korlátozott előreléptetéssel és köztes lekérdezéssel.
 - [ ] Hősmozgás, egyszerű felvétel, körváltás és beépített AI működik.
 - [ ] Várépítés, toborzás, hős/sereg/tárgy műveletek működnek a deklarált profilon.
 - [ ] A tesztpálya választásai nem nyitnak ablakot, Pythonból megválaszolhatók.
@@ -196,7 +254,8 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 5 | Kész: jelenlegi betöltés/döntés/render profil | Explicit headless policy; választható core-komponensek a régi alapértékekkel; önálló adventure viewport, RGB képkérés és tényleges runtime-adatok. 35 sikeres Python-teszt, C++ policy-ellenőrzés és SDL dummy/software próbák. [Leírás és korlátok](PYTHON_ENV_HEADLESS.md). A még nem bekötött játékműveleteknél ezt továbbra is ellenőrizni kell. |
 | 6 | Kész: adventure_basic profil | Natív útkeresés/mezőlépés, saját szárazföldi hős és sima erőforráskupac; `turn.end` valódi AI-körökkel, bevétellel és hétváltással. Tokenverziózás, események és teljes műveleti checkpoint/visszaállítás a nem támogatott interakcióknál. 43 sikeres Python-teszt. [Szerződés, példa és korlátok](PYTHON_ENV_ADVENTURE.md). Emberi csata, választás és hajózás még nincs bekötve. |
 | 7 | Első rész kész: várlekérdezés, építés, pontos toborzás | A natív feltételek, költségek, napi limit, faji fejlesztések, készlet és garrison/hős cél ellenőrzésével; az eredeti játékszabály-függvények változatlanok. [Szerződés és futtatható példa](PYTHON_ENV_CASTLE.md). Hősvásárlás, piaci csere és hajó még hátravan. |
-| 8–14 | Tervezett | A fenti lépések szerint. |
+| 4/A | Következő prioritás; még nincs megvalósítva | Résztvevőnkénti vezérlő, AI-nak jelölt oldal Python-elérése, több külső oldal, kizárólag beépített AI-k futtatása és körhatáron történő követése. Az egyetlen emberinek jelölt oldalra szűkített jelenlegi profil általánosítása a további vezérlőfüggő funkciók előtt. |
+| 8–14 | Tervezett | A fenti lépések szerint, a 4/A résztvevői modelljére építve. |
 
 ### Korai, futtatható Gym-példa a 6. lépés után
 

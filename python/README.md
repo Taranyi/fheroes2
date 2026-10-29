@@ -5,6 +5,13 @@ native land movement/resource pickup and turn progression through the built-in A
 initialization. An optional Gymnasium preview demonstrates the reset/step loop below. External battles/choices,
 other actions/views and the full Gym action/observation contract remain future steps.
 
+Participant-control requirement (2026-10-29): the final session must support a built-in AI or Python controller per side,
+including AI-only simulation and multiple external agents with no manual player. Currently the state is already omniscient
+for every side, but external control is limited to one side marked human in the save. That side can already be driven entirely
+by a Python policy; the human marker is an engine limitation, not a requirement for keyboard input.
+See the [implementation plan's participant requirements](../docs/PYTHON_ENV_IMPLEMENTATION_PLAN.md), task 4/A,
+before extending controller-dependent features. This broader control model is a required goal, not an implemented capability.
+
 Castle inspection, building and exact-count recruitment are also available through the native engine:
 
 ```powershell

@@ -5,6 +5,11 @@ A `start_session(player_id)` belép a C++ `Game::StartGame(controller)` útvonal
 A parancskiszolgálás a callbackből történik, ugyanazon motorszálon; a C++ hívási verem a várakozás végéig megmarad.
 A normál `Game::StartGame()` továbbra is az eredeti ablakos útvonalat használja.
 
+2026-10-29-i követelmény: ez az egyetlen emberinek jelölt résztvevőre szűkített megoldás átmeneti.
+A végcél résztvevőnként választható beépített AI vagy Python-vezérlő, több külső oldal és teljesen AI-s futás,
+kézi játékos nélkül. A mindent látó állapotlekérés már minden oldalra működik; a több résztvevős vezérlés még nem.
+A megvalósítás előtt követendő pontosítás és elfogadási esetek a [terv résztvevői követelményeinél](PYTHON_ENV_IMPLEMENTATION_PLAN.md) szerepelnek (4/A feladat).
+
 ## Használat
 
 ```python
