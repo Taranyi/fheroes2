@@ -522,6 +522,8 @@ namespace CastleDialog
 
     void redrawAllBuildings( const Castle & castle, const fheroes2::Point & offset, const BuildingsRenderQueue & buildings,
                              const CastleDialog::FadeBuilding & alphaBuilding, const uint32_t animationIndex );
+    void redrawAllBuildings( fheroes2::Image & output, const Castle & castle, const fheroes2::Point & offset, const BuildingsRenderQueue & buildings,
+                             const CastleDialog::FadeBuilding & alphaBuilding, uint32_t animationIndex );
 }
 
 struct VecCastles : public std::vector<Castle *>

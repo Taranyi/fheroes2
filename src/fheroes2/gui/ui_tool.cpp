@@ -120,15 +120,36 @@ namespace
 
 namespace fheroes2
 {
+    namespace
+    {
+        thread_local Image * currentDrawingTarget = nullptr;
+    }
+
+    ScopedDrawingTarget::ScopedDrawingTarget( Image & output )
+        : _previous( currentDrawingTarget )
+    {
+        currentDrawingTarget = &output;
+    }
+
+    ScopedDrawingTarget::~ScopedDrawingTarget()
+    {
+        currentDrawingTarget = _previous;
+    }
+
+    Image & drawingTarget()
+    {
+        return currentDrawingTarget != nullptr ? *currentDrawingTarget : Display::instance();
+    }
+
     MovableSprite::MovableSprite()
-        : _restorer( Display::instance(), 0, 0, 0, 0 )
+        : _restorer( drawingTarget(), 0, 0, 0, 0 )
     {
         // Do nothing.
     }
 
     MovableSprite::MovableSprite( const int32_t width, const int32_t height, const int32_t x, const int32_t y )
         : Sprite( width, height, x, y )
-        , _restorer( Display::instance(), x, y, width, height )
+        , _restorer( drawingTarget(), x, y, width, height )
         , _isHidden( height == 0 && width == 0 )
     {
         // Do nothing.
@@ -136,7 +157,7 @@ namespace fheroes2
 
     MovableSprite::MovableSprite( const Sprite & sprite )
         : Sprite( sprite )
-        , _restorer( Display::instance(), 0, 0, 0, 0 )
+        , _restorer( drawingTarget(), 0, 0, 0, 0 )
         , _isHidden( false )
     {
         // Do nothing.
@@ -178,7 +199,7 @@ namespace fheroes2
     {
         if ( _isHidden ) {
             _restorer.update( x(), y(), width(), height() );
-            Blit( *this, Display::instance(), x(), y() );
+            Blit( *this, drawingTarget(), x(), y() );
             _isHidden = false;
         }
     }

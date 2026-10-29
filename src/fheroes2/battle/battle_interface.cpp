@@ -1377,21 +1377,27 @@ bool Battle::TurnOrder::isRenderingInsideBattlefieldWindow( const fheroes2::Rect
     return ( battlefieldWindow.y <= turnOrderMonsterIconSize );
 }
 
-Battle::Interface::Interface( Arena & battleArena, const int32_t tileIndex )
+Battle::Interface::Interface( Arena & battleArena, const int32_t tileIndex, const bool offscreen )
     : arena( battleArena )
+    , _offscreen( offscreen )
 {
-    Cursor::Get().SetThemes( Cursor::WAR_POINTER );
+    if ( !offscreen ) {
+        Cursor::Get().SetThemes( Cursor::WAR_POINTER );
 
-    // border
-    const fheroes2::Display & display = fheroes2::Display::instance();
+        // border
+        const fheroes2::Display & display = fheroes2::Display::instance();
 
-    _interfacePosition = { ( display.width() - fheroes2::Display::DEFAULT_WIDTH ) / 2, ( display.height() - fheroes2::Display::DEFAULT_HEIGHT ) / 2,
-                           _surfaceInnerArea.width, _surfaceInnerArea.height };
-    border.SetPosition( _interfacePosition.x - fheroes2::borderWidthPx, _interfacePosition.y - fheroes2::borderWidthPx, fheroes2::Display::DEFAULT_WIDTH,
-                        fheroes2::Display::DEFAULT_HEIGHT );
+        _interfacePosition = { ( display.width() - fheroes2::Display::DEFAULT_WIDTH ) / 2, ( display.height() - fheroes2::Display::DEFAULT_HEIGHT ) / 2,
+                               _surfaceInnerArea.width, _surfaceInnerArea.height };
+        border.SetPosition( _interfacePosition.x - fheroes2::borderWidthPx, _interfacePosition.y - fheroes2::borderWidthPx, fheroes2::Display::DEFAULT_WIDTH,
+                            fheroes2::Display::DEFAULT_HEIGHT );
 
-    // damage info popup
-    popup.setBattleUIRect( _interfacePosition );
+        // damage info popup
+        popup.setBattleUIRect( _interfacePosition );
+    }
+    else {
+        _interfacePosition = _surfaceInnerArea;
+    }
 
     // cover
     const Maps::Tile & tile = world.getTile( tileIndex );
@@ -1448,6 +1454,24 @@ Battle::Interface::Interface( Arena & battleArena, const int32_t tileIndex )
         break;
     default:
         break;
+    }
+
+    if ( offscreen ) {
+        _mainSurface._disableTransformLayer();
+        _battleGround._disableTransformLayer();
+        _mainSurface.resize( 640, 480 );
+        _battleGround.resize( 640, 480 );
+        _mainSurface.fill( 0 );
+        _battleGround.fill( 0 );
+        _hexagonGrid = DrawHexagon( fheroes2::GetColorId( 0x68, 0x8C, 0x04 ) );
+        if ( auto * hero = arena.getAttackingArmyCommander() ) {
+            _attackingOpponent = std::make_unique<OpponentSprite>( _surfaceInnerArea, hero, false );
+        }
+        if ( auto * hero = arena.getDefendingArmyCommander() ) {
+            _defendingOpponent = std::make_unique<OpponentSprite>( _surfaceInnerArea, hero, true );
+        }
+        _ballistaTowerRect = { 570, 145, 70, 160 };
+        return;
     }
 
     // Setup delay types for all common battlefield animations rendering.
@@ -1513,6 +1537,9 @@ Battle::Interface::Interface( Arena & battleArena, const int32_t tileIndex )
 
 Battle::Interface::~Interface()
 {
+    if ( _offscreen ) {
+        return;
+    }
     AudioManager::ResetAudio();
 
     // Turn order dialog can be outside the battlefield area.
@@ -1533,6 +1560,17 @@ Battle::Interface::~Interface()
 
         Game::setDisplayFadeIn();
     }
+}
+
+void Battle::Interface::renderSnapshot( Arena & arena, const Unit & current, fheroes2::Image & output )
+{
+    const fheroes2::ScopedDrawingTarget target( output );
+    Interface renderer( arena, arena.getMapIndex(), true );
+    renderer._currentUnit = &current;
+    renderer._redrawBattleGround();
+    fheroes2::Copy( renderer._battleGround, renderer._mainSurface );
+    renderer.RedrawArmies();
+    fheroes2::Copy( renderer._mainSurface, output );
 }
 
 void Battle::Interface::SetOrderOfUnits( const std::shared_ptr<const Units> & units )

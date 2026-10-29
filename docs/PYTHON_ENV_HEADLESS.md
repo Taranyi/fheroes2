@@ -36,7 +36,7 @@ print(game.runtime_info())
 
 A szélesség és magasság 32–1024 pixel. A középpont nulla alapú térképmező; alapértelmezésben a pálya közepe.
 A nézet mindent lát: terep, objektumok és hősök, köd/láthatósági szűrés és emberi UI-panelek nélkül. Ez nem fair játékosi
-megfigyelés. A vár-, hős- és csatanézet `unsupported_view`; azok részletes rajzolása a 11. lépés feladata.
+megfigyelés. A 11. lépéstől a [vár-, hős- és csatanézet is elérhető](PYTHON_ENV_VIEWS.md), memóriaképként, döntés- és világváltozás nélkül.
 
 A szükséges grafikus adatok: az eredeti AGG-k és a megfelelő `files/data/resurrection.h2d`.
 Az állapot betöltése nem kéri a H2D-t; az első render igen. A hiányzó csomag `assets_unavailable` hibát ad a rajzolás előtt.

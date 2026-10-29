@@ -38,6 +38,7 @@
 #include "artifact.h"
 #include "battle.h"
 #include "battle_arena.h"
+#include "battle_interface.h"
 #include "battle_troop.h"
 #include "castle.h"
 #include "color.h"
@@ -60,6 +61,7 @@
 #include "python_env_army.h"
 #include "python_env_battle.h"
 #include "python_env_castle.h"
+#include "python_env_views.h"
 #include "race.h"
 #include "rand.h"
 #include "resource.h"
@@ -273,6 +275,7 @@ void fheroes2::PythonEnvWorld::clear()
     _armyMeeting = nullptr;
     _pendingChoice = nullptr;
     _battleState = nullptr;
+    _battleRender = {};
     _events = Json::array();
     _warnings.clear();
     world.Reset();
@@ -597,6 +600,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 _events.push_back( { { "type", "choice_answered" }, { "choice_id", _pendingChoice["choice_id"] }, { "value", _choiceAnswer } } );
                 _pendingChoice = nullptr;
                 _battleState = nullptr;
+                _battleRender = {};
                 return _choiceAnswer;
             },
             [&]( const std::string & title, const std::string & message ) {
@@ -608,6 +612,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 }
                 auto decision = pythonEnvBattleDecision( arena, unit );
                 _battleState = std::move( decision.state );
+                _battleRender = [&]( Image & output ) { Battle::Interface::renderSnapshot( arena, unit, output ); };
                 _pendingChoice = { { "choice_id", ++_nextChoiceId }, { "kind", "battle.unit" }, { "unit_uid", unit.GetUID() } };
                 ++_stateVersion;
                 ++_decisionId;
@@ -619,6 +624,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 actions.push_back( decision.commands.at( selected ) );
                 _pendingChoice = nullptr;
                 _battleState = nullptr;
+                _battleRender = {};
             },
             [&]( const Battle::Result & result, const int32_t tile ) {
                 _events.push_back( { { "type", "battle_completed" },
@@ -762,6 +768,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             _armyMeeting = oldMeeting;
             _pendingChoice = nullptr;
             _battleState = nullptr;
+            _battleRender = {};
             if ( checkpoint.fail() ) {
                 throw std::logic_error( "Invalid action checkpoint." );
             }
@@ -802,7 +809,7 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
     }
     for ( const auto & item : params.items() ) {
         if ( item.key() != "view" && item.key() != "width" && item.key() != "height" && item.key() != "center_x" && item.key() != "center_y"
-             && item.key() != "output_path" ) {
+             && item.key() != "output_path" && item.key() != "hero_id" && item.key() != "castle_id" ) {
             throw PythonEnvError( "invalid_request", "Unexpected render parameter." );
         }
     }
@@ -811,8 +818,41 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
          || params["width"].get<uint64_t>() > 1024 || params["height"].get<uint64_t>() < 32 || params["height"].get<uint64_t>() > 1024 ) {
         throw PythonEnvError( "invalid_request", "Render requires view, width/height between 32 and 1024, and output_path." );
     }
-    if ( params["view"] != "adventure" ) {
-        throw PythonEnvError( "unsupported_view", "Only the adventure viewport is supported at this stage." );
+    const std::string view = params["view"].get<std::string>();
+    if ( view != "adventure" && view != "hero" && view != "castle" && view != "battle" ) {
+        throw PythonEnvError( "unsupported_view", "Supported views are adventure, hero, castle and battle." );
+    }
+    Heroes * hero = nullptr;
+    Castle * castle = nullptr;
+    if ( ( view != "adventure" && ( params.contains( "center_x" ) || params.contains( "center_y" ) ) ) || ( view != "hero" && params.contains( "hero_id" ) )
+         || ( view != "castle" && params.contains( "castle_id" ) ) ) {
+        throw PythonEnvError( "invalid_request", "This render parameter belongs to another view." );
+    }
+    if ( view == "hero" ) {
+        if ( !params.contains( "hero_id" ) || !params["hero_id"].is_number_unsigned() || params["hero_id"].get<uint64_t>() > Heroes::DEBUG_HERO ) {
+            throw PythonEnvError( "invalid_request", "The hero view requires a valid hero_id." );
+        }
+        hero = world.GetHeroes( params["hero_id"].get<int>() );
+        if ( hero == nullptr || !hero->isActive() ) {
+            throw PythonEnvError( "invalid_request", "The hero view requires an active hero." );
+        }
+    }
+    if ( view == "castle" ) {
+        if ( !params.contains( "castle_id" ) || !params["castle_id"].is_number_unsigned() || params["castle_id"].get<uint64_t>() > UINT32_MAX ) {
+            throw PythonEnvError( "invalid_request", "The castle view requires castle_id." );
+        }
+        for ( Castle * candidate : world.getAllCastles() ) {
+            if ( static_cast<uint32_t>( candidate->GetIndex() ) == params["castle_id"].get<uint32_t>() ) {
+                castle = candidate;
+                break;
+            }
+        }
+        if ( castle == nullptr ) {
+            throw PythonEnvError( "invalid_request", "No castle exists with this id." );
+        }
+    }
+    if ( view == "battle" && ( _battleState.is_null() || !_battleRender ) ) {
+        throw PythonEnvError( "no_active_battle", "A battle image requires a pending external battle decision." );
     }
     const int width = params["width"].get<int>();
     const int height = params["height"].get<int>();
@@ -836,15 +876,46 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
         throw PythonEnvError( "render_failed", "Render output must be a new file in an existing directory." );
     }
 
+    // Lazy visual asset generation must not consume the gameplay generator's stream.
+    struct RandomRestorer
+    {
+        Rand::PCG32 saved = Rand::CurrentThreadRandomDevice();
+        ~RandomRestorer()
+        {
+            Rand::CurrentThreadRandomDevice() = saved;
+        }
+    } randomRestorer;
     ensureGraphicsData();
     Image image;
     image._disableTransformLayer();
     image.resize( width, height );
     image.fill( 0 );
-    Interface::GameArea area;
-    area.generate( { width, height }, true );
-    area.SetCenter( { centerX, centerY } );
-    area.Redraw( image, Interface::LEVEL_OBJECTS | Interface::LEVEL_HEROES );
+    if ( view == "adventure" ) {
+        Interface::GameArea area;
+        area.generate( { width, height }, true );
+        area.SetCenter( { centerX, centerY } );
+        area.Redraw( image, Interface::LEVEL_OBJECTS | Interface::LEVEL_HEROES );
+    }
+    else {
+        Image native;
+        if ( hero != nullptr ) {
+            renderHeroSnapshot( *hero, native );
+            centerX = hero->GetCenter().x;
+            centerY = hero->GetCenter().y;
+        }
+        else if ( castle != nullptr ) {
+            renderCastleSnapshot( *castle, native );
+            centerX = castle->GetCenter().x;
+            centerY = castle->GetCenter().y;
+        }
+        else {
+            _battleRender( native );
+            const auto position = Maps::GetPoint( _battleState["map_index"].get<int>() );
+            centerX = position.x;
+            centerY = position.y;
+        }
+        Resize( native, image );
+    }
 
     const auto palette = getNormalizedRGBGamePalette();
     std::vector<uint8_t> pixels( static_cast<size_t>( width ) * height * 3 );
@@ -860,7 +931,7 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
     if ( !output ) {
         throw PythonEnvError( "render_failed", "Could not write the RGB frame." );
     }
-    return { { "view", "adventure" },
+    return { { "view", view },
              { "perspective", "omniscient" },
              { "format", "rgb8" },
              { "width", width },

@@ -1,7 +1,7 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
 Dátum: 2026-10-25; frissítve: 2026-10-29. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
-a 8–10. lépés a deklarált profilon szintén kész, korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
+a 8–11. lépés a deklarált profilon szintén kész, korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
 
@@ -263,7 +263,12 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 8 | Kész a deklarált profilon | Pontos slot-áthelyezés, split/merge, csapat- és tárgycsere közös natív függvényekkel. Tulajdonjog, utolsó kötelező csapat, varázskönyv-védelem és valódi találkozás ellenőrzött. Tekercsadat, Anduran-összeállítás és a találkozás végén alkalmazott natív felderítés megmarad. Teljes csapat fejlesztése/elbocsátása, önkéntes hőselbocsátás és varázskönyv-vétel a normál UI-val közös műveletekkel. Minden oldali, tisztán olvasó seregopciók és árak. [Seregpélda](PYTHON_ENV_ARMY.md), [tárgypélda](PYTHON_ENV_ARTIFACTS.md), [új hősműveletek és tesztmentések](PYTHON_ENV_HERO_OPERATIONS.md). |
 | 9 | Kész a kezdeti, deklarált választás/varázslat profilon | Élő C++ veremben felfüggesztett láda → szintlépés lánc, ingyenes/fizetős csatlakozás és üldözés, lámpa/Wagon Camp toborzás. Köztes lekérdezés/render, hibás válasz változatlan állapottal; megszakításkor teljes műveleti rollback, csatához jutáskor a 10. lépés vezérlője folytatja. Identify Hero és Visions natív árral/hatással; a célzott és további varázslatok külön bővítések. [Szerződés és példa](PYTHON_ENV_CHOICES.md). |
 | 10 | Kész a deklarált csataprofilon | Élő natív Arena, egységkörönkénti Python-döntés és szabályos akciójelöltek; mozgás, közelharc, lövés, 13 célzott varázslat, menekülés, megadás. Semleges/hős elleni csata, támadó ostrom és AI-körből induló saját várvédelem. Natív veszteség, pénz, tapasztalat, nekromancia és szintlépés után visszatérés adventure/terminal helyzetbe. Lekérdezés és megszakítás élő csatából, teljes műveleti rollback. [Szerződés, profilkorlátok és példa](PYTHON_ENV_BATTLE.md). |
-| 11–14 | Tervezett | Közvetlenül a további rendernézetek következnek. A többoldalas vezérlés, hajózás és a profilon kívüli műveletek/varázslatok nyitott követelménye megmarad. |
+| 11 | Kész a deklarált profilon | Adventure, aktív csata, saját/AI-hős és vár natív RGB-képe ablak nélkül. Közös memóriacélú épület-/UI-rajzolás; statikus képek és méretezés. Nyolc új motoros teszt és képi ellenőrzés; a teljes csatavégállapot képkérésekkel/anélkül is egyezik. [API, példa és korlátok](PYTHON_ENV_VIEWS.md). |
+| 12–14 | Tervezett | Közvetlenül a reset/seed és reprodukálhatóság következik. A többoldalas vezérlés, hajózás és a profilon kívüli műveletek/varázslatok nyitott követelménye megmarad. |
+
+Külön felmerült bővítési irány: konfigurálható battle-only reset/indítás, kalandtérképes játékmenet előzménye nélkül.
+A csatavezérlő már alapot ad hozzá, de az önálló konfigurációs API és a terep-/ostrom-/hajós esetek külön ellenőrzése még nincs megvalósítva.
+Ez nem módosítja a számozott lépések egyeztetett sorrendjét.
 
 ### Korai, futtatható Gym-példa a 6. lépés után
 

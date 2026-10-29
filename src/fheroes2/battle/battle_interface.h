@@ -327,7 +327,8 @@ namespace Battle
     class Interface final
     {
     public:
-        Interface( Arena & battleArena, const int32_t tileIndex );
+        Interface( Arena & battleArena, const int32_t tileIndex, bool offscreen = false );
+        static void renderSnapshot( Arena & arena, const Unit & current, fheroes2::Image & output );
         Interface( const Interface & ) = delete;
 
         ~Interface();
@@ -489,6 +490,7 @@ namespace Battle
         std::vector<Game::DelayType> _mergeWithCommonAnimationsDelays( std::vector<Game::DelayType> otherDelays ) const;
 
         Arena & arena;
+        bool _offscreen{ false };
         Dialog::FrameBorder border;
 
         fheroes2::Rect _interfacePosition;

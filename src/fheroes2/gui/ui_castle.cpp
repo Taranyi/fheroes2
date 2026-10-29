@@ -303,7 +303,7 @@ namespace fheroes2
     void drawCastleName( const Castle & castle, Image & output, const Point & offset )
     {
         const fheroes2::Sprite & background = Assets::getImage( ICN::TOWNNAME, 0 );
-        fheroes2::Blit( background, fheroes2::Display::instance(), offset.x + 320 - background.width() / 2, offset.y + 248 );
+        fheroes2::Blit( background, output, offset.x + 320 - background.width() / 2, offset.y + 248 );
 
         const fheroes2::Text text( castle.GetName(), fheroes2::FontType::smallWhite() );
         text.draw( offset.x + 320 - text.width() / 2, offset.y + 250, output );
@@ -312,13 +312,19 @@ namespace fheroes2
     void drawCastleDialogBuilding( const int32_t icnId, const uint32_t icnIndex, const Castle & castle, const Point & offset, const Rect & renderArea,
                                    const uint8_t alpha )
     {
+        drawCastleDialogBuilding( Display::instance(), icnId, icnIndex, castle, offset, renderArea, alpha );
+    }
+
+    void drawCastleDialogBuilding( Image & output, const int32_t icnId, const uint32_t icnIndex, const Castle & castle, const Point & offset, const Rect & renderArea,
+                                   const uint8_t alpha )
+    {
         const fheroes2::Sprite & image
             = isImagePlayerColorDependent( icnId ) ? getModifiedByColorImage( icnId, icnIndex, castle.GetColor() ) : Assets::getImage( icnId, icnIndex );
 
         const fheroes2::Rect imageRoi{ offset.x + image.x(), offset.y + image.y(), image.width(), image.height() };
         const fheroes2::Rect overlappedRoi = renderArea ^ imageRoi;
 
-        fheroes2::AlphaBlit( image, overlappedRoi.x - imageRoi.x, overlappedRoi.y - imageRoi.y, fheroes2::Display::instance(), overlappedRoi.x, overlappedRoi.y,
+        fheroes2::AlphaBlit( image, overlappedRoi.x - imageRoi.x, overlappedRoi.y - imageRoi.y, output, overlappedRoi.x, overlappedRoi.y,
                              overlappedRoi.width, overlappedRoi.height, alpha );
     }
 }

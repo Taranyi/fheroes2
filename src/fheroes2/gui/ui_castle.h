@@ -45,4 +45,6 @@ namespace fheroes2
 
     void drawCastleDialogBuilding( const int32_t icnId, const uint32_t icnIndex, const Castle & castle, const Point & offset, const Rect & renderArea,
                                    const uint8_t alpha = 255 );
+    void drawCastleDialogBuilding( Image & output, int32_t icnId, uint32_t icnIndex, const Castle & castle, const Point & offset, const Rect & renderArea,
+                                   uint8_t alpha = 255 );
 }

@@ -52,7 +52,8 @@ Nem támogatott játékmeneti parancs: `unsupported_action`. Ezek a hibák megő
 Aktív várakozás alatt az újabb `start_session` és a `load_save` hibája `session_active`; előbb a várakozásból kell kilépni.
 
 Az állapotlekérdezés, handshake, képességlista, `get_castle_options` és a [minden oldali seregopciók](PYTHON_ENV_HERO_OPERATIONS.md) lekérdezése várakozás közben is elérhető. Az 5. lépéstől az adventure
-[képkérés](PYTHON_ENV_HEADLESS.md) is működik itt. A láthatóságra szűrt `observe` továbbra sincs implementálva.
+[képkérés](PYTHON_ENV_HEADLESS.md) is működik itt. A 11. lépéstől a [hős-, vár- és élő csatakép](PYTHON_ENV_VIEWS.md)
+is lekérhető, választás/csata közbeni várakozásnál is. A láthatóságra szűrt `observe` továbbra sincs implementálva.
 
 ## Pontos határ és további bekötés
 

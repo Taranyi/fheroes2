@@ -403,9 +403,10 @@ class WorldStateTests(unittest.TestCase):
             decision = game.start_session(1)
             params = {"view": "adventure", "width": 192, "height": 160, "output_path": str(directory / "frame.rgb")}
             for change, code in (
-                ({"view": "battle"}, "unsupported_view"),
-                ({"view": "castle"}, "unsupported_view"),
-                ({"view": "hero"}, "unsupported_view"),
+                ({"view": "battle"}, "no_active_battle"),
+                ({"view": "castle"}, "invalid_request"),
+                ({"view": "hero"}, "invalid_request"),
+                ({"view": "unknown"}, "unsupported_view"),
                 ({"width": True}, "invalid_request"),
                 ({"width": -1}, "invalid_request"),
                 ({"width": 1025}, "invalid_request"),

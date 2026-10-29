@@ -38,6 +38,7 @@ namespace AGG
 
 namespace fheroes2
 {
+    class Image;
     namespace h2d
     {
         class H2DInitializer;
@@ -86,6 +87,7 @@ namespace fheroes2
         nlohmann::json _armyMeeting = nullptr;
         nlohmann::json _pendingChoice = nullptr;
         nlohmann::json _battleState = nullptr;
+        std::function<void( Image & )> _battleRender;
         int64_t _choiceAnswer{ 0 };
         uint64_t _nextChoiceId{ 0 };
         const std::string _sessionId;

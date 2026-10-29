@@ -359,6 +359,11 @@ Battle::Arena::Arena( Army & attackingArmy, Army & defendingArmy, const int32_t 
     _attackingArmy = std::make_unique<Force>( attackingArmy, false, _uidGenerator );
     _defendingArmy = std::make_unique<Force>( defendingArmy, true, _uidGenerator );
 
+    if ( System::isHeadlessMode() ) {
+        // Pixel geometry is initialized independently of whether an image is requested.
+        board.SetArea( { 0, 0, 640, 480 } );
+    }
+
     // If this is a siege of a town, then there is in fact no castle
     if ( castle && !castle->isCastle() ) {
         castle = nullptr;

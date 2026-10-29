@@ -248,10 +248,11 @@ class HeroesSession:
         """Report the actual presentation subsystem state of this process."""
         return self.request("runtime_info")
 
-    def render(self, *, view: str = "adventure", width: int = 640, height: int = 480, center: tuple[int, int] | None = None) -> RGBFrame:
-        """Render the omniscient adventure viewport directly into RGB memory.
+    def render(self, *, view: str = "adventure", width: int = 640, height: int = 480, center: tuple[int, int] | None = None,
+               hero_id: int | None = None, castle_id: int | None = None) -> RGBFrame:
+        """Render an omniscient adventure, active battle, hero or castle image.
 
-        No game time passes. Castle/hero/battle views are not supported yet.
+        Hero/castle views require their entity ID. No game time passes.
         Pixels use HWC order, three uint8 channels, with no row padding.
         """
         if type(width) is not int or type(height) is not int or not 32 <= width <= 1024 or not 32 <= height <= 1024:
@@ -259,6 +260,11 @@ class HeroesSession:
         if not isinstance(view, str):
             raise TypeError("view must be a string")
         params = {"view": view, "width": width, "height": height}
+        for name, value in (("hero_id", hero_id), ("castle_id", castle_id)):
+            if value is not None:
+                if type(value) is not int or not 0 <= value <= 0xFFFFFFFF:
+                    raise ValueError(f"{name} must be an unsigned 32-bit integer")
+                params[name] = value
         if center is not None:
             if not isinstance(center, (tuple, list)) or len(center) != 2 or any(type(value) is not int or value < 0 for value in center):
                 raise ValueError("center must be a pair of nonnegative tile coordinates")
@@ -269,7 +275,7 @@ class HeroesSession:
             result = self.request("render", params)
             try:
                 if (
-                    result.get("format") != "rgb8" or result.get("perspective") != "omniscient"
+                    result.get("view") != view or result.get("format") != "rgb8" or result.get("perspective") != "omniscient"
                     or type(result.get("width")) is not int or result["width"] != width
                     or type(result.get("height")) is not int or result["height"] != height
                     or type(result.get("channels")) is not int or result["channels"] != 3

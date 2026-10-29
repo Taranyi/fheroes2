@@ -30,9 +30,10 @@
 #include "math_base.h"
 #include "screen.h"
 #include "settings.h"
+#include "ui_tool.h"
 
 Dialog::FrameBorder::FrameBorder( int v )
-    : restorer( fheroes2::Display::instance(), 0, 0, 0, 0 )
+    : restorer( fheroes2::drawingTarget(), 0, 0, 0, 0 )
     , border( v )
 {}
 

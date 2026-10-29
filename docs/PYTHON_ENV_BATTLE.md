@@ -100,7 +100,7 @@ tárgykezelés és nekromancia a meglévő natív folytatásból származik. Az 
 A szöveges nekromanciaértesítés esemény, kötelező OK-akció nélkül.
 
 A várakozás alatt az állapot, AI-adatok és adventure kép ismételten lekérhetők, token- és világváltozás nélkül.
-Ez még nem csatakép: a battle rendernézet a 11. lépés feladata.
+A 11. lépéstől a [natív csatakép is kérhető](PYTHON_ENV_VIEWS.md): `game.render(view="battle")`, kizárólag az élő külső csatadöntés alatt.
 Hibás típus/mező: `invalid_request`; nem felkínált jelölt: `illegal_action`; más gameplay akció csata közben:
 `battle_action_required`; elavult/idegen token: a meglévő tokenhibák. Ezek változatlanul hagyják az élő csatát.
 

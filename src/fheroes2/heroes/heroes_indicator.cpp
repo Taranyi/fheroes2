@@ -41,6 +41,7 @@
 #include "translations.h"
 #include "ui_dialog.h"
 #include "ui_text.h"
+#include "ui_tool.h"
 
 namespace fheroes2
 {
@@ -69,7 +70,7 @@ namespace fheroes2
 
 HeroesIndicator::HeroesIndicator( const Heroes * hero )
     : _hero( hero )
-    , _back( fheroes2::Display::instance() )
+    , _back( fheroes2::drawingTarget() )
 {
     assert( _hero != nullptr );
 }
@@ -108,7 +109,7 @@ void LuckIndicator::Redraw()
 
     _back.restore();
 
-    fheroes2::Display & display = fheroes2::Display::instance();
+    fheroes2::Image & display = fheroes2::drawingTarget();
 
     while ( count-- ) {
         fheroes2::Blit( sprite, display, cx, cy );
@@ -169,7 +170,7 @@ void MoraleIndicator::Redraw()
 
     _back.restore();
 
-    fheroes2::Display & display = fheroes2::Display::instance();
+    fheroes2::Image & display = fheroes2::drawingTarget();
 
     while ( count-- ) {
         fheroes2::Blit( sprite, display, cx, cy );
@@ -206,7 +207,7 @@ ExperienceIndicator::ExperienceIndicator( const Heroes * hero )
 
 void ExperienceIndicator::Redraw() const
 {
-    fheroes2::Display & display = fheroes2::Display::instance();
+    fheroes2::Image & display = fheroes2::drawingTarget();
 
     const fheroes2::Sprite & experienceImage = Assets::getImage( ICN::HSICONS, 1 );
     fheroes2::Blit( experienceImage, display, _area.x, _area.y );
@@ -280,7 +281,7 @@ SpellPointsIndicator::SpellPointsIndicator( const Heroes * hero )
 
 void SpellPointsIndicator::Redraw()
 {
-    fheroes2::Display & display = fheroes2::Display::instance();
+    fheroes2::Image & display = fheroes2::drawingTarget();
 
     const fheroes2::Sprite & sprite = Assets::getImage( ICN::HSICONS, 8 );
 

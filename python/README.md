@@ -3,7 +3,8 @@
 Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
 initialization. Selected native choices, two adventure spells and native battles work through the session API.
-An optional Gymnasium preview demonstrates the reset/step loop below. Further actions/views and the full Gym action/observation contract remain future steps.
+Step 11 adds offscreen hero, castle and live battle snapshots, including AI-owned heroes and castles.
+An optional Gymnasium preview demonstrates the reset/step loop below. Further actions and the full Gym action/observation contract remain future steps.
 
 Participant-control requirement (2026-10-29): the final session must support a built-in AI or Python controller per side,
 including AI-only simulation and multiple external agents with no manual player. Currently the state is already omniscient
@@ -327,14 +328,26 @@ with HeroesSession("fheroes2.exe", timeout=20) as game:
 
 `render()` returns an immutable `RGBFrame` with RGB uint8 bytes in HWC order, a camera tile coordinate and state version.
 Dimensions must be integers from 32 to 1024; the optional center is a valid zero-based tile pair (default: map center).
-The current view is `adventure`, explicitly omniscient, with terrain, objects and heroes. It uses the real engine's
+The default view is `adventure`, explicitly omniscient, with terrain, objects and heroes. It uses the real engine's
 `GameArea::Redraw` into an independent `Image`, without constructing a window, radar or interactive interface.
-Castle, hero and battle screens will be added in step 11 and currently return `unsupported_view`.
+Step 11 also provides native hero, castle and battle snapshots:
+
+```python
+hero_frame = game.render(view="hero", hero_id=52)
+castle_frame = game.render(view="castle", castle_id=896)
+# While waiting for an external battle action:
+battle_frame = game.render(view="battle")
+```
+
+Select actual hero/castle IDs from `get_state()`. Both own and AI entities can be rendered. The three new views
+use a native 640×480 canvas resized to the requested dimensions. Battle rendering requires a live battle decision;
+otherwise it returns `no_active_battle`. These are read-only snapshots, not interactive windows.
 
 Rendering requires the original AGG data and matching `files/data/resurrection.h2d`; missing graphics resources return
 `assets_unavailable`. Pure state loading still needs only the original AGG files. The client owns a short-lived output
 directory, reads a bounded RGB file and cleans it on success/error. Pixels do not travel as JSON number arrays.
-The low-level `render` request uses `view`, `width`, `height`, `output_path` and optional `center_x`/`center_y`; output must
+The low-level `render` request uses `view`, `width`, `height`, `output_path`, optional adventure-only `center_x`/`center_y`,
+hero-only `hero_id` or castle-only `castle_id`; output must
 be a new file in an existing directory. Always prefer the Python method, which manages those files automatically.
 
 Frame requests work while waiting for a decision and do not advance the day, consume a decision, change player flags,
@@ -350,6 +363,13 @@ uv run --project python python python/examples/render.py build/python-env-baseli
 ```
 
 See [headless implementation and verification](../docs/PYTHON_ENV_HEADLESS.md).
+The [four-view example and implementation notes](../docs/PYTHON_ENV_VIEWS.md) cover all four snapshots:
+
+```powershell
+uv run --project python python python/examples/views.py
+```
+
+The example writes PNG files under `build/python-env-views` and checks that rendering preserves the full state and decision.
 
 `hello()` repeats the handshake. `request(method, params)` exposes the underlying connection; unknown commands raise
 `EngineError` without breaking the session. A timeout, invalid reply or unexpected process exit stops the process and raises
@@ -406,7 +426,7 @@ as true, and `game_initialized` reflects whether a save is loaded. `simulation`,
 are true for the limited `gameplay_profile: "adventure_basic"` described above, not for every game interaction.
 `external_controller` is true; `controller_active` reflects the decision wait. `choices` is true for the enumerated `choice_types`;
 `adventure_spells` lists the two currently supported spells. This does not mean all map interactions or spells are covered.
-`render` is true, `render_views` lists only `adventure`, and `render_backend` is `memory_image`.
+`render` is true, `render_views` lists `adventure`, `battle`, `hero`, `castle`, and `render_backend` is `memory_image`.
 
 ## Verification
 

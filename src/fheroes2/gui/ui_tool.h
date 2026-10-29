@@ -43,6 +43,21 @@ enum class InterfaceType : uint8_t;
 
 namespace fheroes2
 {
+    // Bind transient UI helpers (selection sprites/indicators) to a caller-owned image.
+    // Display access policy is unchanged; this scope neither opens nor presents a window.
+    class ScopedDrawingTarget final
+    {
+    public:
+        explicit ScopedDrawingTarget( Image & output );
+        ~ScopedDrawingTarget();
+        ScopedDrawingTarget( const ScopedDrawingTarget & ) = delete;
+        ScopedDrawingTarget & operator=( const ScopedDrawingTarget & ) = delete;
+
+    private:
+        Image * _previous;
+    };
+    Image & drawingTarget();
+
     enum class SupportedLanguage : uint8_t;
 
     class MovableSprite : public Sprite

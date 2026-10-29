@@ -109,7 +109,7 @@ namespace
                  { "adventure_spells", { "identify_hero", "visions" } },
                  { "simulation", true },
                  { "render", true },
-                 { "render_views", { "adventure" } },
+                 { "render_views", { "adventure", "battle", "hero", "castle" } },
                  { "render_backend", "memory_image" },
                  { "headless_gameplay", true } };
     }
