@@ -28,6 +28,8 @@
 
 #include "army.h"
 #include "army_troop.h"
+#include "artifact.h"
+#include "artifact_info.h"
 #include "castle.h"
 #include "heroes.h"
 #include "python_env_world.h"
@@ -120,10 +122,105 @@ namespace
         }
         throw fheroes2::PythonEnvError( "illegal_action", "A hero must occupy the castle visitor slot; remote castle transfers are forbidden." );
     }
+
+    struct ArtifactEndpoint
+    {
+        Heroes * hero;
+        Artifact * artifact;
+    };
+
+    ArtifactEndpoint artifactEndpoint( const Json & value, const int playerId )
+    {
+        if ( !value.is_object() || value.size() != 2 ) {
+            throw fheroes2::PythonEnvError( "invalid_request", "An artifact endpoint requires hero_id and slot." );
+        }
+        Heroes & hero = ownedHero( identifier( value, "hero_id" ), playerId );
+        const uint32_t slot = identifier( value, "slot" );
+        if ( slot >= BagArtifacts::maxCapacity || slot >= hero.GetBagArtifacts().size() ) {
+            throw fheroes2::PythonEnvError( "invalid_request", "Artifact slots are numbered 0 through 13." );
+        }
+        return { &hero, &hero.GetBagArtifacts()[slot] };
+    }
+
+    Json artifactState( const Artifact & artifact )
+    {
+        return artifact.isValid() ? Json{ { "id", artifact.GetID() }, { "spell_id", artifact.getSpellId() } } : Json( nullptr );
+    }
+
+    Json artifactAction( const std::string & action, const Json & params, const int playerId, const Json & meeting )
+    {
+        if ( params.size() != 2 || !params.contains( "source" ) || !params.contains( "target" ) ) {
+            throw fheroes2::PythonEnvError( "invalid_request", "Artifact operations require source and target endpoints." );
+        }
+        const auto source = artifactEndpoint( params["source"], playerId );
+        const auto target = artifactEndpoint( params["target"], playerId );
+        if ( source.hero != target.hero && !inMeeting( *source.hero, *target.hero, meeting ) ) {
+            throw fheroes2::PythonEnvError( "illegal_action", "Use hero.meet before exchanging artifacts between heroes." );
+        }
+        if ( action == "artifact.transfer" && ( !source.artifact->isValid() || target.artifact->isValid() ) ) {
+            throw fheroes2::PythonEnvError( "illegal_action",
+                                            "Transfer requires a valid source artifact and an empty target slot; use artifact.swap for occupied slots." );
+        }
+        const Json beforeSource = artifactState( *source.artifact );
+        const Json beforeTarget = artifactState( *target.artifact );
+        if ( !BagArtifacts::swapArtifactSlots( *source.artifact, *target.artifact ) ) {
+            throw fheroes2::PythonEnvError( "illegal_action", "Select distinct slots with at least one artifact; Magic Books cannot be moved or traded." );
+        }
+        Json assembled = Json::array();
+        if ( source.hero != target.hero ) {
+            // Same set-assembly rule as the normal meeting window, without its notification dialog.
+            for ( Heroes * hero : { source.hero, target.hero } ) {
+                for ( const auto & set : hero->GetBagArtifacts().assembleArtifactSetIfPossible() ) {
+                    assembled.push_back( { { "hero_id", hero->GetID() }, { "artifact_id", set._assembledArtifactID } } );
+                }
+            }
+        }
+        world.resetPathfinder();
+        return { { "type", action == "artifact.transfer" ? "artifact_transferred" : "artifacts_swapped" },
+                 { "source", params["source"] },
+                 { "target", params["target"] },
+                 { "source_artifact", beforeSource },
+                 { "target_artifact", beforeTarget },
+                 { "assembled_sets", assembled } };
+    }
+}
+
+nlohmann::json fheroes2::pythonEnvEndMeeting( nlohmann::json & meeting )
+{
+    if ( meeting.is_null() ) {
+        return nullptr;
+    }
+    Json scouted = Json::array();
+    for ( const bool first : { true, false } ) {
+        Heroes * hero = world.GetHeroes( meeting[first ? "hero_id" : "other_hero_id"].get<int>() );
+        if ( hero == nullptr || !hero->isActive() || hero->GetIndex() != meeting[first ? "from" : "to"].get<int>() ) {
+            throw PythonEnvError( "illegal_action", "The active meeting no longer matches the heroes' positions." );
+        }
+        const int32_t previousBonus = meeting[first ? "initial_scout_bonus" : "other_initial_scout_bonus"].get<int32_t>();
+        if ( hero->GetBagArtifacts().getTotalArtifactEffectValue( ArtifactBonusType::AREA_REVEAL_DISTANCE ) > previousBonus ) {
+            hero->Scout( hero->GetIndex() );
+            scouted.push_back( hero->GetID() );
+        }
+    }
+    Json result = { { "type", "heroes_meeting_ended" }, { "hero_id", meeting["hero_id"] }, { "other_hero_id", meeting["other_hero_id"] }, { "scouted_heroes", scouted } };
+    meeting = nullptr;
+    return result;
 }
 
 nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const nlohmann::json & params, const int playerId, nlohmann::json & meeting )
 {
+    if ( action == "hero.end_meeting" ) {
+        if ( !params.empty() ) {
+            throw PythonEnvError( "invalid_request", "hero.end_meeting requires empty params." );
+        }
+        if ( meeting.is_null() ) {
+            throw PythonEnvError( "illegal_action", "There is no active meeting to end." );
+        }
+        return pythonEnvEndMeeting( meeting );
+    }
+    if ( action == "artifact.transfer" || action == "artifact.swap" ) {
+        return artifactAction( action, params, playerId, meeting );
+    }
     if ( action == "hero.meet" ) {
         if ( params.size() != 2 ) {
             throw PythonEnvError( "invalid_request", "hero.meet requires hero_id and other_hero_id." );
@@ -145,6 +242,7 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
         }
         const int from = hero.GetIndex();
         const uint32_t movement = hero.GetMovePoints();
+        pythonEnvEndMeeting( meeting );
         hero.GetPath().setPath( path );
         hero.SetMove( true );
         size_t remaining = path.size() + 1;
@@ -159,7 +257,12 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
         if ( hero.GetIndex() != from || world.GetHeroes( other.GetCenter() ) != &other ) {
             throw PythonEnvError( "engine_error", "The native meeting changed an unexpected hero position." );
         }
-        meeting = { { "hero_id", hero.GetID() }, { "other_hero_id", other.GetID() }, { "from", from }, { "to", other.GetIndex() } };
+        meeting = { { "hero_id", hero.GetID() },
+                    { "other_hero_id", other.GetID() },
+                    { "from", from },
+                    { "to", other.GetIndex() },
+                    { "initial_scout_bonus", hero.GetBagArtifacts().getTotalArtifactEffectValue( ArtifactBonusType::AREA_REVEAL_DISTANCE ) },
+                    { "other_initial_scout_bonus", other.GetBagArtifacts().getTotalArtifactEffectValue( ArtifactBonusType::AREA_REVEAL_DISTANCE ) } };
         return { { "type", "heroes_met" }, { "hero_id", hero.GetID() }, { "other_hero_id", other.GetID() }, { "movement_spent", movement - hero.GetMovePoints() } };
     }
     if ( params.size() != ( action == "army.transfer" ? 3u : 2u ) || !params.contains( "source" ) || !params.contains( "target" ) ) {

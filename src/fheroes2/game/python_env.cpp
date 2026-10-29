@@ -98,6 +98,7 @@ namespace
                  { "castle_actions", { "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire" } },
                  { "market_actions", { "market.trade" } },
                  { "army_actions", { "hero.meet", "army.transfer", "army.swap" } },
+                 { "artifact_actions", { "artifact.transfer", "artifact.swap", "hero.end_meeting" } },
                  { "choices", false },
                  { "simulation", true },
                  { "render", true },

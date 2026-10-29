@@ -29,6 +29,7 @@
 namespace fheroes2
 {
     nlohmann::json pythonEnvArmyAction( const std::string & action, const nlohmann::json & params, int playerId, nlohmann::json & meeting );
+    nlohmann::json pythonEnvEndMeeting( nlohmann::json & meeting );
 }
 
 #endif

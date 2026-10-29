@@ -132,7 +132,8 @@ namespace
         }
         Json artifacts = Json::array();
         for ( const auto & artifact : hero.GetBagArtifacts() ) {
-            artifacts.push_back( artifact.isValid() ? Json{ { "id", artifact.GetID() }, { "name", text( artifact.GetName() ) } } : Json( nullptr ) );
+            artifacts.push_back( artifact.isValid() ? Json{ { "id", artifact.GetID() }, { "name", text( artifact.GetName() ) }, { "spell_id", artifact.getSpellId() } }
+                                                    : Json( nullptr ) );
         }
         Json spells = Json::array();
         for ( const auto & spell : hero.getMagicBookSpells() ) {
@@ -155,6 +156,7 @@ namespace
                  { "spell_points", hero.GetSpellPoints() },
                  { "max_spell_points", hero.GetMaxSpellPoints() },
                  { "move_points", hero.GetMovePoints() },
+                 { "scouting_distance", hero.GetScoutingDistance() },
                  { "army", army( hero.GetArmy() ) },
                  { "secondary_skills", skills },
                  { "artifacts", artifacts },
@@ -366,8 +368,8 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
              { "army_meeting", _armyMeeting },
              { "available_actions", GameOver::Result::Get().GetResult() == 0
                                         ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
-                                                "market.trade", "hero.meet", "army.transfer", "army.swap" }
-                                        : Json{ "session.stop" } },
+                                                "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting" }
+                                        : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
              { "events", _events },
              { "pending_choice", nullptr },
              { "notifications",
@@ -400,17 +402,21 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         if ( !params.empty() ) {
             throw PythonEnvError( "invalid_request", "session.stop requires empty action params." );
         }
+        if ( !_armyMeeting.is_null() ) {
+            // Close the native meeting through the same checkpointed path before detaching.
+            dispatch( "hero.end_meeting", token, Json::object() );
+        }
         _waiting = false;
-        _armyMeeting = nullptr;
         return { { "stopped", true }, { "state_version", _stateVersion } };
     }
     const bool castleAction
         = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire" || action == "market.trade";
-    const bool armyAction = action == "hero.meet" || action == "army.transfer" || action == "army.swap";
+    const bool armyAction = action == "hero.meet" || action == "army.transfer" || action == "army.swap" || action == "artifact.transfer" || action == "artifact.swap"
+                            || action == "hero.end_meeting";
     if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction ) {
         throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }
-    if ( GameOver::Result::Get().GetResult() != 0 ) {
+    if ( GameOver::Result::Get().GetResult() != 0 && action != "hero.end_meeting" ) {
         throw PythonEnvError( "episode_finished", "This game has already ended." );
     }
 
@@ -467,7 +473,10 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     try {
         _events = Json::array();
         if ( !armyAction ) {
-            _armyMeeting = nullptr;
+            const auto ended = pythonEnvEndMeeting( _armyMeeting );
+            if ( !ended.is_null() ) {
+                _events.push_back( ended );
+            }
         }
         Settings::Get().SetCurrentColor( static_cast<PlayerColor>( _controllerPlayer ) );
         if ( !_turnPrepared ) {

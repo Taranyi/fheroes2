@@ -23,8 +23,9 @@ with HeroesSession("fheroes2.exe") as game:
     game.step("session.stop", token=decision["token"])
 ```
 
-Futtatható példa: `python/examples/decision.py`. A `session.stop` csak a külső vezérlési várakozásból lép ki;
-nem zár le játékoskört, nem futtat AI-t és nem változtatja a betöltött világot. Utána ugyanaz a mentett állapot
+Futtatható példa: `python/examples/decision.py`. A `session.stop` nem zár le játékoskört és nem futtat AI-t.
+Nyitott hőstalálkozás nélkül csak a külső várakozásból lép ki, a világ módosítása nélkül; nyitott találkozást előbb
+checkpointolt módon lezár a [natív felderítési mellékhatásokkal](PYTHON_ENV_ARTIFACTS.md), ilyenkor az állapotverzió is nőhet. Utána az állapot
 új döntési azonosítóval ismét vezérelhető, vagy másik mentés tölthető be. A `close` és az EOF a teljes folyamatot lezárja.
 
 ## A döntés szerződése
@@ -35,7 +36,8 @@ nem zár le játékoskört, nem futtat AI-t és nem változtatja a betöltött v
 - `turn_order`: a normál játékkal közös rendezés, emberi játékosok elöl, azon belül növekvő színérték.
 - `token`: folyamatonként egyedi `session_id`, betöltési kísérletenként növekvő `episode_id`, betöltési kísérletnél és
   sikeres játékműveletnél növekvő `state_version`, új várakozásnál és sikeres játékműveletnél növekvő `decision_id`, valamint `player_id`.
-- `available_actions`: `session.stop`, `hero.move`, `turn.end`, `castle.build`, `castle.recruit`, `castle.refresh_heroes`, `castle.hire`, `market.trade`, `hero.meet`, `army.transfer`, `army.swap`; terminális helyzetben csak `session.stop`.
+- `available_actions`: `session.stop`, `hero.move`, `turn.end`, `castle.build`, `castle.recruit`, `castle.refresh_heroes`, `castle.hire`, `market.trade`, `hero.meet`, `army.transfer`, `army.swap`, `artifact.transfer`, `artifact.swap`, `hero.end_meeting`.
+  Terminális helyzetben `session.stop`, illetve nyitott találkozás lezárása érhető el.
 - `army_meeting`: a [seregműveletekhez](PYTHON_ENV_ARMY.md) natív mozgással létrehozott aktuális hőstalálkozás, vagy `null`.
 - `events`: a legutóbbi sikeres művelet eseményei; lekérdezése nem fogyasztja el.
 - `notifications`: stabil `decision_required` értesítés. Lekérdezése nem fogyasztja el.

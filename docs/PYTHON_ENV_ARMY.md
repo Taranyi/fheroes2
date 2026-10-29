@@ -2,7 +2,7 @@
 
 A 8. lépés első része: pontos csapatáthelyezés, szétosztás, összevonás és slotcsere, továbbá szabályos átadás
 saját hősök, illetve a vár és az ott álló saját hős között. Nincs távoli vagy idegen sereghez hozzáférés.
-A tárgyátadás és további hősműveletek még későbbi részek; ez nem a teljes 8. lépés lezárása.
+A [tárgyátadás külön leírásban](PYTHON_ENV_ARTIFACTS.md) már működik; további hősműveletek még hátravannak.
 
 ## Futtatható példa
 
@@ -68,9 +68,12 @@ Két hős között előbb `meet_heroes(hero_id, other_hero_id, token=...)` szük
    az adott módosítást a külön, validált parancs kéri. A normál mód továbbra is az eredeti találkozási ablakot használja.
 
 A válasz és a `get_state` tartalmazza az `army_meeting` adatot (`hero_id`, `other_hero_id`, `from`, `to`), vagy `null` értéket.
-Ez sessionbeli jogosultsági kontextus, nem új, mentésbe írt játékszabály. A két érintett hős mindkét irányban adhat át csapatokat.
+Ez sessionbeli jogosultsági kontextus, nem új, mentésbe írt játékszabály. A tárgyműveleti bővítés az induláskori
+felderítési bónuszokat is tárolja benne. A két érintett hős mindkét irányban adhat át csapatokat és tárgyakat.
 További seregműveletek nem fizetnek újabb találkozási költséget. Lekérdezés és render nem zárja le a kontextust.
-Más sikeres játékművelet (mozgás, körváltás, építés, vásárlás, csere), `session.stop`, új csatlakozás és új mentésbetöltés lezárja.
+Az `end_meeting` explicit lezárás elvégzi a natív nettó felderítési mellékhatásokat. Más sikeres játékművelet
+(mozgás, körváltás, építés, vásárlás, piaci csere) és a `session.stop` ezt automatikusan megteszi;
+utóbbi nyitott találkozásnál ezért az állapotverziót is növeli. Új csatlakozás és mentésbetöltés üres kontextusból indul.
 Másik hőspárra indított sikeres találkozás lecseréli. Elutasításkor az előző kontextus is megmarad a checkpointból.
 
 Események: `heroes_met` (hősazonosítók, `movement_spent`), `army_transferred` (endpointok, `monster_id`, `count`),
@@ -89,7 +92,7 @@ várbeli átadást és utolsó csapat védelmét mindkét csereirányban, hős�
 oda-vissza átadást, lejárt kontextust, mozgáspont hiányát, távoli/idegen hozzáférést és hibás bemeneteket.
 A futtatható bemutató ablak és hang nélkül sikeres. A normál GUI érintett ágait kézzel és más platformok SDK-fordítását itt nem teszteltük.
 
-A tárgyátadás, teljes seregek automatikus szétosztása, fejlesztés/elbocsátás/varázskönyv-vétel és a teljes 8. lépés még hátravan.
+A tárgyátadás már elérhető; teljes seregek automatikus szétosztása, fejlesztés/elbocsátás/varázskönyv-vétel és a teljes 8. lépés még hátravan.
 A korai Gym-példa kilenc akciója változatlan; az új műveleteket a `HeroesSession` adja.
 
 2026-10-29, Windows: mind a 70 Python-integrációs teszt sikeres, beleértve a Gymnasium ellenőrzőjét és a hét új seregműveleti tesztet.

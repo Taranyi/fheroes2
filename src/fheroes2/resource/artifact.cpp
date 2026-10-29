@@ -856,6 +856,15 @@ bool BagArtifacts::PushArtifact( const Artifact & art )
     return true;
 }
 
+bool BagArtifacts::swapArtifactSlots( Artifact & first, Artifact & second )
+{
+    if ( &first == &second || ( !first.isValid() && !second.isValid() ) || first.GetID() == Artifact::MAGIC_BOOK || second.GetID() == Artifact::MAGIC_BOOK ) {
+        return false;
+    }
+    std::swap( first, second );
+    return true;
+}
+
 void BagArtifacts::RemoveArtifact( const Artifact & art )
 {
     iterator it = std::find( begin(), end(), art );
@@ -1205,7 +1214,7 @@ bool ArtifactsBar::ActionBarLeftMouseSingleClick( Artifact & art )
 
     if ( isSelected() ) {
         if ( !read_only ) {
-            std::swap( art, *GetSelectedItem() );
+            BagArtifacts::swapArtifactSlots( art, *GetSelectedItem() );
         }
         return false;
     }
@@ -1283,7 +1292,7 @@ bool ArtifactsBar::ActionBarRightMouseHold( Artifact & art )
 bool ArtifactsBar::ActionBarLeftMouseSingleClick( Artifact & art1, Artifact & art2 )
 {
     if ( !isMagicBook( art1 ) && !isMagicBook( art2 ) ) {
-        std::swap( art1, art2 );
+        BagArtifacts::swapArtifactSlots( art1, art2 );
     }
     else {
         messageMagicBookAbortTrading();

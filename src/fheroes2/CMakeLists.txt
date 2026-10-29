@@ -122,3 +122,14 @@ target_link_libraries(
 	engine
 	${USE_SDL_VERSION}::${USE_SDL_VERSION}main
 	)
+
+if(ENABLE_PYTHON_ENV)
+	# Native test-data builder only: never part of normal game builds or the production protocol.
+	set(ARTIFACT_FIXTURE_SOURCES ${FHEROES2_SOURCES})
+	list(FILTER ARTIFACT_FIXTURE_SOURCES EXCLUDE REGEX "/game/fheroes2\\.cpp$")
+	add_executable(fheroes2_artifact_fixture EXCLUDE_FROM_ALL ${PROJECT_SOURCE_DIR}/python/tests/cpp/artifact_fixture.cpp ${ARTIFACT_FIXTURE_SOURCES})
+	target_include_directories(fheroes2_artifact_fixture PRIVATE $<TARGET_PROPERTY:fheroes2,INCLUDE_DIRECTORIES>)
+	target_compile_definitions(fheroes2_artifact_fixture PRIVATE FHEROES2_ENABLE_PYTHON_ENV $<TARGET_PROPERTY:fheroes2,COMPILE_DEFINITIONS>)
+	target_link_libraries(fheroes2_artifact_fixture PRIVATE $<TARGET_PROPERTY:fheroes2,LINK_LIBRARIES>)
+	set_target_properties(fheroes2_artifact_fixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+endif()

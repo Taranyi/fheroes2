@@ -335,6 +335,9 @@ public:
     // Automatically exchange artifacts between two heroes. The taker should get the best possible artifacts.
     static void exchangeArtifacts( Heroes & taker, Heroes & giver );
 
+    // Shared slot exchange for the UI and external controllers. Magic Books cannot be moved or traded.
+    static bool swapArtifactSlots( Artifact & first, Artifact & second );
+
     double getArtifactValue() const;
     uint32_t CountArtifacts() const;
     uint32_t Count( const Artifact & art ) const;

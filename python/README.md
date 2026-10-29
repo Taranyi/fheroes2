@@ -50,7 +50,24 @@ Use `transfer_troops(source, target, count, token=...)` for exact move/split/mer
 Between two heroes, first establish a native adjacent encounter with `meet_heroes(hero_id, other_hero_id, token=...)`;
 this charges the real movement cost once. Hero/garrison transfers require the actual castle visitor.
 Ownership, last-hero-unit protection and count limits are enforced in C++; no remote transfers are allowed.
-See [the army contract and limits](../docs/PYTHON_ENV_ARMY.md). Artifact transfer remains pending.
+See [the army contract and limits](../docs/PYTHON_ENV_ARMY.md).
+
+Artifact operations also work: `transfer_artifact(source, target, token=...)` moves to an empty slot;
+`swap_artifacts(source, target, token=...)` swaps occupied or empty slots. Endpoints are `{hero_id, slot}` with slots `0..13`.
+Books cannot be moved/traded. Between heroes the same paid `meet_heroes` encounter is required; local reordering needs no meeting.
+Scroll spell data and native set assembly are preserved. `end_meeting(token=...)` applies net scouting gains on close,
+matching the native meeting window; other successful gameplay actions and `session.stop` close an open encounter automatically.
+The full state now includes artifact `spell_id` (0 for no granted spell) and each hero's `scouting_distance`, for AI sides too.
+
+The original local saves have no movable artifact on the controlled side. Prepare separate native test saves for the walkthrough:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File script/windows/python-env-artifact-fixture.ps1
+uv run --project python python python/examples/artifacts.py
+```
+
+The builder is an explicit optional test target, absent from disabled/default game builds and the production protocol.
+See [the artifact API, fixture preparation and limits](../docs/PYTHON_ENV_ARTIFACTS.md). Further hero operations remain pending.
 
 ## Runnable Gymnasium preview
 

@@ -217,7 +217,7 @@ class WorldStateTests(unittest.TestCase):
                 self.assertEqual(decision["controller"], "external")
                 self.assertEqual(decision["token"]["state_version"], before["state_version"])
                 self.assertEqual(decision["turn_order"], [player["id"] for player in sorted(before["players"], key=lambda p: (not p["is_human"], p["id"]))])
-                self.assertEqual(decision["available_actions"], ["session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire", "market.trade", "hero.meet", "army.transfer", "army.swap"])
+                self.assertEqual(decision["available_actions"], ["session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire", "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting"])
                 self.assertIsNone(decision["pending_choice"])
                 self.assertEqual(decision["notifications"][0]["type"], "decision_required")
                 for _ in range(3):

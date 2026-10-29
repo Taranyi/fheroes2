@@ -344,6 +344,18 @@ class HeroesSession:
         """Swap two accessible army slots without emptying a hero's army."""
         return self.step("army.swap", token=token, params={"source": dict(source), "target": dict(target)})
 
+    def transfer_artifact(self, source: Mapping[str, Any], target: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Move a non-book artifact to an empty {hero_id, slot} endpoint."""
+        return self.step("artifact.transfer", token=token, params={"source": dict(source), "target": dict(target)})
+
+    def swap_artifacts(self, source: Mapping[str, Any], target: Mapping[str, Any], *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Exchange artifact slots using native book protection, set assembly and scouting effects."""
+        return self.step("artifact.swap", token=token, params={"source": dict(source), "target": dict(target)})
+
+    def end_meeting(self, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Finish the encounter and apply native net-gain scouting effects once."""
+        return self.step("hero.end_meeting", token=token)
+
     def close(self) -> None:
         with self._lock:
             if self._closed:
