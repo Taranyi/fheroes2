@@ -37,6 +37,7 @@
 #include "maps_tiles.h"
 #include "maps_tiles_helper.h"
 #include "monster.h"
+#include "players.h"
 #include "python_env_world.h"
 #include "resource.h"
 #include "settings.h"
@@ -57,7 +58,7 @@ int main( int argc, char ** argv )
         for ( const char * name : { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav", "choices-chest-day1.sav",
                                     "choices-join-day1.sav", "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav",
                                     "choices-paid-join-day1.sav", "battles-melee-day1.sav", "battles-ranged-day1.sav", "battles-heroes-day1.sav", "battles-loss-day1.sav",
-                                    "battles-boss-day1.sav", "battles-siege-day1.sav", "gym-victory-day1.sav" } ) {
+                                    "battles-boss-day1.sav", "controllers-ai-boss-day1.sav", "battles-siege-day1.sav", "gym-victory-day1.sav" } ) {
             const auto file = output / name;
             if ( std::filesystem::exists( file ) && std::filesystem::equivalent( input, file ) ) {
                 throw std::runtime_error( "The output must not overwrite the input save." );
@@ -208,6 +209,15 @@ int main( int argc, char ** argv )
                                                    : 40 );
             Maps::setMonsterOnTileJoinCondition( tile, Monster::JOIN_CONDITION_SKIP );
             save( profile == 0 ? "battles-melee-day1.sav" : profile == 1 ? "battles-ranged-day1.sav" : profile == 3 ? "battles-loss-day1.sav" : "battles-boss-day1.sav" );
+            if ( profile == 4 ) {
+                // Explicit test scenario: every participant has native AI rules, including the Python-controlled hero.
+                for ( Player * player : Settings::Get().GetPlayers() ) {
+                    player->SetControl( CONTROL_AI );
+                }
+                Settings::Get().GetPlayers().SetStartGame();
+                Settings::Get().SetCurrentColor( PlayerColor::BLUE );
+                save( "controllers-ai-boss-day1.sav" );
+            }
         }
         Heroes * attacker = load();
         attacker->Move2Dest( 903 );

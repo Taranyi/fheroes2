@@ -305,6 +305,11 @@ bool fheroes2::PythonEnvWorld::loaded() const
 void fheroes2::PythonEnvWorld::clear()
 {
     _loaded = false;
+    _controlled = false;
+    _simulationFinished = false;
+    _controllers = Json::object();
+    _outcomes = Json::object();
+    _turnOrder.clear();
     _turnPrepared = false;
     _armyMeeting = nullptr;
     _pendingChoice = nullptr;
@@ -377,7 +382,7 @@ nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path,
              { "height", world.h() }, { "warnings", _warnings } };
 }
 
-nlohmann::json fheroes2::PythonEnvWorld::newGame( const std::string & utf8Path, const uint32_t seed, const int playerId, const int difficulty )
+nlohmann::json fheroes2::PythonEnvWorld::newGame( const std::string & utf8Path, const uint32_t seed, const int playerId, const int difficulty, const Json & ruleProfiles )
 {
     if ( _waiting ) {
         throw PythonEnvError( "session_active", "Stop the active decision before creating a game." );
@@ -419,15 +424,26 @@ nlohmann::json fheroes2::PythonEnvWorld::newGame( const std::string & utf8Path, 
         if ( !read ) {
             throw PythonEnvError( "load_failed", "The engine could not read this standard map." );
         }
-        const auto color = static_cast<PlayerColor>( playerId );
-        if ( !( info.kingdomColors & color ) || !( info.colorsAvailableForHumans & color ) || ( info.HumanOnlyColors() & ~playerId ) != 0 ) {
+        auto color = static_cast<PlayerColor>( playerId );
+        if ( !( info.kingdomColors & color )
+             || ( ruleProfiles.empty() && ( !( info.colorsAvailableForHumans & color ) || ( info.HumanOnlyColors() & ~playerId ) != 0 ) ) ) {
             throw PythonEnvError( "unsupported_state", "The map must allow the selected sole human-rule player and AI opponents." );
         }
         settings.setCurrentMapInfo( info );
         for ( Player * player : settings.GetPlayers() ) {
-            player->SetControl( player->GetColor() == color ? CONTROL_HUMAN : CONTROL_AI );
+            const auto key = std::to_string( static_cast<int>( player->GetColor() ) );
+            if ( !ruleProfiles.empty()
+                 && ( !ruleProfiles.contains( key ) || !ruleProfiles[key].is_string() || ( ruleProfiles[key] != "human" && ruleProfiles[key] != "ai" ) ) ) {
+                throw PythonEnvError( "invalid_request", "rule_profiles must name every map participant as human or ai." );
+            }
+            player->SetControl( ruleProfiles.empty() ? ( player->GetColor() == color ? CONTROL_HUMAN : CONTROL_AI )
+                                                     : ( ruleProfiles[key] == "human" ? CONTROL_HUMAN : CONTROL_AI ) );
         }
+        if ( !ruleProfiles.empty() && ruleProfiles.size() != settings.GetPlayers().size() )
+            throw PythonEnvError( "invalid_request", "Unknown rule profile participant." );
         settings.GetPlayers().SetStartGame();
+        if ( !ruleProfiles.empty() )
+            color = Game::getPlayersInTurnOrder().front()->GetColor();
         const bool loaded = resurrection ? world.loadResurrectionMap( path ) : world.LoadMapMP2( path, info.version == GameVersion::SUCCESSION_WARS );
         if ( !loaded ) {
             throw PythonEnvError( "load_failed", "The engine could not initialize this map." );
@@ -440,9 +456,12 @@ nlohmann::json fheroes2::PythonEnvWorld::newGame( const std::string & utf8Path, 
             world.ClearFog( player->GetColor() );
         }
         Kingdom & kingdom = world.GetKingdom( color );
+        if ( kingdom.isControlAI() )
+            kingdom.ActionNewDayResourceUpdate( nullptr );
         kingdom.ActionBeforeTurn();
-        kingdom.ActionNewDayResourceUpdate( nullptr );
-        if ( Game::getLoadedAdventurePlayer() != color ) {
+        if ( !kingdom.isControlAI() )
+            kingdom.ActionNewDayResourceUpdate( nullptr );
+        if ( ruleProfiles.empty() && Game::getLoadedAdventurePlayer() != color ) {
             throw PythonEnvError( "unsupported_state", "The new map has no live supported external player." );
         }
         _turnPrepared = true;
@@ -468,6 +487,8 @@ bool fheroes2::PythonEnvWorld::waiting() const
 
 void fheroes2::PythonEnvWorld::startSession( const int playerId, const std::function<void( const nlohmann::json & )> & wait )
 {
+    if ( _controlled )
+        throw PythonEnvError( "unsupported_state", "Reset before changing controller mode." );
     if ( _waiting ) {
         throw PythonEnvError( "session_active", "An external controller is already waiting." );
     }
@@ -505,6 +526,9 @@ void fheroes2::PythonEnvWorld::startSession( const int playerId, const std::func
 
 const char * fheroes2::PythonEnvWorld::decisionPhase() const
 {
+    if ( _controlled && _pendingChoice.is_null() && _battleState.is_null() ) {
+        return _simulationFinished ? "terminal" : ( _controllerPlayer == 0 ? "simulation" : "adventure" );
+    }
     return !_battleState.is_null() ? "battle" : ( !_pendingChoice.is_null() ? "choice" : ( GameOver::Result::Get().GetResult() == 0 ? "adventure" : "terminal" ) );
 }
 
@@ -520,7 +544,8 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
     return { { "waiting", true },
              { "phase", decisionPhase() },
              { "battle", _battleState },
-             { "controller", "external" },
+             { "simulation", _controlled ? controlState() : Json( nullptr ) },
+             { "controller", _controlled && _controllerPlayer == 0 ? "builtin_ai" : "external" },
              { "player_id", _controllerPlayer },
              { "token",
                { { "session_id", _sessionId },
@@ -530,13 +555,14 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                  { "player_id", static_cast<uint32_t>( _controllerPlayer ) } } },
              { "turn_order", order },
              { "army_meeting", _armyMeeting },
-             { "available_actions", !_pendingChoice.is_null()
-                                        ? ( !_battleState.is_null() ? Json{ "battle.act", "session.stop" } : Json{ "choice.answer", "session.stop" } )
-                                    : GameOver::Result::Get().GetResult() == 0
-                                        ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
-                                                "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting",
-                                                "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast" }
-                                        : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
+             { "available_actions",
+               !_pendingChoice.is_null()               ? ( !_battleState.is_null() ? Json{ "battle.act", "session.stop" } : Json{ "choice.answer", "session.stop" } )
+               : _controlled && _simulationFinished    ? Json{ "session.stop" }
+               : _controlled && _controllerPlayer == 0 ? Json{ "simulation.advance", "session.stop" }
+               : gameResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
+                                           "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting",
+                                           "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast" }
+                                   : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
              { "events", _events },
              { "pending_choice", _pendingChoice },
              { "notifications", { { { "type", "decision_required" }, { "phase", decisionPhase() }, { "player_id", _controllerPlayer } } } } };
@@ -544,7 +570,7 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
 
 nlohmann::json fheroes2::PythonEnvWorld::actionResult() const
 {
-    return { { "decision", getDecision() }, { "events", _events }, { "state_version", _stateVersion }, { "game_result", GameOver::Result::Get().GetResult() } };
+    return { { "decision", getDecision() }, { "events", _events }, { "state_version", _stateVersion }, { "game_result", gameResult() } };
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params,
@@ -618,13 +644,26 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         _waiting = false;
         return { { "stopped", true }, { "state_version", _stateVersion } };
     }
+    const bool simulationAction = action == "simulation.advance";
+    if ( _controlled && _simulationFinished )
+        throw PythonEnvError( "episode_finished", "The simulation has finished." );
+    if ( simulationAction ) {
+        if ( !_controlled || _controllerPlayer != 0 )
+            throw PythonEnvError( "external_decision_required", "A Python-controlled participant must finish its decision first." );
+        if ( params.size() != 1 || !params.contains( "max_turns" ) || !params["max_turns"].is_number_unsigned() || params["max_turns"].get<uint64_t>() == 0
+             || params["max_turns"].get<uint64_t>() > 64 ) {
+            throw PythonEnvError( "invalid_request", "simulation.advance requires max_turns in 1..64 (participant turns, not days)." );
+        }
+    }
+    else if ( _controlled && _controllerPlayer == 0 )
+        throw PythonEnvError( "simulation_advance_required", "Use simulation.advance at a native AI turn boundary." );
     const bool castleAction
         = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire" || action == "market.trade";
     const bool armyAction = action == "hero.meet" || action == "army.transfer" || action == "army.swap" || action == "artifact.transfer" || action == "artifact.swap"
                             || action == "hero.end_meeting" || action == "army.upgrade" || action == "army.dismiss";
     const bool heroAction = action == "hero.dismiss" || action == "hero.buy_spell_book";
     const bool spellAction = action == "hero.cast";
-    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction && !heroAction && !spellAction ) {
+    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction && !heroAction && !spellAction && !simulationAction ) {
         throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }
     if ( GameOver::Result::Get().GetResult() != 0 && action != "hero.end_meeting" ) {
@@ -683,7 +722,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "illegal_action", text( reason ) );
         }
     }
-    else if ( !castleAction && !armyAction && !heroAction && !params.empty() ) {
+    else if ( !castleAction && !armyAction && !heroAction && !simulationAction && !params.empty() ) {
         throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
     }
 
@@ -714,6 +753,11 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     const uint32_t objectUID = Maps::getLastObjectUID();
     const auto savedVersion = Game::GetVersionOfCurrentSaveFile();
     const bool wasPrepared = _turnPrepared;
+    const auto oldTurnIndex = _turnIndex;
+    const auto oldIncomePrepared = _incomePrepared;
+    const auto oldOutcomes = _outcomes;
+    const auto oldFinished = _simulationFinished;
+    const auto oldController = _controllerPlayer;
     const auto oldStateVersion = _stateVersion;
     const auto oldDecisionId = _decisionId;
     const Json oldEvents = _events;
@@ -724,9 +768,13 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 const int heroId
                     = choice.heroId >= 0 ? choice.heroId : ( movingHero != nullptr ? movingHero->GetID() : ( castingHero != nullptr ? castingHero->GetID() : -1 ) );
                 const Heroes * hero = heroId >= 0 ? world.GetHeroes( heroId ) : nullptr;
-                if ( !choiceWait || hero == nullptr || static_cast<int>( hero->GetColor() ) != _controllerPlayer ) {
-                    throw PythonEnvError( "unsupported_interaction", "This interaction has no supported external hero controller." );
+                if ( !choiceWait || hero == nullptr
+                     || ( _controlled ? !externalPlayer( static_cast<int>( hero->GetColor() ) ) : static_cast<int>( hero->GetColor() ) != _controllerPlayer ) ) {
+                    throw PythonEnvError( "unsupported_interaction", "No external controller for choice " + choice.kind + " (hero " + std::to_string( heroId ) + ")." );
                 }
+                const int previousController = _controllerPlayer;
+                if ( _controlled )
+                    _controllerPlayer = static_cast<int>( hero->GetColor() );
                 _pendingChoice = { { "choice_id", ++_nextChoiceId }, { "kind", choice.kind },       { "hero_id", heroId },        { "options", choice.options },
                                    { "values", choice.values },      { "minimum", choice.minimum }, { "maximum", choice.maximum } };
                 ++_stateVersion;
@@ -737,15 +785,21 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 _pendingChoice = nullptr;
                 _battleState = nullptr;
                 _battleRender = {};
+                _controllerPlayer = previousController;
                 return _choiceAnswer;
             },
             [&]( const std::string & title, const std::string & message ) {
                 _events.push_back( { { "type", "notification" }, { "title", text( title ) }, { "message", text( message ) } } );
             },
             [&]( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions ) {
-                if ( !choiceWait || static_cast<int>( arena.GetCurrentColor() ) != _controllerPlayer ) {
+                if ( !choiceWait
+                     || ( _controlled ? !externalPlayer( static_cast<int>( arena.GetCurrentColor() ) )
+                                      : static_cast<int>( arena.GetCurrentColor() ) != _controllerPlayer ) ) {
                     throw PythonEnvError( "unsupported_interaction", "This battle side has no matching external controller." );
                 }
+                const int previousController = _controllerPlayer;
+                if ( _controlled )
+                    _controllerPlayer = static_cast<int>( arena.GetCurrentColor() );
                 auto decision = pythonEnvBattleDecision( arena, unit );
                 _battleState = std::move( decision.state );
                 _battleRender = [&]( Image & output ) { Battle::Interface::renderSnapshot( arena, unit, output ); };
@@ -761,6 +815,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 _pendingChoice = nullptr;
                 _battleState = nullptr;
                 _battleRender = {};
+                _controllerPlayer = previousController;
             },
             [&]( const Battle::Result & result, const int32_t tile ) {
                 _events.push_back( { { "type", "battle_completed" },
@@ -770,7 +825,11 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                                      { "attacker_experience", result.attackerExperience },
                                      { "defender_experience", result.defenderExperience },
                                      { "dead_units_for_necromancy", result.numOfDeadUnitsForNecromancy } } );
-            } );
+            },
+            _controlled ? std::function<Game::ControllerType( int )>(
+                              [&]( const int color ) { return externalPlayer( color ) ? Game::ControllerType::External : Game::ControllerType::Native; } )
+                        : std::function<Game::ControllerType( int )>{},
+            _controlled ? std::function<bool()>( [&]() { return evaluateSimulation(); } ) : std::function<bool()>{} );
         _events = Json::array();
         if ( !armyAction ) {
             const auto ended = pythonEnvEndMeeting( _armyMeeting );
@@ -778,8 +837,9 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 _events.push_back( ended );
             }
         }
-        Settings::Get().SetCurrentColor( static_cast<PlayerColor>( _controllerPlayer ) );
-        if ( !_turnPrepared ) {
+        if ( !simulationAction )
+            Settings::Get().SetCurrentColor( static_cast<PlayerColor>( _controllerPlayer ) );
+        if ( !_turnPrepared && !simulationAction ) {
             if ( world.CountDay() == 1 ) {
                 for ( const Player * player : Game::getPlayersInTurnOrder() ) {
                     world.ClearFog( player->GetColor() );
@@ -789,7 +849,10 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             world.GetKingdom( static_cast<PlayerColor>( _controllerPlayer ) ).ActionBeforeTurn();
             _turnPrepared = true;
         }
-        if ( spellAction ) {
+        if ( simulationAction ) {
+            advanceSimulation( params["max_turns"].get<uint32_t>() );
+        }
+        else if ( spellAction ) {
             const uint32_t mana = castingHero->GetSpellPoints();
             const uint32_t movement = castingHero->GetMovePoints();
             if ( !castingHero->CanCastSpell( castingSpell ) || !castingHero->ActionSpellCast( castingSpell ) ) {
@@ -842,6 +905,12 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             }
             GameOver::Result::Get().checkGameOver();
         }
+        else if ( _controlled ) {
+            const int color = _controllerPlayer;
+            const uint32_t day = world.CountDay();
+            completeScheduledTurn();
+            _events.push_back( { { "type", "turn_ended" }, { "player_id", color }, { "from_day", day }, { "to_day", world.CountDay() } } );
+        }
         else {
             const uint32_t day = world.CountDay();
             std::vector<PlayerColor> completed;
@@ -860,6 +929,8 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                 _events.push_back( { { "type", "new_week" }, { "week", world.CountWeek() }, { "month", world.GetMonth() } } );
             }
         }
+        if ( _controlled && !_simulationFinished && _controllerPlayer != 0 && _outcomes[std::to_string( _controllerPlayer )].get<uint32_t>() != 0 )
+            completeScheduledTurn();
         ++_stateVersion;
         ++_decisionId;
         return actionResult();
@@ -874,6 +945,11 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             Maps::setLastObjectUID( objectUID );
             AI::Planner::Get().resetWorldCaches();
             _turnPrepared = wasPrepared;
+            _turnIndex = oldTurnIndex;
+            _incomePrepared = oldIncomePrepared;
+            _outcomes = oldOutcomes;
+            _simulationFinished = oldFinished;
+            _controllerPlayer = oldController;
             _stateVersion = oldStateVersion;
             _decisionId = oldDecisionId;
             _events = oldEvents;
@@ -1183,7 +1259,12 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
                  { "players", players },
                  { "heroes", heroes },
                  { "castles", castles },
-                 { "game_result", GameOver::Result::Get().GetResult() } };
+                 { "game_result", gameResult() } };
+    if ( _controlled ) {
+        result["simulation"] = controlState();
+        for ( auto & player : result["players"] )
+            player["controller"] = _controllers[std::to_string( player["id"].get<int>() )];
+    }
     if ( includeSerialized ) {
         RWStreamBuf stream;
         stream.setBigendian( true );

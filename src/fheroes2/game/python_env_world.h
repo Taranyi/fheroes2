@@ -62,12 +62,13 @@ namespace fheroes2
 
         bool loaded() const;
         nlohmann::json loadSave( const std::string & path, std::optional<uint32_t> seed = {} );
-        nlohmann::json newGame( const std::string & path, uint32_t seed, int playerId, int difficulty );
+        nlohmann::json newGame( const std::string & path, uint32_t seed, int playerId, int difficulty, const nlohmann::json & ruleProfiles = nlohmann::json::object() );
         nlohmann::json getState( bool includeSerialized ) const;
         nlohmann::json getCastleOptions( uint32_t castleId ) const;
         nlohmann::json getArmyOptions( const nlohmann::json & params ) const;
         bool waiting() const;
         void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
+        void startControlledSession( const nlohmann::json & controllers, const std::function<void( const nlohmann::json & )> & wait );
         nlohmann::json getDecision() const;
         nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params, const std::function<void()> & choiceWait = {},
                                  bool validateOnly = false );
@@ -78,6 +79,13 @@ namespace fheroes2
         void clear();
         void ensureGraphicsData();
         const char * decisionPhase() const;
+        bool externalPlayer( int color ) const;
+        bool evaluateSimulation();
+        void prepareScheduledTurn();
+        void completeScheduledTurn();
+        void advanceSimulation( uint32_t maxTurns );
+        int gameResult() const;
+        nlohmann::json controlState() const;
 
         const std::string _executablePath;
         std::unique_ptr<AGG::AGGInitializer> _resources;
@@ -97,6 +105,13 @@ namespace fheroes2
         uint64_t _decisionId{ 0 };
         int _controllerPlayer{ 0 };
         bool _waiting{ false };
+        bool _controlled{ false };
+        bool _simulationFinished{ false };
+        bool _incomePrepared{ true };
+        size_t _turnIndex{ 0 };
+        std::vector<int> _turnOrder;
+        nlohmann::json _controllers = nlohmann::json::object();
+        nlohmann::json _outcomes = nlohmann::json::object();
         std::vector<std::string> _warnings;
     };
 }

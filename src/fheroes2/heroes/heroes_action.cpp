@@ -3827,7 +3827,8 @@ void Heroes::Action( const int tileIndex )
         }
     }
 
-    if ( GetKingdom().isControlAI() ) {
+    if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) )
+         || ( GetKingdom().isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( GetColor() ) ) ) ) {
         // Restore the original music after the action is completed.
         const AudioManager::MusicRestorer musicRestorer;
 

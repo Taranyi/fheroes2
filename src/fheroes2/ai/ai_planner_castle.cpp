@@ -34,6 +34,7 @@
 #include "castle.h"
 #include "difficulty.h"
 #include "game.h"
+#include "game_external_interaction.h"
 #include "heroes.h"
 #include "kingdom.h"
 #include "logging.h"
@@ -313,7 +314,7 @@ void AI::Planner::updateKingdomBudget( const Kingdom & kingdom )
 
 void AI::Planner::reinforceCastle( Castle & castle )
 {
-    assert( castle.isControlAI() );
+    assert( castle.isControlAI() || Game::ScopedExternalInteractions::isNative( static_cast<int>( castle.GetColor() ) ) );
 
     const auto recruitMonster = [&castle]( const Troop & troop ) {
         // This method can hire a unit to both the castle garrison and the guest hero's army (depending on the availability of suitable slots)
@@ -336,7 +337,8 @@ void AI::Planner::reinforceCastle( Castle & castle )
 
     Heroes * guestHero = castle.GetHero();
     if ( guestHero ) {
-        assert( guestHero->isActive() && guestHero->isControlAI() && guestHero->GetColor() == castle.GetColor() );
+        assert( guestHero->isActive() && ( guestHero->isControlAI() || Game::ScopedExternalInteractions::isNative( static_cast<int>( guestHero->GetColor() ) ) )
+                && guestHero->GetColor() == castle.GetColor() );
 
         Army & guestHeroArmy = guestHero->GetArmy();
 

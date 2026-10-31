@@ -512,7 +512,11 @@ void Battle::Arena::UnitTurn( const Units & orderHistory )
                 _bridge->SetPassability( *_currentUnit );
             }
 
-            if ( ( _currentUnit->GetCurrentControl() & CONTROL_AI ) || ( _autoCombatColors & _currentUnit->GetCurrentColor() ) ) {
+            if ( System::isHeadlessMode() && Game::ScopedExternalInteractions::isExternal( static_cast<int>( _currentUnit->GetCurrentColor() ) ) ) {
+                Game::ScopedExternalInteractions::battle( *this, *_currentUnit, actions );
+            }
+            else if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( _currentUnit->GetCurrentColor() ) )
+                      || ( _currentUnit->GetCurrentControl() & CONTROL_AI ) || ( _autoCombatColors & _currentUnit->GetCurrentColor() ) ) {
                 AI::BattlePlanner::Get().BattleTurn( *this, *_currentUnit, actions );
             }
             else if ( System::isHeadlessMode() ) {

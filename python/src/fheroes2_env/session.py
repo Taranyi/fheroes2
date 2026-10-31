@@ -244,21 +244,43 @@ class HeroesSession:
         if type(seed) is not int or not 0 <= seed <= 0xFFFFFFFF:
             raise ValueError("seed must be an unsigned 32-bit integer")
 
-    def new_game(self, path: str | os.PathLike[str], *, seed: int, player_id: int = 1, difficulty: int = 1) -> dict[str, Any]:
+    @staticmethod
+    def _assignments(value, choices, name):
+        if not isinstance(value, Mapping) or not value:
+            raise ValueError(f"{name} must be a nonempty participant mapping")
+        colors = {"blue": 1, "green": 2, "red": 4, "yellow": 8, "orange": 16, "purple": 32}
+        result = {}
+        for key, controller in value.items():
+            color = colors.get(key, key) if isinstance(key, str) else key
+            if isinstance(color, str) and color in ("1", "2", "4", "8", "16", "32"):
+                color = int(color)
+            if type(color) is not int or color not in (1, 2, 4, 8, 16, 32) or controller not in choices or str(color) in result:
+                raise ValueError(f"Invalid or duplicate participant/{name} value")
+            result[str(color)] = controller
+        return result
+
+    def new_game(self, path: str | os.PathLike[str], *, seed: int, player_id: int = 1, difficulty: int = 1, rule_profiles=None) -> dict[str, Any]:
         """Initialize a standard MP2/MX2/FH2M map using native seeded setup rules."""
         self._validate_seed(seed)
         if type(player_id) is not int or player_id not in (1, 2, 4, 8, 16, 32):
             raise ValueError("player_id must be one player color bit")
         if type(difficulty) is not int or not 0 <= difficulty <= 4:
             raise ValueError("difficulty must be an integer from 0 to 4")
-        return self.request("new_game", {"path": str(Path(path).resolve()), "seed": seed, "player_id": player_id, "difficulty": difficulty})
+        params = {"path": str(Path(path).resolve()), "seed": seed, "player_id": player_id, "difficulty": difficulty}
+        if rule_profiles is not None:
+            params["rule_profiles"] = self._assignments(rule_profiles, ("human", "ai"), "rule_profiles")
+        return self.request("new_game", params)
 
-    def reset(self, *, save=None, map_path=None, seed: int | None = None, player_id: int | None = None, difficulty: int | None = None) -> dict[str, Any]:
+    def reset(self, *, save=None, map_path=None, seed: int | None = None, player_id: int | None = None, difficulty: int | None = None,
+              controllers=None, rule_profiles=None) -> dict[str, Any]:
         """Restart the engine, initialize an episode and return its decision and effective seed.
 
         Specify exactly one source on first use; subsequent calls reuse that source
         and player/difficulty configuration. A missing seed generates a fresh uint32.
         Reset also recovers closed, crashed and timed-out sessions.
+        Optional controllers assign every participant to python or builtin_ai.
+        New maps may separately select native human/ai rule_profiles. A source-less
+        reset reuses those assignments; save rule flags are never rewritten.
         """
         if save is not None and map_path is not None:
             raise ValueError("Specify save or map_path, not both")
@@ -268,27 +290,37 @@ class HeroesSession:
             raise ValueError("player_id must be one player color bit")
         if difficulty is not None and (type(difficulty) is not int or not 0 <= difficulty <= 4):
             raise ValueError("difficulty must be an integer from 0 to 4")
+        if controllers is not None:
+            controllers = self._assignments(controllers, ("python", "builtin_ai"), "controllers")
+        if rule_profiles is not None:
+            rule_profiles = self._assignments(rule_profiles, ("human", "ai"), "rule_profiles")
         with self._lock:
             if save is None and map_path is None:
                 if self._reset_source is None:
                     raise ValueError("First reset requires save or map_path")
-                kind, path, configured_player, configured_difficulty = self._reset_source
+                kind, path, configured_player, configured_difficulty, configured_controllers, configured_rules = self._reset_source
                 if player_id is None:
                     player_id = configured_player
                 if difficulty is None:
                     difficulty = configured_difficulty
+                if controllers is None:
+                    controllers = configured_controllers
+                if rule_profiles is None:
+                    rule_profiles = configured_rules
             else:
                 kind = "save" if save is not None else "map"
                 path = str(Path(save if save is not None else map_path).resolve())
             if difficulty is None:
                 difficulty = 1
+            if kind == "save" and rule_profiles is not None:
+                raise ValueError("Saved rule profiles are preserved; rule_profiles is only for new maps")
             effective_seed = secrets.randbits(32) if seed is None else seed
             self._dispose()
             try:
                 self._launch()
                 if kind == "save":
                     loaded = self.load_save(path, seed=effective_seed)
-                    if player_id is None:
+                    if player_id is None and controllers is None:
                         humans = [p["id"] for p in self.get_state(include_serialized=False)["players"] if p["is_human"] and p["in_play"]]
                         if len(humans) != 1:
                             raise ValueError("The saved-game profile requires exactly one live human-rule player")
@@ -296,9 +328,9 @@ class HeroesSession:
                 else:
                     if player_id is None:
                         player_id = 1
-                    loaded = self.new_game(path, seed=effective_seed, player_id=player_id, difficulty=difficulty)
-                decision = self.start_session(player_id)
-                self._reset_source = (kind, path, player_id, difficulty)
+                    loaded = self.new_game(path, seed=effective_seed, player_id=player_id, difficulty=difficulty, rule_profiles=rule_profiles)
+                decision = self.start_session(controllers=controllers) if controllers is not None else self.start_session(player_id)
+                self._reset_source = (kind, path, player_id, difficulty, controllers, rule_profiles)
                 return {"seed": effective_seed, "source": kind, "loaded": loaded, "decision": decision}
             except BaseException:
                 self._dispose()
@@ -314,11 +346,25 @@ class HeroesSession:
             raise TypeError("include_serialized must be a boolean")
         return self.request("get_state", {"include_serialized": include_serialized})
 
-    def start_session(self, player_id: int) -> dict[str, Any]:
-        """Wait at the loaded human player's adventure decision, without advancing time."""
+    def start_session(self, player_id: int | None = None, *, controllers=None) -> dict[str, Any]:
+        """Assign every side's controller, or start the legacy single human-rule side.
+
+        Assignment does not advance time or rewrite the save's human/AI rule flags.
+        Configure controllers again only after reset.
+        """
+        if controllers is not None:
+            if player_id is not None:
+                raise ValueError("Use player_id or controllers, not both")
+            return self.request("start_session", {"controllers": self._assignments(controllers, ("python", "builtin_ai"), "controllers")})
         if type(player_id) is not int or player_id not in (1, 2, 4, 8, 16, 32):
             raise ValueError("player_id must be one player color bit")
         return self.request("start_session", {"player_id": player_id})
+
+    def advance_simulation(self, max_turns: int = 1, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Run at most 1..64 native participant turns, stopping at the next Python decision."""
+        if type(max_turns) is not int or not 1 <= max_turns <= 64:
+            raise ValueError("max_turns must be an integer from 1 to 64")
+        return self.step("simulation.advance", token=token, params={"max_turns": max_turns})
 
     def get_decision(self) -> dict[str, Any]:
         """Inspect the pending decision and its explicit action token."""

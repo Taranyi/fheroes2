@@ -41,6 +41,7 @@
 #include "dialog.h"
 #include "game.h"
 #include "game_auto_playtest.h"
+#include "game_external_interaction.h"
 #include "game_io.h"
 #include "game_video.h"
 #include "game_video_type.h"
@@ -481,6 +482,9 @@ void GameOver::Result::Reset()
 
 fheroes2::GameMode GameOver::Result::checkGameOver()
 {
+    if ( System::isHeadlessMode() && Game::ScopedExternalInteractions::hasGameOverController() ) {
+        return Game::ScopedExternalInteractions::gameOver() ? fheroes2::GameMode::MAIN_MENU : fheroes2::GameMode::CANCEL;
+    }
     const Settings & conf = Settings::Get();
     const bool isAutoPlaytest{ conf.IsGameType( Game::TYPE_AUTO_PLAYTEST ) };
     const PlayerColorsSet humanColors = isAutoPlaytest ? conf.GetPlayers().GetColors() : Players::HumanColors();

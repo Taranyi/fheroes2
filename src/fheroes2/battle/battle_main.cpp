@@ -315,7 +315,8 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
     if ( attackingArmyCommander ) {
         attackingArmyCommander->ActionPreBattle();
 
-        if ( attackingArmy.isControlAI() ) {
+        if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( attackingArmy.GetColor() ) )
+             || ( attackingArmy.isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( attackingArmy.GetColor() ) ) ) ) {
             AI::Planner::HeroesPreBattle( *attackingArmyCommander, true );
         }
     }
@@ -341,7 +342,8 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
     if ( defendingArmyCommander ) {
         defendingArmyCommander->ActionPreBattle();
 
-        if ( defendingArmy.isControlAI() ) {
+        if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( defendingArmy.GetColor() ) )
+             || ( defendingArmy.isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( defendingArmy.GetColor() ) ) ) ) {
             AI::Planner::HeroesPreBattle( *defendingArmyCommander, false );
         }
     }

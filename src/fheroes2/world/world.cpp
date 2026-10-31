@@ -38,8 +38,10 @@
 #include "campaign_scenariodata.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "direction.h"
 #include "game.h"
+#include "game_external_interaction.h"
 #include "game_io.h"
 #include "game_over.h"
 #include "game_static.h"
@@ -960,7 +962,8 @@ bool World::KingdomIsWins( const Kingdom & kingdom, const uint32_t wins ) const
     switch ( wins ) {
     case GameOver::WINS_ALL:
         // This method should be called with this condition only for a human-controlled kingdom
-        assert( kingdom.isControlHuman() || kingdomPlayer->isAIAutoControlMode() );
+        assert( kingdom.isControlHuman() || kingdomPlayer->isAIAutoControlMode()
+                || ( System::isHeadlessMode() && Game::ScopedExternalInteractions::hasGameOverController() ) );
 
         return static_cast<PlayerColorsSet>( kingdom.GetColor() ) == vec_kingdoms.GetNotLossColors();
 
@@ -996,7 +999,8 @@ bool World::KingdomIsWins( const Kingdom & kingdom, const uint32_t wins ) const
 
     case GameOver::WINS_SIDE:
         // This method should be called with this condition only for a human-controlled kingdom
-        assert( kingdom.isControlHuman() || kingdomPlayer->isAIAutoControlMode() );
+        assert( kingdom.isControlHuman() || kingdomPlayer->isAIAutoControlMode()
+                || ( System::isHeadlessMode() && Game::ScopedExternalInteractions::hasGameOverController() ) );
 
         return ( Game::GetActualKingdomColors() & ~Players::GetPlayerFriends( kingdom.GetColor() ) ) == 0;
 

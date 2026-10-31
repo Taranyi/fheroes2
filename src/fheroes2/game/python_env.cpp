@@ -97,6 +97,9 @@ namespace
                  { "omniscient_state", true },
                  { "player_observations", false },
                  { "external_controller", true },
+                 { "participant_controllers", true },
+                 { "ai_only_simulation", true },
+                 { "controller_types", { "python", "builtin_ai" } },
                  { "controller_active", waiting },
                  { "gameplay_actions", true },
                  { "gameplay_profile", "adventure_basic" },
@@ -167,10 +170,12 @@ namespace
                                    params.contains( "seed" ) ? std::optional<uint32_t>( params["seed"].get<uint32_t>() ) : std::nullopt );
         }
         if ( method == "new_game" ) {
-            if ( params.size() != 4 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty()
-                 || !params.contains( "seed" ) || !params["seed"].is_number_unsigned() || params["seed"].get<uint64_t>() > UINT32_MAX || !params.contains( "player_id" )
-                 || !params["player_id"].is_number_unsigned() || params["player_id"].get<uint64_t>() > 32 || !params.contains( "difficulty" )
-                 || !params["difficulty"].is_number_unsigned() || params["difficulty"].get<uint64_t>() > 4 ) {
+            if ( ( params.size() != 4 && ( params.size() != 5 || !params.contains( "rule_profiles" ) ) )
+                 || ( params.contains( "rule_profiles" ) && !params["rule_profiles"].is_object() ) || !params.contains( "path" ) || !params["path"].is_string()
+                 || params["path"].get_ref<const std::string &>().empty() || !params.contains( "seed" ) || !params["seed"].is_number_unsigned()
+                 || params["seed"].get<uint64_t>() > UINT32_MAX || !params.contains( "player_id" ) || !params["player_id"].is_number_unsigned()
+                 || params["player_id"].get<uint64_t>() > 32 || !params.contains( "difficulty" ) || !params["difficulty"].is_number_unsigned()
+                 || params["difficulty"].get<uint64_t>() > 4 ) {
                 throw fheroes2::PythonEnvError( "invalid_request", "new_game requires path, uint32 seed, player_id color bit and difficulty 0..4." );
             }
             const int player = params["player_id"].get<int>();
@@ -178,7 +183,8 @@ namespace
                 throw fheroes2::PythonEnvError( "invalid_request", "player_id must contain one player color bit." );
             }
             const DiagnosticRedirect redirect;
-            return world.newGame( params["path"].get<std::string>(), params["seed"].get<uint32_t>(), player, params["difficulty"].get<int>() );
+            return world.newGame( params["path"].get<std::string>(), params["seed"].get<uint32_t>(), player, params["difficulty"].get<int>(),
+                                  params.value( "rule_profiles", Json::object() ) );
         }
         if ( method == "check_actions" ) {
             if ( params.size() != 2 || !params.contains( "token" ) || !params["token"].is_object() || !params.contains( "actions" ) || !params["actions"].is_array()
@@ -335,6 +341,21 @@ namespace
             const std::string & method = request["method"].get_ref<const std::string &>();
             try {
                 const Json params = request.value( "params", Json::object() );
+                if ( method == "start_session" && params.contains( "controllers" ) ) {
+                    if ( params.size() != 1 || !params["controllers"].is_object() )
+                        throw fheroes2::PythonEnvError( "invalid_request", "start_session requires exactly a controllers object." );
+                    int result = EXIT_SUCCESS;
+                    world.startControlledSession( params["controllers"], [&]( const Json & decision ) {
+                        if ( !sendResult( output, id, decision ) ) {
+                            result = EXIT_FAILURE;
+                            return;
+                        }
+                        result = serveRequests( input, output, world, finished, true );
+                    } );
+                    if ( finished || result != EXIT_SUCCESS )
+                        return result;
+                    continue;
+                }
                 if ( method == "start_session" ) {
                     if ( params.size() != 1 || !params.contains( "player_id" ) || !params["player_id"].is_number_unsigned()
                          || params["player_id"].get<uint64_t>() > 32 ) {

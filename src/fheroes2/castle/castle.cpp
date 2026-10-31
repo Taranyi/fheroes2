@@ -41,6 +41,7 @@
 #include "direction.h"
 #include "game.h"
 #include "game_assets.h"
+#include "game_external_interaction.h"
 #include "game_io.h"
 #include "game_static.h"
 #include "ground.h"
@@ -2248,7 +2249,8 @@ void Castle::_joinRNDArmy()
 
 void Castle::ActionPreBattle()
 {
-    if ( isControlAI() ) {
+    if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) )
+         || ( isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( GetColor() ) ) ) ) {
         AI::Planner::CastlePreBattle( *this );
 
         return;

@@ -1,7 +1,8 @@
 # fheroes2 Python connection
 
 Start with the [usage guide, support matrix and measured acceptance results](../docs/PYTHON_ENV_GUIDE.md).
-The current single-external-side profile is verified; per-side controllers, multi-agent and AI-only execution remain task 4/A.
+Task 4/A adds per-side Python/built-in AI controllers, multiple Python agents and bounded AI-only simulation.
+See the [controller API and runnable examples](../docs/PYTHON_ENV_CONTROLLERS.md).
 
 Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
@@ -10,12 +11,18 @@ Step 11 adds offscreen hero, castle and live battle snapshots, including AI-owne
 Step 13 provides the structured `Fheroes2-v0` Gym adapter below, including native choices and battles.
 Further engine actions remain outside the documented profile; the older visual preview is also retained.
 
-Participant-control requirement (2026-10-29): the final session must support a built-in AI or Python controller per side,
-including AI-only simulation and multiple external agents with no manual player. Currently the state is already omniscient
-for every side, but external control is limited to one side marked human in the save. That side can already be driven entirely
-by a Python policy; the human marker is an engine limitation, not a requirement for keyboard input.
-See the [implementation plan's participant requirements](../docs/PYTHON_ENV_IMPLEMENTATION_PLAN.md), task 4/A,
-for the required broader control model. It remains unimplemented after the profile acceptance and measurements in step 14.
+Each participant can now use `python` or `builtin_ai` without rewriting native human/AI save flags.
+Use `reset(..., controllers={1: "python", 2: "builtin_ai"})`; new maps optionally accept separate
+`rule_profiles={1: "ai", 2: "ai"}` for native difficulty/event semantics with no human-rule participant.
+At `simulation` decisions, call `advance_simulation(max_turns=1, token=...)`; at external decisions,
+route to the policy identified by `decision["player_id"]`, including defenders in native AI turns.
+All sides remain observable. The existing Gym adapter retains its single-agent interface.
+
+```powershell
+uv run --project python python python/examples/controllers.py
+uv run --project python python python/examples/controllers.py --mode mixed --steps 30
+uv run --project python python python/examples/controllers.py --mode python --steps 10
+```
 
 Castle inspection, building and exact-count recruitment are also available through the native engine:
 

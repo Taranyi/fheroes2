@@ -2,7 +2,7 @@
 
 Dátum: 2026-10-25; frissítve: 2026-10-31. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
 a 8–13. lépés a deklarált profilon szintén kész, a 14. lépés profilon végzett elfogadási próbái és mérései elkészültek.
-A globális végső elfogadás a 4/A két vezérlési követelménye miatt még nyitott. [Használati útmutató, mérések és támogatási mátrix](PYTHON_ENV_GUIDE.md).
+A 4/A oldalankénti vezérlés is elkészült: több Python-agent, vegyes vezérlés és korlátozott AI–AI szimuláció. [Vezérlési API és példa](PYTHON_ENV_CONTROLLERS.md). [Használati útmutató, mérések és támogatási mátrix](PYTHON_ENV_GUIDE.md).
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
 
@@ -19,7 +19,7 @@ A támogatás nem korlátozódik csatára. Az első kész verzió elfogadási p�
 
 További kötelező cél a résztvevőnként választható vezérlő és a kézi játékos nélküli futás: beépített AI-k egymás ellen,
 Python-agent beépített AI ellen, illetve több Python-agent egymás ellen is ugyanazt a motort használhassa.
-Ez nem a mostani egyetlen külső játékosra korlátozott bemutató már elkészült képessége; a szükséges vezérlőbővítés lent külön feladat.
+Ezeket a 4/A megvalósítása már támogatja az általános session API-ban; a Gym-adapter egy külső oldalas marad.
 
 Az „alap env” nem egyenlő minden eredeti pálya, kampány és speciális objektum teljes támogatásával. Az első kiadás egy dokumentált standardjáték-profilon és tesztpályán garantálja a működést. A támogatott műveletek és objektumtípusok név szerinti listát kapnak. Nem támogatott helyzetnél egyértelmű hiba és esemény érkezik; sem csendes AI-döntés, sem végtelen UI-várakozás nem elfogadható. Kampányok, pályaszerkesztő, hálózatos játék, teljes speciálisobjektum-lefedettség és optimalizált nagyléptékű RL későbbi bővítés.
 
@@ -50,16 +50,14 @@ Az ablak és a renderelés választása ettől független: megfigyeléshez lehet
 
 **Már működik:** a `get_state` minden résztvevő adatait lekéri: beépített AI-k, erőforrások, hősök, seregek, várak és
 teljes térkép, a köd mögötti adatokkal együtt. A Gym-példa `info["state"]` mezője is ezt adja.
-A `turn.end` ténylegesen végrehajtja az AI-k köreit, a következő teljes lekérdezés ezek eredményét is tartalmazza.
+A korábbi egyoldalas mód `turn.end` parancsa végrehajtja az AI-k köreit; konfigurált sessionben külön `simulation.advance` lépteti a natív AI-t.
 Az `ai_turn_completed` események azonosítják a lefutott résztvevőket; ez jelenleg nem minden egyes belső AI-mozdulat részletes eseménynaplója.
 
-**Jelenlegi korlát:** a `start_session` egyetlen, a mentésben emberinek jelölt aktív résztvevőhöz kapcsolódik.
-Ennek a döntéseit már most teljesen Python hozza, emberi kattintás nélkül. Az AI-nak jelölt oldal külső átvétele,
-több külső vezérlő és a kizárólag beépített AI-kból álló session még nincs megvalósítva.
+**Korábbi, kompatibilitás miatt megtartott mód:** a `start_session(player_id)` egyetlen emberi szabályú oldalhoz kapcsolódik. A 4/A `controllers` konfigurációja feloldja ezt a korlátot.
+A 4/A konfigurált módjában AI-nak jelölt oldal is átvehető, több külső vezérlő és tisztán beépített AI-s session is fut.
 A meglévő `is_human`/`is_ai` mezők a motor régi vezérléstípusát írják le; nem bizonyítják, hogy ember ül a gépnél.
 
-**Rögzített kötelező bővítés (4/A):** a követelmény megőrzendő, de nem változtatja meg az egyeztetett
-fejlesztési sorrendet. A 7. lépés hősvásárlási és kereskedelmi része az eredeti sorrendben készült; a vezérlés általánosítása külön munkaszakasz.
+**Megvalósított követelmények (4/A):** az alábbi szerződés az általános sessionben elkészült. A 7. lépés hősvásárlási és kereskedelmi része az eredeti sorrendben készült; a vezérlés általánosítása külön munkaszakasz.
 
 1. A résztvevő azonosítóját, motorbeli szabályprofilját, a döntést hozó vezérlőt és a megjelenítést külön kezeljük.
    A mentés emberi/AI jelölése nem lehet a Python-hozzáférés feltétele. Az eredeti nehézségi AI-bónuszok,
@@ -132,12 +130,12 @@ Hibás/idejétmúlt parancs a módosítás előtt elutasítandó. Külön hibaka
 
 ### 4/A. Résztvevőnként választható vezérlés
 
-**Tervezett bővítés:** a fenti résztvevői követelmények szerint általánosítani
-a sessiont és a körütemezést; az egyetlen emberinek jelölt oldalra épülő átmeneti korlátot megszüntetni.
-A 7. lépés folytatását nem előzi meg: a hősvásárlás és a piaci kereskedelem az eredeti sorrendben készült el.
-A meglévő egy külső oldalas működés bővíthető marad, a többoldalas vezérlés kötelező célját nem hagyjuk el.
-Először a jelenleg támogatott adventure/várműveleti profilon ellenőrizzük az AI-only, vegyes és több külső oldalas eseteket;
-a csatát és a valódi választásokat a 9–10. lépés köti be ugyanebbe a modellbe.
+**Elkészült:** minden pályabeli résztvevőhöz `python` vagy `builtin_ai` rendelhető, a mentés natív human/AI szabályprofiljának átírása nélkül.
+Új pályán külön `rule_profiles` választható, még a natív inicializálás előtt; így emberi szabályú résztvevő nélkül is fut AI–AI játék.
+A `simulation.advance` 1–64 résztvevői körre korlátozott, köztes állapot/esemény/render kérhető.
+Csatában az aktuális egység, választásnál a hős tulajdonosa kapja a döntést; a vegyes AI-támadó/Python-védő eset is támogatott.
+A körsorrend, napi bevétel, natív győzelem/vereség és az atomi visszaállítás megmarad. A Gym egy külső oldalas adapter marad.
+[Vezérlési szerződés, korlátok és futtatható példa](PYTHON_ENV_CONTROLLERS.md).
 
 ### 5. Valódi headless működés
 
@@ -228,8 +226,8 @@ Győzelem/vereség: `terminated=True`. Külső lépésszámkorlát: `truncated=T
 - [x] Pythonból elindítható és lezárható, menükézi kezelés nélkül.
 - [x] Ablak/hang nélkül betölt és léptet; grafikus felhasználói munkamenetre nincs szükség.
 - [x] Minden résztvevő, köztük az AI-k állapota, hősei, várai, seregei és tárgyai lekérdezhetők és változásuk követhető.
-- [ ] Résztvevőnként választható beépített AI vagy Python-vezérlő; több külső oldal szabályosan válthatja egymást.
-- [ ] Emberinek jelölt résztvevő nélkül is fut beépített AI–AI játék, korlátozott előreléptetéssel és köztes lekérdezéssel.
+- [x] Résztvevőnként választható beépített AI vagy Python-vezérlő; több külső oldal szabályosan válthatja egymást.
+- [x] Emberinek jelölt résztvevő nélkül is fut beépített AI–AI játék, korlátozott előreléptetéssel és köztes lekérdezéssel.
 - [x] Hősmozgás, egyszerű felvétel, körváltás és beépített AI működik.
 - [x] Várépítés, toborzás, hős/sereg/tárgy műveletek működnek a deklarált profilon.
 - [x] A tesztpálya választásai nem nyitnak ablakot, Pythonból megválaszolhatók.
@@ -260,14 +258,14 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 5 | Kész: jelenlegi betöltés/döntés/render profil | Explicit headless policy; választható core-komponensek a régi alapértékekkel; önálló adventure viewport, RGB képkérés és tényleges runtime-adatok. 35 sikeres Python-teszt, C++ policy-ellenőrzés és SDL dummy/software próbák. [Leírás és korlátok](PYTHON_ENV_HEADLESS.md). A még nem bekötött játékműveleteknél ezt továbbra is ellenőrizni kell. |
 | 6 | Kész: adventure_basic profil | Natív útkeresés/mezőlépés, saját szárazföldi hős és sima erőforráskupac; `turn.end` valódi AI-körökkel, bevétellel és hétváltással. Tokenverziózás, események és teljes műveleti checkpoint/visszaállítás a nem támogatott interakcióknál. 43 sikeres Python-teszt. [Szerződés, példa és korlátok](PYTHON_ENV_ADVENTURE.md). Emberi csata, választás és hajózás még nincs bekötve. |
 | 7 | Várlekérdezés, építés, pontos toborzás, hősvásárlás és piaci csere kész | Natív feltételek, árak, napi építési limit, faji fejlesztések, készlet és seregcél ellenőrzése. Explicit hősajánlat-frissítés; a lekérdezés változatlanul csak olvas. A piaci ablak és a Python közös, ellenőrzött kereskedelmi műveletet használ. [Szerződés és futtatható példák](PYTHON_ENV_CASTLE.md). Hajóvásárlás még nincs bekötve; az eredeti „indokolt esetben hajó” rész nem teljesült. |
-| 4/A | Rögzített követelmény; még nincs megvalósítva | Résztvevőnkénti vezérlő, AI-nak jelölt oldal Python-elérése, több külső oldal, kizárólag beépített AI-k futtatása és körhatáron történő követése. Nem írja felül a 7. lépés egyeztetett folytatását; megvalósítása külön munkaszakasz. |
+| 4/A | Kész a dokumentált standard profilon | Résztvevőnként Python/beépített AI, több Python-oldal, AI-only emberi natív profil nélkül, korlátozott előreléptetés, csata-/választásirányítás és natív oldalankénti eredmények. [API és tesztek](PYTHON_ENV_CONTROLLERS.md). |
 | 8 | Kész a deklarált profilon | Pontos slot-áthelyezés, split/merge, csapat- és tárgycsere közös natív függvényekkel. Tulajdonjog, utolsó kötelező csapat, varázskönyv-védelem és valódi találkozás ellenőrzött. Tekercsadat, Anduran-összeállítás és a találkozás végén alkalmazott natív felderítés megmarad. Teljes csapat fejlesztése/elbocsátása, önkéntes hőselbocsátás és varázskönyv-vétel a normál UI-val közös műveletekkel. Minden oldali, tisztán olvasó seregopciók és árak. [Seregpélda](PYTHON_ENV_ARMY.md), [tárgypélda](PYTHON_ENV_ARTIFACTS.md), [új hősműveletek és tesztmentések](PYTHON_ENV_HERO_OPERATIONS.md). |
 | 9 | Kész a kezdeti, deklarált választás/varázslat profilon | Élő C++ veremben felfüggesztett láda → szintlépés lánc, ingyenes/fizetős csatlakozás és üldözés, lámpa/Wagon Camp toborzás. Köztes lekérdezés/render, hibás válasz változatlan állapottal; megszakításkor teljes műveleti rollback, csatához jutáskor a 10. lépés vezérlője folytatja. Identify Hero és Visions natív árral/hatással; a célzott és további varázslatok külön bővítések. [Szerződés és példa](PYTHON_ENV_CHOICES.md). |
 | 10 | Kész a deklarált csataprofilon | Élő natív Arena, egységkörönkénti Python-döntés és szabályos akciójelöltek; mozgás, közelharc, lövés, 13 célzott varázslat, menekülés, megadás. Semleges/hős elleni csata, támadó ostrom és AI-körből induló saját várvédelem. Natív veszteség, pénz, tapasztalat, nekromancia és szintlépés után visszatérés adventure/terminal helyzetbe. Lekérdezés és megszakítás élő csatából, teljes műveleti rollback. [Szerződés, profilkorlátok és példa](PYTHON_ENV_BATTLE.md). |
 | 11 | Kész a deklarált profilon | Adventure, aktív csata, saját/AI-hős és vár natív RGB-képe ablak nélkül. Közös memóriacélú épület-/UI-rajzolás; statikus képek és méretezés. Nyolc új motoros teszt és képi ellenőrzés; a teljes csatavégállapot képkérésekkel/anélkül is egyezik. [API, példa és korlátok](PYTHON_ENV_VIEWS.md). |
 | 12 | Kész a deklarált profilon | Mentéses és natív MP2/MX2/FH2M pályás, seedelt reset friss motorfolyamatban. Csata/választás/terminális állapotból és crash/timeout után is újraindítható. A mentett világseed változatlan; főszál-PCG és új világ kezdőállapota szabályozott. [Szerződés, példa és korlátok](PYTHON_ENV_RESET.md). |
 | 13 | Kész a deklarált profilon | `Fheroes2-v0`: fix numerikus Dict és Discrete jelöltek, natív maszk, minden saját aktív hős, vár/sereg/tárgy műveletek, választás és csata ugyanabban az epizódban, +1/-1 terminális jutalom, külön időlimit. Render nélkül nincs képkérés. [Séma, korlátok, példák és ellenőrzés](PYTHON_ENV_GYM.md). |
-| 14 | Profil-ellenőrzés és mérés kész; globális elfogadás még nyitott | 146 teszt, 13 hosszabb Gym-epizód/2707 lépés hiba nélkül; összefüggő építés/toborzás/csata/szintlépés/AI-kör. Reset/lépés/render és két párhuzamos session mérése; normál, Python nélküli Windows UI smoke sikeres. [Útmutató és támogatási mátrix](PYTHON_ENV_GUIDE.md), [rögzített jelentés](python_env/acceptance.windows.2026-10-31.json). A két 4/A vezérlési követelmény még nincs implementálva. |
+| 14 | Profil-ellenőrzés és mérés kész; globális elfogadás még nyitott | 146 teszt, 13 hosszabb Gym-epizód/2707 lépés hiba nélkül; összefüggő építés/toborzás/csata/szintlépés/AI-kör. Reset/lépés/render és két párhuzamos session mérése; normál, Python nélküli Windows UI smoke sikeres. [Útmutató és támogatási mátrix](PYTHON_ENV_GUIDE.md), [rögzített jelentés](python_env/acceptance.windows.2026-10-31.json). A 4/A követelményei az ezt követő munkaszakaszban elkészültek; a 14. lépés jelentése az akkori build történeti mérése. |
 
 Külön felmerült bővítési irány: konfigurálható battle-only reset/indítás, kalandtérképes játékmenet előzménye nélkül.
 A csatavezérlő már alapot ad hozzá, de az önálló konfigurációs API és a terep-/ostrom-/hajós esetek külön ellenőrzése még nincs megvalósítva.

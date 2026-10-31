@@ -32,12 +32,15 @@ namespace
 Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int64_t( const ExternalChoice & )> choose,
                                                               std::function<void( const std::string &, const std::string & )> notify,
                                                               std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle,
-                                                              std::function<void( const Battle::Result &, int32_t )> battleFinished )
+                                                              std::function<void( const Battle::Result &, int32_t )> battleFinished,
+                                                              std::function<ControllerType( int )> controller, std::function<bool()> gameOver )
     : _previous( current )
     , _choose( std::move( choose ) )
     , _notify( std::move( notify ) )
     , _battle( std::move( battle ) )
     , _battleFinished( std::move( battleFinished ) )
+    , _controller( std::move( controller ) )
+    , _gameOver( std::move( gameOver ) )
 {
     current = this;
 }
@@ -45,6 +48,27 @@ Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int6
 Game::ScopedExternalInteractions::~ScopedExternalInteractions()
 {
     current = _previous;
+}
+
+bool Game::ScopedExternalInteractions::hasAssignments()
+{
+    return current != nullptr && static_cast<bool>( current->_controller );
+}
+bool Game::ScopedExternalInteractions::isExternal( const int color )
+{
+    return hasAssignments() && current->_controller( color ) == ControllerType::External;
+}
+bool Game::ScopedExternalInteractions::isNative( const int color )
+{
+    return hasAssignments() && current->_controller( color ) == ControllerType::Native;
+}
+bool Game::ScopedExternalInteractions::hasGameOverController()
+{
+    return current != nullptr && static_cast<bool>( current->_gameOver );
+}
+bool Game::ScopedExternalInteractions::gameOver()
+{
+    return hasGameOverController() && current->_gameOver();
 }
 
 int64_t Game::ScopedExternalInteractions::choose( const ExternalChoice & choice )

@@ -45,6 +45,7 @@
 #include "game.h"
 #include "game_assets.h"
 #include "game_auto_playtest.h"
+#include "game_external_interaction.h"
 #include "game_io.h"
 #include "game_static.h"
 #include "ground.h"
@@ -1619,7 +1620,7 @@ bool Heroes::BuySpellBook( const Castle & castle )
     StringReplace( header, "%{gold}", payment.gold );
 
     if ( !kingdom.AllowPayment( payment ) ) {
-        if ( isControlHuman() ) {
+        if ( isControlHuman() && !Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) ) ) {
             header.append( " " );
             header.append( _( "Unfortunately, you seem to be a little short of cash at the moment." ) );
 
@@ -1629,7 +1630,7 @@ bool Heroes::BuySpellBook( const Castle & castle )
         return false;
     }
 
-    if ( isControlHuman() ) {
+    if ( isControlHuman() && !Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) ) ) {
         header.append( " " );
         header.append( _( "Do you wish to buy one?" ) );
 
@@ -1678,7 +1679,8 @@ void Heroes::SetMove( const bool enable )
 
         ResetModes( SLEEPER );
 
-        if ( isControlAI() ) {
+        if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) )
+             || ( isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( GetColor() ) ) ) ) {
             AI::Planner::Get().HeroesBeginMovement( *this );
         }
 
@@ -1891,7 +1893,8 @@ void Heroes::_levelUpSecondarySkill( const HeroSeedsForLevelUp & seeds, const in
             selected = sec1.isValid() ? sec1 : sec2;
         }
     }
-    else if ( isControlAI() ) {
+    else if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) )
+              || ( isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( GetColor() ) ) ) ) {
         selected = AI::Planner::pickSecondarySkill( *this, sec1, sec2 );
     }
     else {
@@ -2052,7 +2055,8 @@ void Heroes::ActionNewPosition( const bool allowMonsterAttack )
         }
     }
 
-    if ( isControlAI() ) {
+    if ( Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) )
+         || ( isControlAI() && !Game::ScopedExternalInteractions::isExternal( static_cast<int>( GetColor() ) ) ) ) {
         AI::Planner::Get().HeroesActionNewPosition( *this );
     }
 
@@ -2246,7 +2250,7 @@ Heroes::HeroSeedsForLevelUp Heroes::_getSeedsForLevelUp() const
 
 double Heroes::getAIMinimumJoiningArmyStrength() const
 {
-    assert( isControlAI() );
+    assert( isControlAI() || Game::ScopedExternalInteractions::isNative( static_cast<int>( GetColor() ) ) );
 
     double strengthThreshold = 0.05;
 

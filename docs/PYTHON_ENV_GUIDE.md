@@ -1,8 +1,8 @@
 # fheroes2 Python és Gym: használati útmutató és ellenőrzött állapot
 
-2026-10-31. Az alap Python API és a strukturált Gym-adapter működik a lent felsorolt, egy külső oldalas profilon.
-A 14. lépés profilra vonatkozó elfogadási próbái és mérései elkészültek. A tágabb végcél teljes elfogadása még nyitott:
-a résztvevőnként választható vezérlő, több Python-agent és a csak beépített AI-kból álló játék a 4/A feladata.
+2026-10-31. Az alap Python API, a strukturált Gym-adapter és a 4/A oldalankénti vezérlés elkészült a dokumentált profilon.
+A session több Python-agentet, vegyes és beépített AI–AI játékot is támogat; [vezérlési API és példa](PYTHON_ENV_CONTROLLERS.md).
+A Gym-adapter továbbra is egy külső oldalt vezérel. A 14. lépés rögzített mérései az akkori build történeti eredményei.
 Ez az útmutató a jelenleg ellenőrzött képességeket írja le, nem minden eredeti pálya/kampány teljes támogatását.
 
 ## 1. Fordítás és telepítés
@@ -70,7 +70,7 @@ Az ismételhetőség azonos motorbuildre, assetekre, konfigurációra és akció
 A session jelenleg egy, a mentésben emberi szabályprofillal rendelkező aktív oldalt vár; annak minden döntését
 Python hozhatja, emberi input nélkül. Új pályán `player_id` választhatja a pálya által megengedett ilyen oldalt,
 alapértéke kék (`1`); `difficulty=0..4`, alapértéke normal (`1`). A többi oldalt a natív AI vezérli.
-Az AI-oldalak adatai ugyanúgy lekérdezhetők. Vezérlésük átadását a 4/A bővítés fogja megoldani.
+Az AI-oldalak adatai ugyanúgy lekérdezhetők, és a 4/A `controllers` konfigurációval Pythonból is vezérelhetők.
 
 A repóban nincs terjesztve eredeti AGG vagy bináris tesztmentés. A helyi referencia mentések előkészítése:
 [baseline](PYTHON_ENV_BASELINE.md). Ezt követően a külön teszthelyzetek generálhatók:
@@ -154,7 +154,7 @@ Teljes séma és konfigurációs maximumok: [Gym-szerződés](PYTHON_ENV_GYM.md)
 |---|---|---|
 | Betöltés/reset | Standard mentés, seedelt MP2/MX2/FH2M új játék; csatából/választásból reset | Kampányok, szerkesztő és hálózati játék nem célprofil |
 | Állapot | Minden oldal, AI-hősök/várak/seregek/tárgyak és teljes térkép | Láthatóságra szűrt `observe` nincs |
-| Vezérlés | Egy teljesen Pythonból vezérelt oldal, natív AI ellenfelek | 4/A: tetszőleges oldal átvétele, multi-agent és AI-only |
+| Vezérlés | Oldalanként Python/beépített AI, több Python-agent, AI-only, csata/választás útválasztás | Hozzárendelés resetkor; Gym egy külső oldalas; külön multi-agent wrapper nincs |
 | Adventure | Saját szárazföldi hős, erőforráskupac, deklarált célobjektumok, AI-körök | Hajózás, saját várba belépés és további objektumok |
 | Gazdaság | Natív építés, pontos toborzás, hősvásárlás, ajánlatfrissítés, piaci csere | Hajóvásárlás |
 | Sereg/hős/tárgy | Natív találkozás, seregátadás/csere, upgrade/dismiss, könyvvásárlás, tárgy/tekercs/set | Jogosultság és találkozási távolság a natív szabályok szerint |
@@ -212,7 +212,7 @@ Elvégzett ellenőrzések:
 - A base csomag szerkeszthető telepítése külön venv-ben sikeres.
 
 Nem történt teljes kampánybejárás, minden billentyűparancs vagy más platform SDK-jának ellenőrzése.
-A globális végső elfogadási listán a két 4/A vezérlési követelmény továbbra is nyitott; a működő profilon az ellenőrzési munkaszakasz lezárható.
+A 14. lépés jelentése az akkori egykülsőoldalas profilt rögzíti; az ezt követő 4/A megvalósítás teljesíti a két vezérlési feltételt.
 
 ## 7. Újrafuttatás és hibakeresés
 
@@ -235,11 +235,11 @@ Tipikus hibák:
 
 - `unknown_method` / hiányzó Gym capability: ellenőrizd, hogy valóban az új, Python-támogatású executable-t adtad-e meg.
 - `assets_unavailable`: eredeti AGG, illeszkedő H2D, `FHEROES2_DATA` és a runtime könyvtárak ellenőrzése.
-- `wrong_player` / `unsupported_state`: a mentés és a jelenlegi egy külső oldalas profil egyezzen.
+- `wrong_player` / `unsupported_state`: az aktuális token, a vezérlő-hozzárendelés és a művelet tulajdonosa egyezzen.
 - `gym_profile_limit`: emeld a megfelelő fix korlátot, vagy válassz a profilba férő állapotot; az adapter nem vág le opciókat.
 - `unsupported_action` / `unsupported_interaction`: a motorprofil még nem kezeli az adott helyzetet. Ne alakítsd jutalommá vagy vereséggé.
 - `stale_decision` / `wrong_session`: session API-ban friss tokent használj, reset után a régi token érvénytelen.
 - Timeout/crash: kivétel után reset; a motorfolyamat kilépése nem játékmeneti eredmény.
 
-További munka: 4/A résztvevőnkénti vezérlés; hajózás/hajóvásárlás/saját várba belépés; a profilon kívüli objektumok
+További munka: hajózás/hajóvásárlás/saját várba belépés; a profilon kívüli objektumok
 és varázslatok; konfigurálható battle-only indítás. Nagy léptékű RL-optimalizálás és láthatóságra szűrt observation ezek mellett külön bővítés.

@@ -1,5 +1,8 @@
 # Külső vezérlő: mentésből induló döntési pont
 
+Ez a dokumentum a kompatibilitás miatt megtartott, eredeti `start_session(player_id)` módot írja le.
+A 4/A többoldalas vezérlés már elkészült: [oldalankénti Python/beépített AI, vegyes és AI–AI futás](PYTHON_ENV_CONTROLLERS.md).
+
 A 4. lépés első működő vezérlési határa a standard mentés emberi játékosának adventure köre.
 A `start_session(player_id)` belép a C++ `Game::StartGame(controller)` útvonalba, amely a döntési callbackben vár.
 A parancskiszolgálás a callbackből történik, ugyanazon motorszálon; a C++ hívási verem a várakozás végéig megmarad.
@@ -7,8 +10,8 @@ A normál `Game::StartGame()` továbbra is az eredeti ablakos útvonalat haszná
 
 2026-10-29-i követelmény: ez az egyetlen emberinek jelölt résztvevőre szűkített megoldás átmeneti.
 A végcél résztvevőnként választható beépített AI vagy Python-vezérlő, több külső oldal és teljesen AI-s futás,
-kézi játékos nélkül. A mindent látó állapotlekérés már minden oldalra működik; a több résztvevős vezérlés még nem.
-A megvalósítás előtt követendő pontosítás és elfogadási esetek a [terv résztvevői követelményeinél](PYTHON_ENV_IMPLEMENTATION_PLAN.md) szerepelnek (4/A feladat).
+kézi játékos nélkül. Ezek a 4/A konfigurált sessionmódjában már működnek.
+A követelmények és elfogadási esetek a [terv résztvevői követelményeinél](PYTHON_ENV_IMPLEMENTATION_PLAN.md) szerepelnek.
 
 ## Használat
 
