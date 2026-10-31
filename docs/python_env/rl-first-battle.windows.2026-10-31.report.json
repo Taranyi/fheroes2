@@ -1,0 +1,3048 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "source_commit": "d802e23b5a7740960834d32717d7d49b1629de26",
+    "worktree_dirty": true,
+    "executable_sha256": "b7e7284b9130c538c6c6564139909344741f8d7328b2fab30730fedfd776f58f",
+    "files_sha256": {
+      "python/examples/battle_rl.py": "6bc834690fe016fea1424d958b473cb35dbe53d0e4043f4dc7c624d06347db6e",
+      "python/tests/test_battle_rl.py": "20cc3198d28f570705579ff1df12360a225f707bfd6f77e58b3dbce48c0d8546",
+      "python/src/fheroes2_env/__init__.py": "7f74a07eaa2b6616fefa6805f53d8af4a0a09a368607cdb5c9e90b080cacc1d4",
+      "python/src/fheroes2_env/frame.py": "deec10377eafbd86d4dd0b2a0e2f06f1f33e16180e23fc986131a542d3cd9248",
+      "python/src/fheroes2_env/gym_candidates.py": "036027d453575bb06bc10d5953b882397a992a77c7e6fa6cb37d882335c925e4",
+      "python/src/fheroes2_env/gym_env.py": "678b2d108e15608dd48f4187f23fb783e64c40061b454a6cf7a4c9f202ab5627",
+      "python/src/fheroes2_env/gym_observation.py": "c809a2bcd3a4049c1c5b84a3a5888d8fc9d131ab808d396ad0f59c411fc792c8",
+      "python/src/fheroes2_env/gym_preview.py": "3e05522723c385dea5010edd37b9a83566f57d2dd9191658a59e9ec58dc54b3d",
+      "python/src/fheroes2_env/session.py": "2bc2f8b8e912c6eb537dc991d238da959a8aa6ff40e63db3bc09e3bcb20821c9"
+    },
+    "asset_sha256": {
+      "DATA/HEROES2.AGG": "7a11c86db8ec8fbf19d810c1f7ebf9d8520f63fbdc42d6f51f7538654004315d",
+      "DATA/HEROES2X.AGG": "1f3edad1bb88052da50b3fae5d00e8f7e73dd977f356463022aab132b54f4d41",
+      "files/data/resurrection.h2d": "5963a20776351035a9a1030170cf418570622cd3bed76e189b0868b8a9583f32"
+    },
+    "python": "3.14.7",
+    "numpy": "2.5.4",
+    "gymnasium": "1.4.0",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+    "logical_cpus": 16,
+    "device": "cpu_numpy",
+    "created_utc": "2026-10-31T17:08:06.618212+00:00"
+  },
+  "plan_sha256": "16a11b51b8cd9423ca2cbd7a5dad7a763a3b28fb62449157d55d2e0c6ab9627c",
+  "run_completed": true,
+  "learning_detected": true,
+  "runs": [
+    {
+      "seed": 7,
+      "episodes": 400,
+      "training": {
+        "episodes": 400,
+        "wins": 306,
+        "losses": 86,
+        "truncated": 8,
+        "win_rate": 0.765,
+        "win_rate_wilson_95": [
+          0.7210494588154521,
+          0.8039090251873708
+        ],
+        "mean_return": 0.55,
+        "steps": 1648,
+        "reset": {
+          "samples": 400,
+          "mean_ms": 74.75072524997813,
+          "median_ms": 72.69814999972368,
+          "p95_ms": 93.26419499989241,
+          "operations_per_second": 13.377796625462073
+        },
+        "step": {
+          "samples": 1648,
+          "mean_ms": 22.578793507270206,
+          "median_ms": 21.524349999708647,
+          "p95_ms": 34.62011999936293,
+          "operations_per_second": 44.289346092739954
+        },
+        "features_and_inference": {
+          "samples": 1648,
+          "mean_ms": 1.073928276727184,
+          "median_ms": 0.9321500001533423,
+          "p95_ms": 2.3495250000905794,
+          "operations_per_second": 931.1608807317359
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 138,
+            "wins": 126
+          },
+          "melee": {
+            "episodes": 132,
+            "wins": 125
+          },
+          "ranged": {
+            "episodes": 130,
+            "wins": 55
+          }
+        }
+      },
+      "checkpoints": [
+        {
+          "episode": 100,
+          "validation": {
+            "episodes": 27,
+            "wins": 17,
+            "losses": 10,
+            "truncated": 0,
+            "win_rate": 0.6296296296296297,
+            "win_rate_wilson_95": [
+              0.4422923441210239,
+              0.784674870390344
+            ],
+            "mean_return": 0.25925925925925924,
+            "steps": 128,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 70.7427555555653,
+              "median_ms": 66.1378999993758,
+              "p95_ms": 91.26232999988132,
+              "operations_per_second": 14.135723045373098
+            },
+            "step": {
+              "samples": 128,
+              "mean_ms": 22.2076648437195,
+              "median_ms": 20.364649999919493,
+              "p95_ms": 35.71068500014007,
+              "operations_per_second": 45.0294980150877
+            },
+            "features_and_inference": {
+              "samples": 128,
+              "mean_ms": 1.0661812499890289,
+              "median_ms": 0.8569999999963329,
+              "p95_ms": 2.4211900002228486,
+              "operations_per_second": 937.9268299928274
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 7
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 1
+              }
+            }
+          },
+          "model_sha256": "dbf3f2462fd5a73d0bc94c64b4dc49ec90650b0d268031c65c0c1ca30d718122",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.32,
+            "win_rate": 0.64
+          }
+        },
+        {
+          "episode": 200,
+          "validation": {
+            "episodes": 27,
+            "wins": 19,
+            "losses": 8,
+            "truncated": 0,
+            "win_rate": 0.7037037037037037,
+            "win_rate_wilson_95": [
+              0.5151931703585185,
+              0.8414695953022023
+            ],
+            "mean_return": 0.4074074074074074,
+            "steps": 132,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 76.08775925938163,
+              "median_ms": 75.39210000049934,
+              "p95_ms": 93.39557000048444,
+              "operations_per_second": 13.142718483679094
+            },
+            "step": {
+              "samples": 132,
+              "mean_ms": 24.373668181755367,
+              "median_ms": 24.0756500002135,
+              "p95_ms": 32.95496499981709,
+              "operations_per_second": 41.02788273570323
+            },
+            "features_and_inference": {
+              "samples": 132,
+              "mean_ms": 1.1838363636384615,
+              "median_ms": 1.1550499998520536,
+              "p95_ms": 2.197520000072472,
+              "operations_per_second": 844.7113390963514
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 1
+              }
+            }
+          },
+          "model_sha256": "5afbae2b49494e333c13197c2f44124c5163847a1c9bd23295cce0e831a9e274",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.42,
+            "win_rate": 0.68
+          }
+        },
+        {
+          "episode": 300,
+          "validation": {
+            "episodes": 27,
+            "wins": 22,
+            "losses": 5,
+            "truncated": 0,
+            "win_rate": 0.8148148148148148,
+            "win_rate_wilson_95": [
+              0.6330131638145156,
+              0.9181929285702346
+            ],
+            "mean_return": 0.6296296296296297,
+            "steps": 115,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 75.55086296290231,
+              "median_ms": 73.39980000051582,
+              "p95_ms": 95.34143999981097,
+              "operations_per_second": 13.236116184285406
+            },
+            "step": {
+              "samples": 115,
+              "mean_ms": 22.187753913045604,
+              "median_ms": 21.745300000475254,
+              "p95_ms": 33.31767000026957,
+              "operations_per_second": 45.069906756629194
+            },
+            "features_and_inference": {
+              "samples": 115,
+              "mean_ms": 1.1390391304224106,
+              "median_ms": 1.0346999997636885,
+              "p95_ms": 2.391909999732888,
+              "operations_per_second": 877.9329641020777
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 4
+              }
+            }
+          },
+          "model_sha256": "e40a78b15988593161e646a73eea362bd67cdb9850b73b88e19510d8a137f430",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.78,
+            "win_rate": 0.88
+          }
+        },
+        {
+          "episode": 400,
+          "validation": {
+            "episodes": 27,
+            "wins": 27,
+            "losses": 0,
+            "truncated": 0,
+            "win_rate": 1.0,
+            "win_rate_wilson_95": [
+              0.8754449702581328,
+              0.9999999999999998
+            ],
+            "mean_return": 1.0,
+            "steps": 74,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 76.26900740736649,
+              "median_ms": 77.3391000002448,
+              "p95_ms": 89.06294999987949,
+              "operations_per_second": 13.111485700329363
+            },
+            "step": {
+              "samples": 74,
+              "mean_ms": 26.480891891878855,
+              "median_ms": 26.23265000011088,
+              "p95_ms": 36.1786850001863,
+              "operations_per_second": 37.763078527830075
+            },
+            "features_and_inference": {
+              "samples": 74,
+              "mean_ms": 1.1621810810931885,
+              "median_ms": 1.0403999999653024,
+              "p95_ms": 2.142549999871335,
+              "operations_per_second": 860.4511089264719
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 9
+              }
+            }
+          },
+          "model_sha256": "a93980bed07a6105eb5246803bd5cbedfd0c7bfebb074b13ca7b5de9b6e11aa2",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.88,
+            "win_rate": 0.94
+          }
+        }
+      ],
+      "selected_episode": 400,
+      "selected_validation": {
+        "episodes": 27,
+        "wins": 27,
+        "losses": 0,
+        "truncated": 0,
+        "win_rate": 1.0,
+        "win_rate_wilson_95": [
+          0.8754449702581328,
+          0.9999999999999998
+        ],
+        "mean_return": 1.0,
+        "steps": 74,
+        "reset": {
+          "samples": 27,
+          "mean_ms": 76.26900740736649,
+          "median_ms": 77.3391000002448,
+          "p95_ms": 89.06294999987949,
+          "operations_per_second": 13.111485700329363
+        },
+        "step": {
+          "samples": 74,
+          "mean_ms": 26.480891891878855,
+          "median_ms": 26.23265000011088,
+          "p95_ms": 36.1786850001863,
+          "operations_per_second": 37.763078527830075
+        },
+        "features_and_inference": {
+          "samples": 74,
+          "mean_ms": 1.1621810810931885,
+          "median_ms": 1.0403999999653024,
+          "p95_ms": 2.142549999871335,
+          "operations_per_second": 860.4511089264719
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 9,
+            "wins": 9
+          },
+          "melee": {
+            "episodes": 9,
+            "wins": 9
+          },
+          "ranged": {
+            "episodes": 9,
+            "wins": 9
+          }
+        }
+      },
+      "initial_model_sha256": "c33d30bd4c3b5f122049f95add7eb66ef9328b5a1e7750c9a131baf3347cad6f",
+      "final_model_sha256": "a93980bed07a6105eb5246803bd5cbedfd0c7bfebb074b13ca7b5de9b6e11aa2",
+      "optimizer_seconds": 0.1813153000002785,
+      "wall_seconds_including_validation": 88.4080557999996,
+      "train_native_seeds": [
+        13,
+        15,
+        69,
+        75,
+        77,
+        86,
+        88,
+        109,
+        124,
+        126,
+        135,
+        144,
+        162,
+        173,
+        188,
+        222,
+        233,
+        234,
+        258,
+        266,
+        271,
+        274,
+        281,
+        302,
+        394,
+        396,
+        399,
+        420,
+        438,
+        445,
+        468,
+        503,
+        511,
+        521,
+        527,
+        528,
+        533,
+        545,
+        550,
+        555,
+        560,
+        565,
+        599,
+        628,
+        634,
+        635,
+        641,
+        656,
+        657,
+        659,
+        661,
+        663,
+        679,
+        684,
+        696,
+        698,
+        702,
+        724,
+        728,
+        739,
+        740,
+        752,
+        776,
+        781,
+        788,
+        807,
+        810,
+        820,
+        838,
+        870,
+        880,
+        897,
+        901,
+        911,
+        922,
+        931,
+        937,
+        940,
+        986,
+        1016,
+        1024,
+        1038,
+        1042,
+        1051,
+        1058,
+        1066,
+        1074,
+        1075,
+        1080,
+        1085,
+        1095,
+        1102,
+        1145,
+        1165,
+        1184,
+        1185,
+        1187,
+        1192,
+        1196,
+        1208,
+        1215,
+        1216,
+        1223,
+        1232,
+        1253,
+        1256,
+        1259,
+        1262,
+        1267,
+        1278,
+        1292,
+        1305,
+        1310,
+        1319,
+        1323,
+        1330,
+        1336,
+        1337,
+        1345,
+        1352,
+        1357,
+        1361,
+        1362,
+        1375,
+        1383,
+        1392,
+        1398,
+        1408,
+        1414,
+        1417,
+        1422,
+        1428,
+        1460,
+        1471,
+        1474,
+        1503,
+        1518,
+        1524,
+        1526,
+        1532,
+        1535,
+        1540,
+        1544,
+        1549,
+        1553,
+        1558,
+        1567,
+        1587,
+        1597,
+        1607,
+        1608,
+        1614,
+        1647,
+        1650,
+        1667,
+        1675,
+        1685,
+        1724,
+        1726,
+        1735,
+        1748,
+        1753,
+        1761,
+        1772,
+        1773,
+        1791,
+        1797,
+        1803,
+        1823,
+        1832,
+        1833,
+        1835,
+        1855,
+        1861,
+        1883,
+        1892,
+        1895,
+        1910,
+        1915,
+        1919,
+        1924,
+        1959,
+        1988,
+        2003,
+        2020,
+        2026,
+        2043,
+        2044,
+        2055,
+        2056,
+        2058,
+        2074,
+        2075,
+        2084,
+        2092,
+        2102,
+        2114,
+        2120,
+        2126,
+        2134,
+        2136,
+        2137,
+        2156,
+        2157,
+        2172,
+        2178,
+        2183,
+        2212,
+        2235,
+        2241,
+        2251,
+        2254,
+        2255,
+        2266,
+        2277,
+        2284,
+        2286,
+        2310,
+        2325,
+        2356,
+        2372,
+        2404,
+        2449,
+        2466,
+        2478,
+        2479,
+        2522,
+        2526,
+        2539,
+        2547,
+        2548,
+        2550,
+        2566,
+        2572,
+        2574,
+        2577,
+        2583,
+        2584,
+        2595,
+        2605,
+        2624,
+        2627,
+        2635,
+        2640,
+        2650,
+        2651,
+        2664,
+        2679,
+        2683,
+        2688,
+        2690,
+        2708,
+        2711,
+        2713,
+        2727,
+        2743,
+        2751,
+        2755,
+        2763,
+        2777,
+        2791,
+        2793,
+        2798,
+        2823,
+        2834,
+        2842,
+        2847,
+        2855,
+        2860,
+        2877,
+        2894,
+        2899,
+        2911,
+        2915,
+        2919,
+        2953,
+        2954,
+        2972,
+        2973,
+        2979,
+        2989,
+        3003,
+        3005,
+        3014,
+        3026,
+        3036,
+        3046,
+        3053,
+        3057,
+        3064,
+        3065,
+        3083,
+        3084,
+        3093,
+        3094,
+        3098,
+        3114,
+        3124,
+        3132,
+        3139,
+        3150,
+        3156,
+        3162,
+        3168,
+        3196,
+        3200,
+        3205,
+        3231,
+        3238,
+        3266,
+        3267,
+        3285,
+        3288,
+        3301,
+        3307,
+        3313,
+        3345,
+        3347,
+        3363,
+        3385,
+        3391,
+        3395,
+        3402,
+        3420,
+        3433,
+        3443,
+        3453,
+        3458,
+        3460,
+        3469,
+        3482,
+        3487,
+        3492,
+        3507,
+        3547,
+        3551,
+        3566,
+        3570,
+        3576,
+        3577,
+        3591,
+        3627,
+        3630,
+        3665,
+        3674,
+        3676,
+        3680,
+        3690,
+        3697,
+        3706,
+        3713,
+        3722,
+        3749,
+        3750,
+        3752,
+        3753,
+        3756,
+        3766,
+        3774,
+        3783,
+        3794,
+        3798,
+        3802,
+        3832,
+        3837,
+        3840,
+        3856,
+        3870,
+        3875,
+        3917,
+        3921,
+        3931,
+        3935,
+        3940,
+        3954,
+        3959,
+        3974,
+        3993,
+        4001,
+        4022,
+        4039,
+        4048,
+        4049,
+        4052,
+        4083,
+        4093
+      ],
+      "test_greedy": {
+        "episodes": 90,
+        "wins": 90,
+        "losses": 0,
+        "truncated": 0,
+        "win_rate": 1.0,
+        "win_rate_wilson_95": [
+          0.9590643744356734,
+          1.0000000000000002
+        ],
+        "mean_return": 1.0,
+        "steps": 208,
+        "reset": {
+          "samples": 90,
+          "mean_ms": 57.24474111111704,
+          "median_ms": 56.66990000008809,
+          "p95_ms": 61.40114000045287,
+          "operations_per_second": 17.468853567857224
+        },
+        "step": {
+          "samples": 208,
+          "mean_ms": 14.167109134623738,
+          "median_ms": 14.047749999917869,
+          "p95_ms": 15.331254999728117,
+          "operations_per_second": 70.58603067834409
+        },
+        "features_and_inference": {
+          "samples": 208,
+          "mean_ms": 0.2968966346394644,
+          "median_ms": 0.3029499998774554,
+          "p95_ms": 0.3985649997503059,
+          "operations_per_second": 3368.175598266202
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "melee": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "ranged": {
+            "episodes": 30,
+            "wins": 30
+          }
+        }
+      },
+      "paired_improvement": {
+        "paired_episodes": 90,
+        "win_rate_delta": 0.37777777777777777,
+        "paired_bootstrap_95": [
+          0.2777777777777778,
+          0.4777777777777778
+        ],
+        "bootstrap_samples": 5000
+      },
+      "test_stochastic": {
+        "episodes": 90,
+        "wins": 88,
+        "losses": 2,
+        "truncated": 0,
+        "win_rate": 0.9777777777777777,
+        "win_rate_wilson_95": [
+          0.9225547331137463,
+          0.9938845580136748
+        ],
+        "mean_return": 0.9555555555555556,
+        "steps": 255,
+        "reset": {
+          "samples": 90,
+          "mean_ms": 57.75362888892535,
+          "median_ms": 57.26069999991523,
+          "p95_ms": 61.86872000012045,
+          "operations_per_second": 17.314929282162506
+        },
+        "step": {
+          "samples": 255,
+          "mean_ms": 14.523621568600099,
+          "median_ms": 14.313200000287907,
+          "p95_ms": 17.001610000079378,
+          "operations_per_second": 68.85335005987683
+        },
+        "features_and_inference": {
+          "samples": 255,
+          "mean_ms": 0.3402498039434374,
+          "median_ms": 0.32439999995403923,
+          "p95_ms": 0.46983000011096,
+          "operations_per_second": 2939.017123331652
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 30,
+            "wins": 28
+          },
+          "melee": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "ranged": {
+            "episodes": 30,
+            "wins": 30
+          }
+        }
+      }
+    },
+    {
+      "seed": 19,
+      "episodes": 400,
+      "training": {
+        "episodes": 400,
+        "wins": 315,
+        "losses": 78,
+        "truncated": 7,
+        "win_rate": 0.7875,
+        "win_rate_wilson_95": [
+          0.7447739406814162,
+          0.8247564900763633
+        ],
+        "mean_return": 0.5925,
+        "steps": 1675,
+        "reset": {
+          "samples": 400,
+          "mean_ms": 83.29442300000892,
+          "median_ms": 70.27849999985847,
+          "p95_ms": 87.65881000003898,
+          "operations_per_second": 12.005605705437121
+        },
+        "step": {
+          "samples": 1675,
+          "mean_ms": 23.27214179104057,
+          "median_ms": 21.59419999952661,
+          "p95_ms": 33.33888000042862,
+          "operations_per_second": 42.96983100992385
+        },
+        "features_and_inference": {
+          "samples": 1675,
+          "mean_ms": 1.0882566567078589,
+          "median_ms": 0.9135000000242144,
+          "p95_ms": 2.205160000085016,
+          "operations_per_second": 918.900880445934
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 140,
+            "wins": 131
+          },
+          "melee": {
+            "episodes": 129,
+            "wins": 126
+          },
+          "ranged": {
+            "episodes": 131,
+            "wins": 58
+          }
+        }
+      },
+      "checkpoints": [
+        {
+          "episode": 100,
+          "validation": {
+            "episodes": 27,
+            "wins": 18,
+            "losses": 9,
+            "truncated": 0,
+            "win_rate": 0.6666666666666666,
+            "win_rate_wilson_95": [
+              0.47824760507320074,
+              0.8135673850128435
+            ],
+            "mean_return": 0.3333333333333333,
+            "steps": 129,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 71.7460222221807,
+              "median_ms": 70.9049999995841,
+              "p95_ms": 82.09218999963923,
+              "operations_per_second": 13.938054947537486
+            },
+            "step": {
+              "samples": 129,
+              "mean_ms": 24.32268837206058,
+              "median_ms": 23.906800000077055,
+              "p95_ms": 32.22311999943486,
+              "operations_per_second": 41.11387625837849
+            },
+            "features_and_inference": {
+              "samples": 129,
+              "mean_ms": 1.116623255834983,
+              "median_ms": 0.9503000001132023,
+              "p95_ms": 2.177300000039395,
+              "operations_per_second": 895.5572031788153
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 7
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 2
+              }
+            }
+          },
+          "model_sha256": "6412e2f887c18fdcfc631ccbd18f1e9df68850bc98397e4121b923ab33d7567b",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.44,
+            "win_rate": 0.72
+          }
+        },
+        {
+          "episode": 200,
+          "validation": {
+            "episodes": 27,
+            "wins": 20,
+            "losses": 7,
+            "truncated": 0,
+            "win_rate": 0.7407407407407407,
+            "win_rate_wilson_95": [
+              0.5532142868544692,
+              0.8682962543809281
+            ],
+            "mean_return": 0.48148148148148145,
+            "steps": 125,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 71.98628518522634,
+              "median_ms": 71.35130000006029,
+              "p95_ms": 80.37451999989571,
+              "operations_per_second": 13.891534997630757
+            },
+            "step": {
+              "samples": 125,
+              "mean_ms": 22.23778880001919,
+              "median_ms": 20.648599999731232,
+              "p95_ms": 32.2048400003041,
+              "operations_per_second": 44.96849974576326
+            },
+            "features_and_inference": {
+              "samples": 125,
+              "mean_ms": 1.0350224000430899,
+              "median_ms": 0.8544000002075336,
+              "p95_ms": 2.0698999996966445,
+              "operations_per_second": 966.1626646518647
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 2
+              }
+            }
+          },
+          "model_sha256": "bef1d675f918b002983296164ba208aa18d4f7a2e61acbd3deba2a5b3eb4ae07",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.36,
+            "win_rate": 0.66
+          }
+        },
+        {
+          "episode": 300,
+          "validation": {
+            "episodes": 27,
+            "wins": 23,
+            "losses": 2,
+            "truncated": 2,
+            "win_rate": 0.8518518518518519,
+            "win_rate_wilson_95": [
+              0.6752131457218702,
+              0.9408407222375568
+            ],
+            "mean_return": 0.7777777777777778,
+            "steps": 115,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 70.59768518522309,
+              "median_ms": 71.09649999983958,
+              "p95_ms": 81.99608000013541,
+              "operations_per_second": 14.16477037988367
+            },
+            "step": {
+              "samples": 115,
+              "mean_ms": 24.24605478258657,
+              "median_ms": 22.74330000000191,
+              "p95_ms": 35.13543999997637,
+              "operations_per_second": 41.243823334021194
+            },
+            "features_and_inference": {
+              "samples": 115,
+              "mean_ms": 1.047450434753441,
+              "median_ms": 0.8924000003389665,
+              "p95_ms": 2.049520000218763,
+              "operations_per_second": 954.6991120733934
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 5
+              }
+            }
+          },
+          "model_sha256": "2699c8f06537a497c8f125185f368d3538ec42c1b781778c3e3794a67a56f3da",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.78,
+            "win_rate": 0.88
+          }
+        },
+        {
+          "episode": 400,
+          "validation": {
+            "episodes": 27,
+            "wins": 27,
+            "losses": 0,
+            "truncated": 0,
+            "win_rate": 1.0,
+            "win_rate_wilson_95": [
+              0.8754449702581328,
+              0.9999999999999998
+            ],
+            "mean_return": 1.0,
+            "steps": 73,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 73.14365185185225,
+              "median_ms": 73.00589999977092,
+              "p95_ms": 84.57642000021224,
+              "operations_per_second": 13.671726454476671
+            },
+            "step": {
+              "samples": 73,
+              "mean_ms": 23.255891780810423,
+              "median_ms": 21.17329999964568,
+              "p95_ms": 33.311400000093265,
+              "operations_per_second": 42.9998560977631
+            },
+            "features_and_inference": {
+              "samples": 73,
+              "mean_ms": 0.9451506849435558,
+              "median_ms": 0.8163000002241461,
+              "p95_ms": 1.8544200005635487,
+              "operations_per_second": 1058.032349687944
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 9
+              }
+            }
+          },
+          "model_sha256": "dd7ba9b03611c168539f7fc6a8fa1c736de4ab7aed5cb2e9801a23d875d7d7a7",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.96,
+            "win_rate": 0.98
+          }
+        }
+      ],
+      "selected_episode": 400,
+      "selected_validation": {
+        "episodes": 27,
+        "wins": 27,
+        "losses": 0,
+        "truncated": 0,
+        "win_rate": 1.0,
+        "win_rate_wilson_95": [
+          0.8754449702581328,
+          0.9999999999999998
+        ],
+        "mean_return": 1.0,
+        "steps": 73,
+        "reset": {
+          "samples": 27,
+          "mean_ms": 73.14365185185225,
+          "median_ms": 73.00589999977092,
+          "p95_ms": 84.57642000021224,
+          "operations_per_second": 13.671726454476671
+        },
+        "step": {
+          "samples": 73,
+          "mean_ms": 23.255891780810423,
+          "median_ms": 21.17329999964568,
+          "p95_ms": 33.311400000093265,
+          "operations_per_second": 42.9998560977631
+        },
+        "features_and_inference": {
+          "samples": 73,
+          "mean_ms": 0.9451506849435558,
+          "median_ms": 0.8163000002241461,
+          "p95_ms": 1.8544200005635487,
+          "operations_per_second": 1058.032349687944
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 9,
+            "wins": 9
+          },
+          "melee": {
+            "episodes": 9,
+            "wins": 9
+          },
+          "ranged": {
+            "episodes": 9,
+            "wins": 9
+          }
+        }
+      },
+      "initial_model_sha256": "0d266876e4455c5e4e6798354bcd833ad9a56e90c36088c1806eb394c48e3cbb",
+      "final_model_sha256": "dd7ba9b03611c168539f7fc6a8fa1c736de4ab7aed5cb2e9801a23d875d7d7a7",
+      "optimizer_seconds": 0.20001989999400394,
+      "wall_seconds_including_validation": 93.12961240000004,
+      "train_native_seeds": [
+        11,
+        34,
+        45,
+        58,
+        63,
+        70,
+        72,
+        80,
+        81,
+        91,
+        94,
+        95,
+        112,
+        113,
+        136,
+        138,
+        147,
+        149,
+        154,
+        156,
+        157,
+        162,
+        185,
+        194,
+        206,
+        239,
+        241,
+        254,
+        257,
+        270,
+        275,
+        281,
+        290,
+        295,
+        304,
+        315,
+        329,
+        332,
+        333,
+        350,
+        366,
+        407,
+        416,
+        430,
+        462,
+        487,
+        488,
+        489,
+        499,
+        513,
+        526,
+        536,
+        537,
+        541,
+        556,
+        571,
+        572,
+        573,
+        582,
+        583,
+        596,
+        643,
+        648,
+        657,
+        659,
+        672,
+        684,
+        700,
+        722,
+        724,
+        729,
+        733,
+        740,
+        780,
+        805,
+        810,
+        817,
+        833,
+        834,
+        835,
+        863,
+        864,
+        875,
+        881,
+        908,
+        914,
+        919,
+        943,
+        947,
+        953,
+        956,
+        981,
+        987,
+        998,
+        1003,
+        1008,
+        1021,
+        1043,
+        1046,
+        1059,
+        1062,
+        1077,
+        1081,
+        1082,
+        1098,
+        1107,
+        1108,
+        1110,
+        1130,
+        1139,
+        1153,
+        1158,
+        1169,
+        1178,
+        1179,
+        1214,
+        1235,
+        1237,
+        1241,
+        1254,
+        1276,
+        1289,
+        1304,
+        1346,
+        1354,
+        1379,
+        1391,
+        1395,
+        1400,
+        1427,
+        1428,
+        1432,
+        1450,
+        1481,
+        1489,
+        1490,
+        1510,
+        1513,
+        1517,
+        1534,
+        1536,
+        1546,
+        1597,
+        1608,
+        1611,
+        1612,
+        1634,
+        1655,
+        1656,
+        1661,
+        1672,
+        1685,
+        1688,
+        1689,
+        1691,
+        1695,
+        1721,
+        1763,
+        1778,
+        1784,
+        1785,
+        1787,
+        1798,
+        1816,
+        1826,
+        1832,
+        1845,
+        1855,
+        1864,
+        1882,
+        1891,
+        1945,
+        1966,
+        2000,
+        2001,
+        2003,
+        2014,
+        2039,
+        2050,
+        2061,
+        2068,
+        2071,
+        2102,
+        2121,
+        2150,
+        2152,
+        2153,
+        2160,
+        2161,
+        2163,
+        2165,
+        2168,
+        2169,
+        2170,
+        2172,
+        2206,
+        2219,
+        2227,
+        2259,
+        2261,
+        2273,
+        2275,
+        2279,
+        2295,
+        2298,
+        2307,
+        2337,
+        2368,
+        2396,
+        2409,
+        2410,
+        2427,
+        2434,
+        2447,
+        2470,
+        2480,
+        2502,
+        2521,
+        2522,
+        2536,
+        2540,
+        2548,
+        2553,
+        2563,
+        2572,
+        2600,
+        2601,
+        2602,
+        2609,
+        2626,
+        2634,
+        2635,
+        2640,
+        2641,
+        2650,
+        2654,
+        2682,
+        2698,
+        2714,
+        2731,
+        2746,
+        2762,
+        2766,
+        2767,
+        2772,
+        2783,
+        2790,
+        2840,
+        2842,
+        2852,
+        2860,
+        2873,
+        2890,
+        2896,
+        2916,
+        2924,
+        2936,
+        2944,
+        2958,
+        2968,
+        2969,
+        2979,
+        2982,
+        2983,
+        2986,
+        2999,
+        3009,
+        3020,
+        3021,
+        3048,
+        3055,
+        3072,
+        3089,
+        3095,
+        3098,
+        3101,
+        3108,
+        3111,
+        3129,
+        3131,
+        3132,
+        3135,
+        3144,
+        3150,
+        3164,
+        3165,
+        3198,
+        3208,
+        3219,
+        3226,
+        3231,
+        3238,
+        3242,
+        3245,
+        3250,
+        3254,
+        3264,
+        3270,
+        3274,
+        3277,
+        3280,
+        3288,
+        3291,
+        3301,
+        3311,
+        3347,
+        3352,
+        3353,
+        3363,
+        3379,
+        3381,
+        3387,
+        3389,
+        3395,
+        3413,
+        3422,
+        3427,
+        3439,
+        3457,
+        3469,
+        3472,
+        3481,
+        3489,
+        3492,
+        3511,
+        3516,
+        3526,
+        3532,
+        3533,
+        3538,
+        3551,
+        3566,
+        3568,
+        3573,
+        3605,
+        3627,
+        3650,
+        3667,
+        3682,
+        3712,
+        3725,
+        3743,
+        3754,
+        3761,
+        3770,
+        3777,
+        3788,
+        3792,
+        3795,
+        3807,
+        3810,
+        3814,
+        3825,
+        3835,
+        3846,
+        3848,
+        3849,
+        3854,
+        3857,
+        3861,
+        3869,
+        3884,
+        3889,
+        3893,
+        3894,
+        3899,
+        3923,
+        3941,
+        3978,
+        3981,
+        3998,
+        4013,
+        4035,
+        4039,
+        4045,
+        4047,
+        4055,
+        4059,
+        4065,
+        4066,
+        4082,
+        4083,
+        4087
+      ],
+      "test_greedy": {
+        "episodes": 90,
+        "wins": 88,
+        "losses": 0,
+        "truncated": 2,
+        "win_rate": 0.9777777777777777,
+        "win_rate_wilson_95": [
+          0.9225547331137463,
+          0.9938845580136748
+        ],
+        "mean_return": 0.9777777777777777,
+        "steps": 320,
+        "reset": {
+          "samples": 90,
+          "mean_ms": 57.34645222216083,
+          "median_ms": 56.61549999967974,
+          "p95_ms": 62.49025499964773,
+          "operations_per_second": 17.437870369486646
+        },
+        "step": {
+          "samples": 320,
+          "mean_ms": 13.648328750002747,
+          "median_ms": 13.49049999998897,
+          "p95_ms": 14.848505000190928,
+          "operations_per_second": 73.26904402121752
+        },
+        "features_and_inference": {
+          "samples": 320,
+          "mean_ms": 0.2622309375169607,
+          "median_ms": 0.25005000043165637,
+          "p95_ms": 0.32833500054039183,
+          "operations_per_second": 3813.432577669527
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "melee": {
+            "episodes": 30,
+            "wins": 28
+          },
+          "ranged": {
+            "episodes": 30,
+            "wins": 30
+          }
+        }
+      },
+      "paired_improvement": {
+        "paired_episodes": 90,
+        "win_rate_delta": 0.35555555555555557,
+        "paired_bootstrap_95": [
+          0.24444444444444444,
+          0.4666666666666667
+        ],
+        "bootstrap_samples": 5000
+      },
+      "test_stochastic": {
+        "episodes": 90,
+        "wins": 88,
+        "losses": 2,
+        "truncated": 0,
+        "win_rate": 0.9777777777777777,
+        "win_rate_wilson_95": [
+          0.9225547331137463,
+          0.9938845580136748
+        ],
+        "mean_return": 0.9555555555555556,
+        "steps": 288,
+        "reset": {
+          "samples": 90,
+          "mean_ms": 57.441035555550314,
+          "median_ms": 56.54325000023164,
+          "p95_ms": 63.835774999643036,
+          "operations_per_second": 17.409156891555615
+        },
+        "step": {
+          "samples": 288,
+          "mean_ms": 13.580420138901495,
+          "median_ms": 13.452500000312284,
+          "p95_ms": 14.970759999641809,
+          "operations_per_second": 73.63542436625151
+        },
+        "features_and_inference": {
+          "samples": 288,
+          "mean_ms": 0.3281854167167037,
+          "median_ms": 0.3195499998582818,
+          "p95_ms": 0.4473150000194435,
+          "operations_per_second": 3047.058001554104
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 30,
+            "wins": 29
+          },
+          "melee": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "ranged": {
+            "episodes": 30,
+            "wins": 29
+          }
+        }
+      }
+    },
+    {
+      "seed": 41,
+      "episodes": 400,
+      "training": {
+        "episodes": 400,
+        "wins": 296,
+        "losses": 90,
+        "truncated": 14,
+        "win_rate": 0.74,
+        "win_rate_wilson_95": [
+          0.6948757457668063,
+          0.7805583529527312
+        ],
+        "mean_return": 0.515,
+        "steps": 1701,
+        "reset": {
+          "samples": 400,
+          "mean_ms": 73.50913474999743,
+          "median_ms": 71.63820000005217,
+          "p95_ms": 93.76489000019316,
+          "operations_per_second": 13.603751471173927
+        },
+        "step": {
+          "samples": 1701,
+          "mean_ms": 22.857793885960415,
+          "median_ms": 21.56620000005205,
+          "p95_ms": 34.93040000012115,
+          "operations_per_second": 43.748753925645225
+        },
+        "features_and_inference": {
+          "samples": 1701,
+          "mean_ms": 0.9599708406919186,
+          "median_ms": 0.8569000001443783,
+          "p95_ms": 2.0547000003716676,
+          "operations_per_second": 1041.6983075019543
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 146,
+            "wins": 136
+          },
+          "melee": {
+            "episodes": 128,
+            "wins": 116
+          },
+          "ranged": {
+            "episodes": 126,
+            "wins": 44
+          }
+        }
+      },
+      "checkpoints": [
+        {
+          "episode": 100,
+          "validation": {
+            "episodes": 27,
+            "wins": 17,
+            "losses": 10,
+            "truncated": 0,
+            "win_rate": 0.6296296296296297,
+            "win_rate_wilson_95": [
+              0.4422923441210239,
+              0.784674870390344
+            ],
+            "mean_return": 0.25925925925925924,
+            "steps": 130,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 58.32311851850979,
+              "median_ms": 58.00580000050104,
+              "p95_ms": 63.69233000004897,
+              "operations_per_second": 17.145859573380562
+            },
+            "step": {
+              "samples": 130,
+              "mean_ms": 13.948380769194884,
+              "median_ms": 13.708599999972648,
+              "p95_ms": 15.675724999755403,
+              "operations_per_second": 71.69290948871344
+            },
+            "features_and_inference": {
+              "samples": 130,
+              "mean_ms": 0.35422538469972026,
+              "median_ms": 0.3455000000940345,
+              "p95_ms": 0.4739500005598529,
+              "operations_per_second": 2823.061370510496
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 7
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 1
+              }
+            }
+          },
+          "model_sha256": "a7cc001634f8649949057104352ea50f8cfa2b27064fabb2e24b779cff732dfd",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.36,
+            "win_rate": 0.66
+          }
+        },
+        {
+          "episode": 200,
+          "validation": {
+            "episodes": 27,
+            "wins": 20,
+            "losses": 7,
+            "truncated": 0,
+            "win_rate": 0.7407407407407407,
+            "win_rate_wilson_95": [
+              0.5532142868544692,
+              0.8682962543809281
+            ],
+            "mean_return": 0.48148148148148145,
+            "steps": 131,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 79.68484074081061,
+              "median_ms": 79.80530000077124,
+              "p95_ms": 92.46664999991481,
+              "operations_per_second": 12.549438396352969
+            },
+            "step": {
+              "samples": 131,
+              "mean_ms": 26.39686564886778,
+              "median_ms": 26.279699999577133,
+              "p95_ms": 34.987749999800144,
+              "operations_per_second": 37.88328558784373
+            },
+            "features_and_inference": {
+              "samples": 131,
+              "mean_ms": 1.1767633588172477,
+              "median_ms": 1.1111000003438676,
+              "p95_ms": 2.011449999827164,
+              "operations_per_second": 849.7885258809292
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 2
+              }
+            }
+          },
+          "model_sha256": "eb2d074b56be942f591ba33cf34f8983d0d48182809f327b9a9d8661e8c2f1fb",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.38,
+            "win_rate": 0.68
+          }
+        },
+        {
+          "episode": 300,
+          "validation": {
+            "episodes": 27,
+            "wins": 20,
+            "losses": 4,
+            "truncated": 3,
+            "win_rate": 0.7407407407407407,
+            "win_rate_wilson_95": [
+              0.5532142868544692,
+              0.8682962543809281
+            ],
+            "mean_return": 0.5925925925925926,
+            "steps": 137,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 74.19550000001134,
+              "median_ms": 73.22849999945902,
+              "p95_ms": 85.7462300001316,
+              "operations_per_second": 13.47790634202677
+            },
+            "step": {
+              "samples": 137,
+              "mean_ms": 24.21238613136214,
+              "median_ms": 22.960000000239233,
+              "p95_ms": 34.94502000012289,
+              "operations_per_second": 41.3011751330327
+            },
+            "features_and_inference": {
+              "samples": 137,
+              "mean_ms": 1.0580233576122597,
+              "median_ms": 0.8996999995360966,
+              "p95_ms": 2.233859999432751,
+              "operations_per_second": 945.1587177213115
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 2
+              }
+            }
+          },
+          "model_sha256": "b34a50ea44241a924515efeeeaaa2acc195f5fcd88d7981a9554b713d65f85e2",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.64,
+            "win_rate": 0.82
+          }
+        },
+        {
+          "episode": 400,
+          "validation": {
+            "episodes": 27,
+            "wins": 27,
+            "losses": 0,
+            "truncated": 0,
+            "win_rate": 1.0,
+            "win_rate_wilson_95": [
+              0.8754449702581328,
+              0.9999999999999998
+            ],
+            "mean_return": 1.0,
+            "steps": 77,
+            "reset": {
+              "samples": 27,
+              "mean_ms": 72.34369259256506,
+              "median_ms": 70.94749999941996,
+              "p95_ms": 84.88623000057487,
+              "operations_per_second": 13.82290513745178
+            },
+            "step": {
+              "samples": 77,
+              "mean_ms": 23.030302597409854,
+              "median_ms": 22.63889999994717,
+              "p95_ms": 29.151099999944563,
+              "operations_per_second": 43.42105344775048
+            },
+            "features_and_inference": {
+              "samples": 77,
+              "mean_ms": 0.9010272726134809,
+              "median_ms": 0.8010000001377193,
+              "p95_ms": 1.5718999997261562,
+              "operations_per_second": 1109.8443192506736
+            },
+            "observation_bytes": 285928,
+            "by_family": {
+              "flying": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "melee": {
+                "episodes": 9,
+                "wins": 9
+              },
+              "ranged": {
+                "episodes": 9,
+                "wins": 9
+              }
+            }
+          },
+          "model_sha256": "759abc2ed7ca2f25f59f9a1a1a215aaa6d03f8f9161a83bf8615bf96d825164f",
+          "train_recent": {
+            "episodes": 50,
+            "mean_return": 0.92,
+            "win_rate": 0.96
+          }
+        }
+      ],
+      "selected_episode": 400,
+      "selected_validation": {
+        "episodes": 27,
+        "wins": 27,
+        "losses": 0,
+        "truncated": 0,
+        "win_rate": 1.0,
+        "win_rate_wilson_95": [
+          0.8754449702581328,
+          0.9999999999999998
+        ],
+        "mean_return": 1.0,
+        "steps": 77,
+        "reset": {
+          "samples": 27,
+          "mean_ms": 72.34369259256506,
+          "median_ms": 70.94749999941996,
+          "p95_ms": 84.88623000057487,
+          "operations_per_second": 13.82290513745178
+        },
+        "step": {
+          "samples": 77,
+          "mean_ms": 23.030302597409854,
+          "median_ms": 22.63889999994717,
+          "p95_ms": 29.151099999944563,
+          "operations_per_second": 43.42105344775048
+        },
+        "features_and_inference": {
+          "samples": 77,
+          "mean_ms": 0.9010272726134809,
+          "median_ms": 0.8010000001377193,
+          "p95_ms": 1.5718999997261562,
+          "operations_per_second": 1109.8443192506736
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 9,
+            "wins": 9
+          },
+          "melee": {
+            "episodes": 9,
+            "wins": 9
+          },
+          "ranged": {
+            "episodes": 9,
+            "wins": 9
+          }
+        }
+      },
+      "initial_model_sha256": "65b1b72e15f3c57b249d0c4bab3b432d82dc45a8ae13aefaff1fe715b3aca439",
+      "final_model_sha256": "759abc2ed7ca2f25f59f9a1a1a215aaa6d03f8f9161a83bf8615bf96d825164f",
+      "optimizer_seconds": 0.17728880000049685,
+      "wall_seconds_including_validation": 88.72054599999956,
+      "train_native_seeds": [
+        0,
+        11,
+        21,
+        47,
+        96,
+        124,
+        129,
+        136,
+        145,
+        149,
+        153,
+        154,
+        161,
+        182,
+        200,
+        229,
+        252,
+        278,
+        289,
+        290,
+        295,
+        301,
+        303,
+        319,
+        327,
+        333,
+        347,
+        357,
+        373,
+        378,
+        384,
+        394,
+        395,
+        404,
+        409,
+        419,
+        460,
+        464,
+        468,
+        475,
+        485,
+        498,
+        501,
+        505,
+        556,
+        567,
+        583,
+        598,
+        626,
+        645,
+        665,
+        670,
+        677,
+        688,
+        689,
+        691,
+        706,
+        750,
+        752,
+        787,
+        789,
+        805,
+        826,
+        833,
+        837,
+        851,
+        858,
+        859,
+        878,
+        884,
+        885,
+        902,
+        907,
+        909,
+        913,
+        923,
+        936,
+        937,
+        945,
+        949,
+        954,
+        978,
+        1019,
+        1021,
+        1025,
+        1027,
+        1034,
+        1056,
+        1062,
+        1068,
+        1078,
+        1089,
+        1097,
+        1100,
+        1129,
+        1133,
+        1136,
+        1137,
+        1144,
+        1181,
+        1184,
+        1187,
+        1234,
+        1239,
+        1249,
+        1257,
+        1258,
+        1266,
+        1268,
+        1272,
+        1274,
+        1278,
+        1280,
+        1311,
+        1316,
+        1319,
+        1342,
+        1345,
+        1346,
+        1355,
+        1356,
+        1360,
+        1374,
+        1386,
+        1387,
+        1391,
+        1393,
+        1395,
+        1420,
+        1449,
+        1453,
+        1457,
+        1497,
+        1504,
+        1505,
+        1520,
+        1531,
+        1556,
+        1559,
+        1583,
+        1601,
+        1612,
+        1613,
+        1615,
+        1632,
+        1646,
+        1673,
+        1686,
+        1700,
+        1703,
+        1705,
+        1707,
+        1713,
+        1722,
+        1762,
+        1787,
+        1788,
+        1796,
+        1800,
+        1808,
+        1829,
+        1830,
+        1833,
+        1836,
+        1844,
+        1850,
+        1851,
+        1860,
+        1870,
+        1878,
+        1889,
+        1907,
+        1915,
+        1917,
+        1921,
+        1938,
+        1968,
+        1986,
+        1994,
+        1999,
+        2000,
+        2040,
+        2047,
+        2065,
+        2068,
+        2074,
+        2077,
+        2078,
+        2083,
+        2090,
+        2096,
+        2097,
+        2122,
+        2131,
+        2135,
+        2144,
+        2145,
+        2154,
+        2165,
+        2176,
+        2180,
+        2221,
+        2228,
+        2261,
+        2264,
+        2285,
+        2292,
+        2293,
+        2306,
+        2307,
+        2310,
+        2312,
+        2318,
+        2322,
+        2330,
+        2342,
+        2351,
+        2371,
+        2377,
+        2391,
+        2392,
+        2394,
+        2404,
+        2408,
+        2411,
+        2422,
+        2431,
+        2435,
+        2442,
+        2447,
+        2450,
+        2482,
+        2487,
+        2498,
+        2510,
+        2517,
+        2536,
+        2546,
+        2549,
+        2568,
+        2569,
+        2572,
+        2577,
+        2582,
+        2600,
+        2602,
+        2612,
+        2647,
+        2658,
+        2659,
+        2666,
+        2673,
+        2677,
+        2697,
+        2699,
+        2702,
+        2720,
+        2750,
+        2751,
+        2754,
+        2758,
+        2760,
+        2765,
+        2770,
+        2778,
+        2791,
+        2798,
+        2818,
+        2823,
+        2829,
+        2835,
+        2851,
+        2860,
+        2895,
+        2917,
+        2919,
+        2922,
+        2950,
+        2987,
+        2991,
+        2998,
+        2999,
+        3009,
+        3010,
+        3021,
+        3025,
+        3026,
+        3053,
+        3056,
+        3065,
+        3071,
+        3082,
+        3089,
+        3096,
+        3115,
+        3124,
+        3126,
+        3133,
+        3145,
+        3154,
+        3155,
+        3192,
+        3193,
+        3202,
+        3209,
+        3220,
+        3225,
+        3239,
+        3266,
+        3341,
+        3343,
+        3355,
+        3370,
+        3374,
+        3402,
+        3411,
+        3413,
+        3425,
+        3440,
+        3454,
+        3458,
+        3460,
+        3464,
+        3476,
+        3477,
+        3483,
+        3492,
+        3493,
+        3510,
+        3516,
+        3517,
+        3537,
+        3545,
+        3558,
+        3560,
+        3572,
+        3573,
+        3575,
+        3584,
+        3594,
+        3598,
+        3609,
+        3615,
+        3634,
+        3638,
+        3693,
+        3706,
+        3719,
+        3720,
+        3739,
+        3776,
+        3780,
+        3819,
+        3824,
+        3848,
+        3876,
+        3882,
+        3893,
+        3897,
+        3900,
+        3922,
+        3936,
+        3953,
+        3962,
+        3969,
+        3987,
+        3996,
+        4002,
+        4017,
+        4019,
+        4022,
+        4027,
+        4028,
+        4034,
+        4045,
+        4054,
+        4056,
+        4064,
+        4095
+      ],
+      "test_greedy": {
+        "episodes": 90,
+        "wins": 89,
+        "losses": 0,
+        "truncated": 1,
+        "win_rate": 0.9888888888888889,
+        "win_rate_wilson_95": [
+          0.9397159168824657,
+          0.9980359158990818
+        ],
+        "mean_return": 0.9888888888888889,
+        "steps": 326,
+        "reset": {
+          "samples": 90,
+          "mean_ms": 58.35790777776614,
+          "median_ms": 57.62235000020155,
+          "p95_ms": 65.77706499979286,
+          "operations_per_second": 17.13563830643345
+        },
+        "step": {
+          "samples": 326,
+          "mean_ms": 13.665656748506002,
+          "median_ms": 13.412799999969138,
+          "p95_ms": 15.315274999693429,
+          "operations_per_second": 73.17613916428311
+        },
+        "features_and_inference": {
+          "samples": 326,
+          "mean_ms": 0.2586481594926505,
+          "median_ms": 0.24189999976442778,
+          "p95_ms": 0.335674999632829,
+          "operations_per_second": 3866.256005693382
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "melee": {
+            "episodes": 30,
+            "wins": 29
+          },
+          "ranged": {
+            "episodes": 30,
+            "wins": 30
+          }
+        }
+      },
+      "paired_improvement": {
+        "paired_episodes": 90,
+        "win_rate_delta": 0.36666666666666664,
+        "paired_bootstrap_95": [
+          0.26666666666666666,
+          0.4777777777777778
+        ],
+        "bootstrap_samples": 5000
+      },
+      "test_stochastic": {
+        "episodes": 90,
+        "wins": 88,
+        "losses": 2,
+        "truncated": 0,
+        "win_rate": 0.9777777777777777,
+        "win_rate_wilson_95": [
+          0.9225547331137463,
+          0.9938845580136748
+        ],
+        "mean_return": 0.9555555555555556,
+        "steps": 287,
+        "reset": {
+          "samples": 90,
+          "mean_ms": 58.35149222217903,
+          "median_ms": 57.31134999950882,
+          "p95_ms": 65.7685399996808,
+          "operations_per_second": 17.137522313780803
+        },
+        "step": {
+          "samples": 287,
+          "mean_ms": 13.719148083627188,
+          "median_ms": 13.52590000078635,
+          "p95_ms": 15.04036000033011,
+          "operations_per_second": 72.89082338818311
+        },
+        "features_and_inference": {
+          "samples": 287,
+          "mean_ms": 0.3295000000029183,
+          "median_ms": 0.3183999997418141,
+          "p95_ms": 0.4573400002300332,
+          "operations_per_second": 3034.901365678735
+        },
+        "observation_bytes": 285928,
+        "by_family": {
+          "flying": {
+            "episodes": 30,
+            "wins": 29
+          },
+          "melee": {
+            "episodes": 30,
+            "wins": 30
+          },
+          "ranged": {
+            "episodes": 30,
+            "wins": 29
+          }
+        }
+      }
+    }
+  ],
+  "pilot": false,
+  "validation_baselines": {
+    "uniform": {
+      "episodes": 27,
+      "wins": 15,
+      "losses": 12,
+      "truncated": 0,
+      "win_rate": 0.5555555555555556,
+      "win_rate_wilson_95": [
+        0.3731302451322448,
+        0.72414141822977
+      ],
+      "mean_return": 0.1111111111111111,
+      "steps": 122,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 66.18225185185887,
+        "median_ms": 61.69769999996788,
+        "p95_ms": 94.15942999976323,
+        "operations_per_second": 15.109791099861361
+      },
+      "step": {
+        "samples": 122,
+        "mean_ms": 15.646577868903746,
+        "median_ms": 13.870050000150513,
+        "p95_ms": 28.439379999599623,
+        "operations_per_second": 63.911738936052956
+      },
+      "features_and_inference": {
+        "samples": 122,
+        "mean_ms": 0.480297541023484,
+        "median_ms": 0.32420000025012996,
+        "p95_ms": 1.7576099993675574,
+        "operations_per_second": 2082.042722661171
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 6
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 0
+        }
+      }
+    },
+    "heuristic": {
+      "episodes": 27,
+      "wins": 27,
+      "losses": 0,
+      "truncated": 0,
+      "win_rate": 1.0,
+      "win_rate_wilson_95": [
+        0.8754449702581328,
+        0.9999999999999998
+      ],
+      "mean_return": 1.0,
+      "steps": 58,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 98.5004296294897,
+        "median_ms": 85.6524000000718,
+        "p95_ms": 160.29994999953487,
+        "operations_per_second": 10.15223998272403
+      },
+      "step": {
+        "samples": 58,
+        "mean_ms": 30.297518965590857,
+        "median_ms": 28.036149999934423,
+        "p95_ms": 53.53261999957794,
+        "operations_per_second": 33.00600293825076
+      },
+      "features_and_inference": {
+        "samples": 58,
+        "mean_ms": 1.0608362068868984,
+        "median_ms": 0.7819000002200482,
+        "p95_ms": 2.508014999466467,
+        "operations_per_second": 942.6525918968899
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 9
+        }
+      }
+    }
+  },
+  "selected_learning_seed": 7,
+  "test_baselines": {
+    "uniform": {
+      "episodes": 90,
+      "wins": 56,
+      "losses": 33,
+      "truncated": 1,
+      "win_rate": 0.6222222222222222,
+      "win_rate_wilson_95": [
+        0.5189976405818348,
+        0.715440317613552
+      ],
+      "mean_return": 0.25555555555555554,
+      "steps": 423,
+      "reset": {
+        "samples": 90,
+        "mean_ms": 70.57435111107932,
+        "median_ms": 69.36109999969631,
+        "p95_ms": 82.60367000020779,
+        "operations_per_second": 14.169453693255596
+      },
+      "step": {
+        "samples": 423,
+        "mean_ms": 22.993472103999718,
+        "median_ms": 21.105799999531882,
+        "p95_ms": 32.45258000024478,
+        "operations_per_second": 43.49060444099044
+      },
+      "features_and_inference": {
+        "samples": 423,
+        "mean_ms": 0.9610198581313008,
+        "median_ms": 0.8349999998245039,
+        "p95_ms": 1.8221200001789835,
+        "operations_per_second": 1040.5612241400463
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 30,
+          "wins": 25
+        },
+        "melee": {
+          "episodes": 30,
+          "wins": 27
+        },
+        "ranged": {
+          "episodes": 30,
+          "wins": 4
+        }
+      }
+    },
+    "heuristic": {
+      "episodes": 90,
+      "wins": 90,
+      "losses": 0,
+      "truncated": 0,
+      "win_rate": 1.0,
+      "win_rate_wilson_95": [
+        0.9590643744356734,
+        1.0000000000000002
+      ],
+      "mean_return": 1.0,
+      "steps": 197,
+      "reset": {
+        "samples": 90,
+        "mean_ms": 69.87088222215083,
+        "median_ms": 67.60040000017398,
+        "p95_ms": 84.24209499949029,
+        "operations_per_second": 14.31211354710754
+      },
+      "step": {
+        "samples": 197,
+        "mean_ms": 20.271738071074317,
+        "median_ms": 19.0374999992855,
+        "p95_ms": 32.03807999980199,
+        "operations_per_second": 49.3297612910112
+      },
+      "features_and_inference": {
+        "samples": 197,
+        "mean_ms": 0.6058639593653323,
+        "median_ms": 0.5092000001241104,
+        "p95_ms": 1.3220799995906416,
+        "operations_per_second": 1650.535544394391
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 30,
+          "wins": 30
+        },
+        "melee": {
+          "episodes": 30,
+          "wins": 30
+        },
+        "ranged": {
+          "episodes": 30,
+          "wins": 30
+        }
+      }
+    }
+  },
+  "ood": {
+    "greedy": {
+      "episodes": 27,
+      "wins": 27,
+      "losses": 0,
+      "truncated": 0,
+      "win_rate": 1.0,
+      "win_rate_wilson_95": [
+        0.8754449702581328,
+        0.9999999999999998
+      ],
+      "mean_return": 1.0,
+      "steps": 62,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 57.61959999994427,
+        "median_ms": 57.022399999368645,
+        "p95_ms": 62.71831999983987,
+        "operations_per_second": 17.355205520360556
+      },
+      "step": {
+        "samples": 62,
+        "mean_ms": 13.784482258048934,
+        "median_ms": 13.529150000067602,
+        "p95_ms": 15.224285000249438,
+        "operations_per_second": 72.54534347244616
+      },
+      "features_and_inference": {
+        "samples": 62,
+        "mean_ms": 0.2909048386989584,
+        "median_ms": 0.3074999999626016,
+        "p95_ms": 0.38562499989893684,
+        "operations_per_second": 3437.550246576839
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 9
+        }
+      }
+    },
+    "uniform": {
+      "episodes": 27,
+      "wins": 14,
+      "losses": 13,
+      "truncated": 0,
+      "win_rate": 0.5185185185185185,
+      "win_rate_wilson_95": [
+        0.3398561575495229,
+        0.6925677302378153
+      ],
+      "mean_return": 0.037037037037037035,
+      "steps": 132,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 61.31662592603485,
+        "median_ms": 59.0953000000809,
+        "p95_ms": 71.62817000007635,
+        "operations_per_second": 16.308790395712283
+      },
+      "step": {
+        "samples": 132,
+        "mean_ms": 14.597134848482904,
+        "median_ms": 14.200349999555328,
+        "p95_ms": 17.679365000003596,
+        "operations_per_second": 68.50659464202532
+      },
+      "features_and_inference": {
+        "samples": 132,
+        "mean_ms": 0.34460530308465287,
+        "median_ms": 0.31929999977364787,
+        "p95_ms": 0.5240999998932239,
+        "operations_per_second": 2901.870606890656
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 6
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 8
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 0
+        }
+      }
+    },
+    "heuristic": {
+      "episodes": 27,
+      "wins": 27,
+      "losses": 0,
+      "truncated": 0,
+      "win_rate": 1.0,
+      "win_rate_wilson_95": [
+        0.8754449702581328,
+        0.9999999999999998
+      ],
+      "mean_return": 1.0,
+      "steps": 59,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 59.70268888884473,
+        "median_ms": 58.378699999593664,
+        "p95_ms": 66.75504999993791,
+        "operations_per_second": 16.749664355349445
+      },
+      "step": {
+        "samples": 59,
+        "mean_ms": 14.958274576248048,
+        "median_ms": 14.679599999908532,
+        "p95_ms": 16.778670000257986,
+        "operations_per_second": 66.85263028851473
+      },
+      "features_and_inference": {
+        "samples": 59,
+        "mean_ms": 0.29779830511269195,
+        "median_ms": 0.29969999923196156,
+        "p95_ms": 0.4869199997301619,
+        "operations_per_second": 3357.9774727783724
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 9
+        }
+      }
+    }
+  },
+  "benchmark": {
+    "gym_default": {
+      "episodes": 27,
+      "wins": 27,
+      "losses": 0,
+      "truncated": 0,
+      "win_rate": 1.0,
+      "win_rate_wilson_95": [
+        0.8754449702581328,
+        0.9999999999999998
+      ],
+      "mean_return": 1.0,
+      "steps": 58,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 64.75665555562618,
+        "median_ms": 63.16570000035426,
+        "p95_ms": 70.38375999991331,
+        "operations_per_second": 15.442428139930678
+      },
+      "step": {
+        "samples": 58,
+        "mean_ms": 18.469534482737174,
+        "median_ms": 17.940900000212423,
+        "p95_ms": 21.18252000009306,
+        "operations_per_second": 54.14321627514029
+      },
+      "features_and_inference": {
+        "samples": 58,
+        "mean_ms": 0.3221189655552484,
+        "median_ms": 0.30454999978246633,
+        "p95_ms": 0.5450750001728011,
+        "operations_per_second": 3104.4431000089144
+      },
+      "observation_bytes": 8751734,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 9
+        }
+      },
+      "wall_seconds": 2.851972200000091,
+      "end_to_end_steps_per_second_with_resets": 20.33680412452763
+    },
+    "gym_compact": {
+      "episodes": 27,
+      "wins": 27,
+      "losses": 0,
+      "truncated": 0,
+      "win_rate": 1.0,
+      "win_rate_wilson_95": [
+        0.8754449702581328,
+        0.9999999999999998
+      ],
+      "mean_return": 1.0,
+      "steps": 58,
+      "reset": {
+        "samples": 27,
+        "mean_ms": 57.60194074058812,
+        "median_ms": 56.959099999403406,
+        "p95_ms": 61.14620999978797,
+        "operations_per_second": 17.36052617573298
+      },
+      "step": {
+        "samples": 58,
+        "mean_ms": 13.970718965459849,
+        "median_ms": 13.877599999887025,
+        "p95_ms": 15.339959999528219,
+        "operations_per_second": 71.57827757270935
+      },
+      "features_and_inference": {
+        "samples": 58,
+        "mean_ms": 0.26306379308591893,
+        "median_ms": 0.2659500005393056,
+        "p95_ms": 0.3564950000054523,
+        "operations_per_second": 3801.359313911327
+      },
+      "observation_bytes": 285928,
+      "by_family": {
+        "flying": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "melee": {
+          "episodes": 9,
+          "wins": 9
+        },
+        "ranged": {
+          "episodes": 9,
+          "wins": 9
+        }
+      },
+      "wall_seconds": 2.3852741999999125,
+      "end_to_end_steps_per_second_with_resets": 24.315862721360137
+    },
+    "raw_session": {
+      "reset": {
+        "samples": 27,
+        "mean_ms": 44.48648148142335,
+        "median_ms": 44.08179999973072,
+        "p95_ms": 47.609669999837934,
+        "operations_per_second": 22.478738859524768
+      },
+      "step": {
+        "samples": 58,
+        "mean_ms": 0.6091568965342143,
+        "median_ms": 0.6287500004873436,
+        "p95_ms": 0.7663999995656923,
+        "operations_per_second": 1641.6131963529915
+      },
+      "episodes": 27,
+      "wall_seconds": 1.4801150999992387,
+      "contract": "Native decision/action transport; no Gym observation encoding or info deepcopy"
+    },
+    "profile": [
+      {
+        "file": "gym_env.py",
+        "function": "_refresh",
+        "calls": 18,
+        "self_seconds": 0.002601,
+        "cumulative_seconds": 0.20493830000000002
+      },
+      {
+        "file": "gym_observation.py",
+        "function": "encode",
+        "calls": 36,
+        "self_seconds": 0.0261686,
+        "cumulative_seconds": 0.0443411
+      },
+      {
+        "file": "copy.py",
+        "function": "deepcopy",
+        "calls": 479620,
+        "self_seconds": 0.08197320000000001,
+        "cumulative_seconds": 0.22398020000000002
+      },
+      {
+        "file": "session.py",
+        "function": "request",
+        "calls": 55,
+        "self_seconds": 0.0010571,
+        "cumulative_seconds": 0.5069958
+      },
+      {
+        "file": "gym_env.py",
+        "function": "_info",
+        "calls": 18,
+        "self_seconds": 0.0003679,
+        "cumulative_seconds": 0.2231536
+      }
+    ],
+    "matched_native_action_traces": true
+  },
+  "wall_seconds": 377.51015950000055
+}

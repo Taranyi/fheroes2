@@ -623,3 +623,20 @@ The standard-library runner covers 996 terrain/army/siege/boundary cases, 144 ex
 100 reset/recovery cycles and concurrent sessions. Detailed local receipts and compact hashable summaries
 record real outcomes, failures, private-memory and handle samples. The regular unittest suite includes bounded regressions.
 See [coverage, reproducible commands, discovered fixes and remaining work](../docs/PYTHON_ENV_BATTLE_STRESS.md).
+
+### First actual battle RL experiment
+
+```powershell
+uv run --project python --cache-dir .tools/uv-cache --extra gym --locked python python/examples/battle_rl.py --episodes 400 --seeds 7 19 41 --output build/python-env-first-rl/final
+# Evaluate the checked-in trained model without retraining:
+uv run --project python --cache-dir .tools/uv-cache --extra gym --locked python python/examples/battle_rl.py --evaluate-only docs/python_env/rl-first-battle.windows.2026-10-31.model.json --output build/python-env-first-rl/recheck
+```
+
+The NumPy example learns a 416-parameter masked REINFORCE policy from real headless native battles,
+using terminal rewards and public numeric observations. It separates training, checkpoint validation and held-out tests.
+Three 400-episode runs reached 97.8–100% greedy test wins versus 62.2% masked random; the simple rule baseline reached 100%.
+These are deliberately winnable single-stack ranged/melee/flying tasks, without spells or siege.
+The full local CPU experiment took 377.5 seconds. Matched-workload measurements found 71.6 compact Gym steps/s
+excluding resets, or 24.3 including resets. Native action traces and saved-model reload were checked.
+No engine, package dependency or mobile build changes are needed for this example.
+See [method, measured limits, learning curve, saved weights and full remaining roadmap](../docs/PYTHON_ENV_FIRST_RL.md).

@@ -1,0 +1,4678 @@
+{
+  "schema_version": 1,
+  "dataset": "first_battle_v1",
+  "algorithm": "masked_reinforce",
+  "hidden_units": 16,
+  "parameters": 416,
+  "features": [
+    "bias",
+    "skip",
+    "move",
+    "attack",
+    "shoot",
+    "spell",
+    "retreat",
+    "surrender",
+    "log_count",
+    "log_own_hp",
+    "log_enemy_hp",
+    "hp_balance",
+    "shots",
+    "speed",
+    "wide",
+    "flying",
+    "nearest_enemy",
+    "move_approach",
+    "destination_distance",
+    "target_log_hp",
+    "target_attack",
+    "target_defense",
+    "attack",
+    "defense"
+  ],
+  "episodes_per_run": 400,
+  "learning_seeds": [
+    7,
+    19,
+    41
+  ],
+  "gamma": 1.0,
+  "learning_rate": 0.01,
+  "entropy": 0.01,
+  "batch_episodes": 8,
+  "baseline": "previous-batch EMA, state independent",
+  "training_native_seed_range": [
+    0,
+    4095
+  ],
+  "validation_cases": [
+    {
+      "id": "validation/ranged/grass/0",
+      "seed": 10000,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/grass/1",
+      "seed": 10001,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/grass/2",
+      "seed": 10002,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/snow/0",
+      "seed": 10020,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/snow/1",
+      "seed": 10021,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/snow/2",
+      "seed": 10022,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/water/0",
+      "seed": 10040,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/water/1",
+      "seed": 10041,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/ranged/water/2",
+      "seed": 10042,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/grass/0",
+      "seed": 10100,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/grass/1",
+      "seed": 10101,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/grass/2",
+      "seed": 10102,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/snow/0",
+      "seed": 10120,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/snow/1",
+      "seed": 10121,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/snow/2",
+      "seed": 10122,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/water/0",
+      "seed": 10140,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/water/1",
+      "seed": 10141,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/melee/water/2",
+      "seed": 10142,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/grass/0",
+      "seed": 10200,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/grass/1",
+      "seed": 10201,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/grass/2",
+      "seed": 10202,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/snow/0",
+      "seed": 10220,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/snow/1",
+      "seed": 10221,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/snow/2",
+      "seed": 10222,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/water/0",
+      "seed": 10240,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/water/1",
+      "seed": 10241,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "validation/flying/water/2",
+      "seed": 10242,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "test/ranged/grass/0",
+      "seed": 20000,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/1",
+      "seed": 20001,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/2",
+      "seed": 20002,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/3",
+      "seed": 20003,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/4",
+      "seed": 20004,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/5",
+      "seed": 20005,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/6",
+      "seed": 20006,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/7",
+      "seed": 20007,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/8",
+      "seed": 20008,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/grass/9",
+      "seed": 20009,
+      "family": "ranged",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/0",
+      "seed": 20020,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/1",
+      "seed": 20021,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/2",
+      "seed": 20022,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/3",
+      "seed": 20023,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/4",
+      "seed": 20024,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/5",
+      "seed": 20025,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/6",
+      "seed": 20026,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/7",
+      "seed": 20027,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/8",
+      "seed": 20028,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/snow/9",
+      "seed": 20029,
+      "family": "ranged",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/0",
+      "seed": 20040,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/1",
+      "seed": 20041,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/2",
+      "seed": 20042,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/3",
+      "seed": 20043,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/4",
+      "seed": 20044,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/5",
+      "seed": 20045,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/6",
+      "seed": 20046,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/7",
+      "seed": 20047,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/8",
+      "seed": 20048,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/ranged/water/9",
+      "seed": 20049,
+      "family": "ranged",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/0",
+      "seed": 20100,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/1",
+      "seed": 20101,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/2",
+      "seed": 20102,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/3",
+      "seed": 20103,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/4",
+      "seed": 20104,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/5",
+      "seed": 20105,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/6",
+      "seed": 20106,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/7",
+      "seed": 20107,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/8",
+      "seed": 20108,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/grass/9",
+      "seed": 20109,
+      "family": "melee",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/0",
+      "seed": 20120,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/1",
+      "seed": 20121,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/2",
+      "seed": 20122,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/3",
+      "seed": 20123,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/4",
+      "seed": 20124,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/5",
+      "seed": 20125,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/6",
+      "seed": 20126,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/7",
+      "seed": 20127,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/8",
+      "seed": 20128,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/snow/9",
+      "seed": 20129,
+      "family": "melee",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/0",
+      "seed": 20140,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/1",
+      "seed": 20141,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/2",
+      "seed": 20142,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/3",
+      "seed": 20143,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/4",
+      "seed": 20144,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/5",
+      "seed": 20145,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/6",
+      "seed": 20146,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/7",
+      "seed": 20147,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/8",
+      "seed": 20148,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/melee/water/9",
+      "seed": 20149,
+      "family": "melee",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/0",
+      "seed": 20200,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/1",
+      "seed": 20201,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/2",
+      "seed": 20202,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/3",
+      "seed": 20203,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/4",
+      "seed": 20204,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/5",
+      "seed": 20205,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/6",
+      "seed": 20206,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/7",
+      "seed": 20207,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 1,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/8",
+      "seed": 20208,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 2,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/grass/9",
+      "seed": 20209,
+      "family": "flying",
+      "terrain": "grass",
+      "variant": 0,
+      "config": {
+        "terrain": "grass",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/0",
+      "seed": 20220,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/1",
+      "seed": 20221,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/2",
+      "seed": 20222,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/3",
+      "seed": 20223,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/4",
+      "seed": 20224,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/5",
+      "seed": 20225,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/6",
+      "seed": 20226,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/7",
+      "seed": 20227,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 1,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/8",
+      "seed": 20228,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 2,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/snow/9",
+      "seed": 20229,
+      "family": "flying",
+      "terrain": "snow",
+      "variant": 0,
+      "config": {
+        "terrain": "snow",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/0",
+      "seed": 20240,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/1",
+      "seed": 20241,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/2",
+      "seed": 20242,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/3",
+      "seed": 20243,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/4",
+      "seed": 20244,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/5",
+      "seed": 20245,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/6",
+      "seed": 20246,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/7",
+      "seed": 20247,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 1,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/8",
+      "seed": 20248,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 2,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "test/flying/water/9",
+      "seed": 20249,
+      "family": "flying",
+      "terrain": "water",
+      "variant": 0,
+      "config": {
+        "terrain": "water",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    }
+  ],
+  "ood_cases": [
+    {
+      "id": "ood/ranged/desert/0",
+      "seed": 30000,
+      "family": "ranged",
+      "terrain": "desert",
+      "variant": 0,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/desert/1",
+      "seed": 30001,
+      "family": "ranged",
+      "terrain": "desert",
+      "variant": 1,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/desert/2",
+      "seed": 30002,
+      "family": "ranged",
+      "terrain": "desert",
+      "variant": 2,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/swamp/0",
+      "seed": 30020,
+      "family": "ranged",
+      "terrain": "swamp",
+      "variant": 0,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/swamp/1",
+      "seed": 30021,
+      "family": "ranged",
+      "terrain": "swamp",
+      "variant": 1,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/swamp/2",
+      "seed": 30022,
+      "family": "ranged",
+      "terrain": "swamp",
+      "variant": 2,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/lava/0",
+      "seed": 30040,
+      "family": "ranged",
+      "terrain": "lava",
+      "variant": 0,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 10
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 45
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/lava/1",
+      "seed": 30041,
+      "family": "ranged",
+      "terrain": "lava",
+      "variant": 1,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 12
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 60
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/ranged/lava/2",
+      "seed": 30042,
+      "family": "ranged",
+      "terrain": "lava",
+      "variant": 2,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 3,
+              "count": 14
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 1,
+              "count": 75
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/desert/0",
+      "seed": 30100,
+      "family": "melee",
+      "terrain": "desert",
+      "variant": 0,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/desert/1",
+      "seed": 30101,
+      "family": "melee",
+      "terrain": "desert",
+      "variant": 1,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/desert/2",
+      "seed": 30102,
+      "family": "melee",
+      "terrain": "desert",
+      "variant": 2,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/swamp/0",
+      "seed": 30120,
+      "family": "melee",
+      "terrain": "swamp",
+      "variant": 0,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/swamp/1",
+      "seed": 30121,
+      "family": "melee",
+      "terrain": "swamp",
+      "variant": 1,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/swamp/2",
+      "seed": 30122,
+      "family": "melee",
+      "terrain": "swamp",
+      "variant": 2,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/lava/0",
+      "seed": 30140,
+      "family": "melee",
+      "terrain": "lava",
+      "variant": 0,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 6
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/lava/1",
+      "seed": 30141,
+      "family": "melee",
+      "terrain": "lava",
+      "variant": 1,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 30
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/melee/lava/2",
+      "seed": 30142,
+      "family": "melee",
+      "terrain": "lava",
+      "variant": 2,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 6,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 12,
+              "count": 36
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/desert/0",
+      "seed": 30200,
+      "family": "flying",
+      "terrain": "desert",
+      "variant": 0,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/desert/1",
+      "seed": 30201,
+      "family": "flying",
+      "terrain": "desert",
+      "variant": 1,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/desert/2",
+      "seed": 30202,
+      "family": "flying",
+      "terrain": "desert",
+      "variant": 2,
+      "config": {
+        "terrain": "desert",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/swamp/0",
+      "seed": 30220,
+      "family": "flying",
+      "terrain": "swamp",
+      "variant": 0,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/swamp/1",
+      "seed": 30221,
+      "family": "flying",
+      "terrain": "swamp",
+      "variant": 1,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/swamp/2",
+      "seed": 30222,
+      "family": "flying",
+      "terrain": "swamp",
+      "variant": 2,
+      "config": {
+        "terrain": "swamp",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/lava/0",
+      "seed": 30240,
+      "family": "flying",
+      "terrain": "lava",
+      "variant": 0,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 7
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 20
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/lava/1",
+      "seed": 30241,
+      "family": "flying",
+      "terrain": "lava",
+      "variant": 1,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 8
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 24
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    },
+    {
+      "id": "ood/flying/lava/2",
+      "seed": 30242,
+      "family": "flying",
+      "terrain": "lava",
+      "variant": 2,
+      "config": {
+        "terrain": "lava",
+        "max_rounds": 10,
+        "attacker": {
+          "army": [
+            {
+              "monster_id": 33,
+              "count": 9
+            }
+          ],
+          "controller": "python",
+          "hero": {
+            "id": 1
+          }
+        },
+        "defender": {
+          "army": [
+            {
+              "monster_id": 48,
+              "count": 28
+            }
+          ],
+          "controller": "builtin_ai"
+        }
+      }
+    }
+  ],
+  "checkpoint_selection": "highest stochastic validation win rate, then mean return, then earliest checkpoint",
+  "learning_criterion": {
+    "minimum_win_rate_gain": 0.15,
+    "paired_bootstrap_lower_bound_above_zero": true,
+    "at_least_two_learning_seeds_improve": true
+  },
+  "reward": "Unchanged native Gym terminal +1/-1; draw/truncation 0; no dense reward shaping",
+  "compact_profile": {
+    "max_map_size": 2,
+    "max_castles": 1,
+    "max_battle_units": 8,
+    "max_actions": 256,
+    "max_text_bytes": 1,
+    "max_answer_bytes": 1
+  },
+  "render_during_training": false
+}

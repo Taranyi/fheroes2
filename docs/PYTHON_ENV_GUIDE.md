@@ -5,6 +5,11 @@ A session több Python-agentet, vegyes és beépített AI–AI játékot is tám
 A Gym-adapter továbbra is egy külső oldalt vezérel. A 14. lépés rögzített mérései az akkori build történeti eredményei.
 Ez az útmutató a jelenleg ellenőrzött képességeket írja le, nem minden eredeti pálya/kampány teljes támogatását.
 
+Az [első valódi csata-RL tanítás és kiértékelés](PYTHON_ENV_FIRST_RL.md) is elkészült: 3 × 400 epizód,
+külön teszten 97,8–100% greedy győzelem, maszkos random 62,2%, szabályalapú referencia 100%.
+Mentett modell, tanulási görbe, reprodukálható futtató és teljes lépés/reset benchmark is elérhető.
+Ez egyszerű egycsapatos taktikai curriculum; a nagyobb RL-optimalizálás és nehezebb tanítás továbbra is nyitott.
+
 ## 1. Fordítás és telepítés
 
 A C++ játékhoz továbbra sem kell Python. A desktop adapter explicit `ENABLE_PYTHON_ENV=ON` opcióval épül;

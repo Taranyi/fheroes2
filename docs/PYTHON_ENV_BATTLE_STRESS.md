@@ -152,8 +152,11 @@ A normál `ENABLE_PYTHON_ENV=OFF` Windows build lefordult, a gyökérben az opci
 
 ## Ami továbbra is hátravan
 
+Az első tényleges csata-RL tanítás, külön teszt, modellmentés/visszatöltés és Gym/raw sebességösszehasonlítás
+azóta elkészült: [eredmények és futtatható példa](PYTHON_ENV_FIRST_RL.md).
+
 1. Linux/macOS és mobil SDK-buildek, illetve ottani tényleges futásellenőrzés.
-2. Nagyobb léptékű RL-profilozás és az eredmény alapján teljesítményjavítás.
+2. Nehezebb többcsapatos/varázslatos/ostromos RL-feladatok; nagyobb léptékű profilozás és teljesítményjavítás.
 3. Igény szerint láthatóságra szűrt observation és több agentes Gym-wrapper.
 
 A kombinációs/stressztesztelés reprodukálható kerete és a fenti Windows mátrix elkészült.

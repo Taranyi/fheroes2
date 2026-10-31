@@ -307,3 +307,18 @@ Kész a reprodukálható csatateszt-futtató: 996 terep/sereg/ostrom/szélsőér
 100 reset/helyreállítási ciklus és párhuzamos sessionök.
 Külön regresszió védi a Hypnotize öncélzását és a hős nélküli ostrom AI-elemzését.
 [Leírás, jelentések, futtatás és teljes fennmaradó lista](PYTHON_ENV_BATTLE_STRESS.md).
+
+### Első tényleges csata-RL tanítás és kiértékelés
+
+Kész: 416 paraméteres NumPy policy, valódi natív csatákból, módosítatlan terminális jutalommal.
+3 × 400 tanítóepizód, elkülönített validáció és 90 teszteset; a greedy győzelmi arány 97,8–100%,
+a maszkos randomé 62,2%, a szabályalapú referenciáé 100%. Mentett modell visszatöltése és akciósorai ellenőrizve.
+Csatához méretezett Gym: 71,6 lépés/s reset nélkül, 24,3 resetekkel ezen a rövid feladaton.
+[Terv, eredményfájlok, tanulási görbe és korlátok](PYTHON_ENV_FIRST_RL.md).
+
+Teljes fennmaradó lista:
+
+1. Nehezebb, többcsapatos/varázslatos/ostromos tanítás és erősebb általánosítási mérés.
+2. Nagy léptékű RL-profilozás; a most kimért állapotfeldolgozás/másolás/reset költségének csökkentése, párhuzamos adatgyűjtés.
+3. Linux/macOS és mobil SDK-buildek, illetve tényleges platformellenőrzés.
+4. Igény szerint láthatóságra szűrt observation és több agentes Gym/self-play wrapper.

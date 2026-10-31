@@ -201,6 +201,9 @@ Az önálló csataindítás elkészült. Fennmaradó feladatok:
 
 A [nagyobb kombinációs és stresszteszt-készlet](PYTHON_ENV_BATTLE_STRESS.md) is elkészült, reprodukálható futtatóval és Windows jelentésekkel.
 
+Az [első tényleges csata-RL tanítás és kiértékelés](PYTHON_ENV_FIRST_RL.md) is elkészült:
+mentett neurális modellekkel, külön tesztkészlettel és Gym/raw sebességméréssel. A nehezebb tanítás és nagy léptékű optimalizálás még nyitott.
+
 1. Linux/macOS és mobil SDK-build ellenőrzése.
 2. Nagyobb léptékű RL-profilozás és teljesítményjavítás.
 3. Igény szerint láthatóságra szűrt observation és több agentes Gym-wrapper.
