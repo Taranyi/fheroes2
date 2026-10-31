@@ -4,6 +4,9 @@ A [battle_rl.py](../python/examples/battle_rl.py) valódi, natív csatákból ta
 A meglévő `HeroesEnv.reset/step` API-t használja; a C++ motorhoz és a játékszabályokhoz ez a kísérlet nem nyúl.
 A cél az első tanulási jel, a modell mentés/visszatöltés és a teljes Python–motor lépésköltség ellenőrzése.
 
+Következő kísérlet: [Stable-Baselines3 PPO, saját HP-alapú jutalom, két-két csapat és helyi MP4-ek](PYTHON_ENV_PPO.md).
+Az új kísérlet modelljei és média-/eredménykimenetei a felhasználó kérésére nem kerülnek Gitbe.
+
 ## Tényleges Windows-eredmény, 2026-10-31
 
 **A tanulás kimutatható volt mindhárom futásban.** 3 × 400 tanítóepizód, összesen 5024 tanítási Gym-lépés;

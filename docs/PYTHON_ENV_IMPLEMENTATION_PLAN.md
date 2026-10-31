@@ -322,3 +322,11 @@ Teljes fennmaradó lista:
 2. Nagy léptékű RL-profilozás; a most kimért állapotfeldolgozás/másolás/reset költségének csökkentése, párhuzamos adatgyűjtés.
 3. Linux/macOS és mobil SDK-buildek, illetve tényleges platformellenőrzés.
 4. Igény szerint láthatóságra szűrt observation és több agentes Gym/self-play wrapper.
+
+### Opcionális kész RL-könyvtár és saját jutalom
+
+Stable-Baselines3/sb3-contrib MaskablePPO tanítási példa, közös akciójelölt-pontozó policy-val.
+Külön task-wrapperben natív HP-változásból számolt jutalom, az eredeti motor és Gym-jutalom átírása nélkül.
+Egyenlő költségkeretű sparse/dense összehasonlítás és natív döntési pillanatképekből rögzített helyi videók.
+A modellek, videók, képek és futási jelentések kizárólag az ignorált `build/` fában maradnak.
+[Saját jutalom, PPO-szerződés, futtatás és teljes fennmaradó lista](PYTHON_ENV_PPO.md).

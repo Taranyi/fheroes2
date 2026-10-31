@@ -640,3 +640,16 @@ The full local CPU experiment took 377.5 seconds. Matched-workload measurements 
 excluding resets, or 24.3 including resets. Native action traces and saved-model reload were checked.
 No engine, package dependency or mobile build changes are needed for this example.
 See [method, measured limits, learning curve, saved weights and full remaining roadmap](../docs/PYTHON_ENV_FIRST_RL.md).
+
+### Optional Stable-Baselines3 PPO, custom rewards and local videos
+
+```powershell
+uv run --project python --cache-dir .tools/uv-cache --extra battle-rl --locked python python/examples/battle_ppo.py --steps 4096 --seeds 7 19 --output build/python-env-battle-ppo/final
+```
+
+Uses sb3-contrib MaskablePPO with a shared candidate-scoring actor and pooled critic, without changing native rules
+or the default Gym reward. A separate battle task wrapper computes signed enemy/own HP deltas plus native terminal reward
+and a small decision cost. Equal-budget sparse/dense runs are selected on validation before held-out evaluation.
+The two-stack task records native decision-snapshot MP4s for random, non-retreating random and trained policies on the same predeclared test cases.
+All models, videos, screenshots and result files stay in ignored `build/`, never in Git.
+See [reward formula, limitations, installation, trusted-model reload and remaining roadmap](../docs/PYTHON_ENV_PPO.md).
