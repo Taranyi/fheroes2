@@ -316,9 +316,9 @@ a maszkos randomé 62,2%, a szabályalapú referenciáé 100%. Mentett modell vi
 Csatához méretezett Gym: 71,6 lépés/s reset nélkül, 24,3 resetekkel ezen a rövid feladaton.
 [Terv, eredményfájlok, tanulási görbe és korlátok](PYTHON_ENV_FIRST_RL.md).
 
-Teljes fennmaradó lista:
+Az első csata-RL kísérlet utáni feladatlista (történeti; az aktuális sorrend a dokumentum végén):
 
-1. Nehezebb, többcsapatos/varázslatos/ostromos tanítás és erősebb általánosítási mérés.
+1. Nehezebb, többcsapatos/varázslatos/ostromos tanítás és erősebb általánosítási mérés — az első ilyen kísérlet azóta elkészült, lásd lent.
 2. Nagy léptékű RL-profilozás; a most kimért állapotfeldolgozás/másolás/reset költségének csökkentése, párhuzamos adatgyűjtés.
 3. Linux/macOS és mobil SDK-buildek, illetve tényleges platformellenőrzés.
 4. Igény szerint láthatóságra szűrt observation és több agentes Gym/self-play wrapper.
@@ -330,3 +330,15 @@ Külön task-wrapperben natív HP-változásból számolt jutalom, az eredeti mo
 Egyenlő költségkeretű sparse/dense összehasonlítás és natív döntési pillanatképekből rögzített helyi videók.
 A modellek, videók, képek és futási jelentések kizárólag az ignorált `build/` fában maradnak.
 [Saját jutalom, PPO-szerződés, futtatás és teljes fennmaradó lista](PYTHON_ENV_PPO.md).
+
+### Nehezebb csata-RL, varázslás és ostrom
+
+Új, külön tanítási példa: háromcsapatos vegyes seregek, hét választható varázslat, nyílt/vízi csata és támadó/védő ostrom.
+Fokozatos bevezetés után mind a négy kontextuson tanít; warmup-only modell nem adható ki.
+Külön seedes teszt és teljesen új lénytípusos/ostromfajos általánosítás, varázslatletiltási abláció,
+ellenőrzött natív videó-replay és helyi galéria. A közös motorhoz vagy Gym-adapterhez nem nyúl.
+[Feladat, mérési módszer, videók és teljes fennmaradó sorrend](PYTHON_ENV_ADVANCED_RL.md).
+
+A következő munkaszakasz a korábban rögzített sorrendben a **Gym/reset gyorsítás és párhuzamos tanítás**.
+Utána Linux/macOS és mobil ellenőrzés; adventure végigjátszás; adventure RL; kampánykezelés;
+igény szerint láthatósági korlátozás, több agentes Gym és self-play.

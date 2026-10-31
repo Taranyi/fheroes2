@@ -10,6 +10,9 @@ külön teszten 97,8–100% greedy győzelem, maszkos random 62,2%, szabályalap
 Mentett modell, tanulási görbe, reprodukálható futtató és teljes lépés/reset benchmark is elérhető.
 Ez egyszerű egycsapatos taktikai curriculum; a nagyobb RL-optimalizálás és nehezebb tanítás továbbra is nyitott.
 
+Azóta külön [összetett csata-RL kísérlet](PYTHON_ENV_ADVANCED_RL.md) is készült háromcsapatos seregekkel,
+hét választható varázslattal, támadó/védő ostrommal és új lénytípusos kiértékeléssel. A kimeneti modellek és videók helyben maradnak.
+
 ## 1. Fordítás és telepítés
 
 A C++ játékhoz továbbra sem kell Python. A desktop adapter explicit `ENABLE_PYTHON_ENV=ON` opcióval épül;

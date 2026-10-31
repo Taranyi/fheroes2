@@ -653,3 +653,18 @@ and a small decision cost. Equal-budget sparse/dense runs are selected on valida
 The two-stack task records native decision-snapshot MP4s for random, non-retreating random and trained policies on the same predeclared test cases.
 All models, videos, screenshots and result files stay in ignored `build/`, never in Git.
 See [reward formula, limitations, installation, trusted-model reload and remaining roadmap](../docs/PYTHON_ENV_PPO.md).
+
+### Advanced battle RL: mixed armies, spells and both siege sides
+
+```powershell
+uv run --project python --cache-dir .tools/uv-cache --extra battle-rl --locked python python/examples/battle_advanced.py --steps 8192 --seeds 7 19 --output build/python-env-advanced/new-run
+uv run --project python --cache-dir .tools/uv-cache --extra battle-rl --locked --with matplotlib python python/examples/battle_advanced_media.py --run build/python-env-advanced/new-run --plot --unseen-videos
+```
+
+The task uses mixed three-stack armies, seven selectable spells, native naval battles and attacking/defending sieges.
+After a direct-damage warmup, the same masked candidate policy trains on all four contexts. Only post-warmup checkpoints
+can be selected. Separate tests cover new native seeds and entirely unseen creature types / siege races.
+Evaluation compares random and rule controls, sampled/greedy PPO and the same frozen model with spells disabled.
+Native video replay is verified against non-rendered traces; a local gallery includes fixed unseen-army examples.
+All models, videos, images and result files remain in ignored `build/`. No engine changes or new package dependencies.
+See [the full task, reward, split definitions, reproducible commands and remaining roadmap](../docs/PYTHON_ENV_ADVANCED_RL.md).

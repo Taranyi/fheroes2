@@ -9,6 +9,8 @@ A C++ játékszabály, a base Python-csomag és az eredeti Gym-jutalom változat
 A `battle-rl` extra csak az ezt kifejezetten kérő Python-környezetet bővíti; a normál és mobil játékhoz nem kell.
 A korábbi [NumPy-kísérlet](PYTHON_ENV_FIRST_RL.md) külön, egyszerűbb, egycsapatos referencia marad.
 
+Következő, nehezebb kísérlet: [háromcsapatos seregek, hét varázslat, támadó/védő ostrom és új seregeken tesztelés](PYTHON_ENV_ADVANCED_RL.md).
+
 ## Tényleges Windows-eredmény, 2026-10-31
 
 Négy futás készült: két seed × két jutalmazás, egyenként 4096 tanítási döntéssel,
