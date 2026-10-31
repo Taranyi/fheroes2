@@ -1,0 +1,128 @@
+name: Python env platform compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/python-env-bootstrap]
+    paths:
+      - '.github/workflows/python-env-platforms.yml'
+      - 'CMakeLists.txt'
+      - 'src/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'script/**'
+      - 'python/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-env-platforms-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: ${{ matrix.os }} Python=${{ matrix.python_env }} bundle=${{ matrix.bundle }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, python_env: 'OFF', bundle: 'OFF'}
+          - {os: ubuntu-24.04, python_env: 'ON', bundle: 'OFF'}
+          - {os: macos-15, python_env: 'OFF', bundle: 'OFF'}
+          - {os: macos-15, python_env: 'ON', bundle: 'OFF'}
+          - {os: macos-15, python_env: 'OFF', bundle: 'ON'}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-mixer-dev libsdl2-image-dev ninja-build gettext
+      - name: macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install sdl2 sdl2_mixer sdl2_image ninja gettext dylibbundler
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 'ON'
+      - name: Configure and build existing desktop targets
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            export PATH="$(brew --prefix gettext)/bin:$PATH"
+          fi
+          cmake -S . -B build/platform -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DENABLE_IMAGE=ON -DENABLE_TOOLS=ON \
+            -DENABLE_PYTHON_ENV=${{ matrix.python_env }} -DMACOS_APP_BUNDLE=${{ matrix.bundle }}
+          cmake --build build/platform --parallel 3
+          python script/python/check_build_profile.py build/platform/compile_commands.json --enabled ${{ matrix.python_env }}
+      - name: Native headless policy and Python transport
+        if: matrix.python_env == 'ON'
+        run: |
+          cmake --build build/platform --target fheroes2_headless_checks --parallel 3
+          build/platform/fheroes2_headless_checks
+          python -m pip install './python[gym]'
+          FHEROES2_TEST_EXE="$PWD/build/platform/fheroes2" python -m unittest discover -s python/tests -p test_transport.py -v
+      - name: Real headless Gym battle and RGB rendering with verified demo assets
+        if: matrix.python_env == 'ON'
+        timeout-minutes: 7
+        run: |
+          mkdir -p "$RUNNER_TEMP/fheroes2-demo"
+          python -c 'import os, subprocess; subprocess.run(["bash", "script/demo/download_demo_version.sh", os.environ["RUNNER_TEMP"] + "/fheroes2-demo"], check=True, timeout=300)'
+          python python/examples/platform_smoke.py --executable build/platform/fheroes2 \
+            --data "$RUNNER_TEMP/fheroes2-demo" --output build/platform/smoke.json
+      - name: Install existing desktop target
+        if: matrix.bundle == 'OFF'
+        run: cmake --install build/platform --prefix "$RUNNER_TEMP/fheroes2-install"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: profile-${{ matrix.os }}-${{ matrix.python_env }}-${{ matrix.bundle }}
+          path: |
+            build/platform/smoke.json
+            build/platform/CMakeCache.txt
+            build/platform/compile_commands.json
+          if-no-files-found: warn
+
+  android:
+    name: Android SDK / four ABIs / Python disabled
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Existing Android dependencies and translations
+        run: |
+          bash script/android/install_packages.sh
+          sudo apt-get update
+          sudo apt-get install -y gettext
+          make -C files/lang -j2
+      - name: Build unsigned debug APK and AAB with existing Gradle configuration
+        working-directory: android
+        run: ./gradlew assembleDebug bundleDebug
+
+  ios:
+    name: iOS SDK / simulator / Python disabled
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Existing iOS dependencies
+        run: bash script/ios/install_packages.sh
+      - name: Build existing Xcode project without signing or original assets
+        run: |
+          mkdir -p anim data music
+          xcodebuild -version
+          xcodebuild -project ios/fheroes2.xcodeproj -scheme fheroes2 \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/fheroes2-ios" CODE_SIGNING_ALLOWED=NO build
