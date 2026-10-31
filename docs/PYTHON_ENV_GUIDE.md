@@ -224,6 +224,12 @@ A 14. lépés jelentése az akkori egykülsőoldalas profilt rögzíti; az ezt k
 
 ## 7. Újrafuttatás és hibakeresés
 
+Aktuális teljesítménybővítés: [Gyorsított Gym, opcionális csata-reset és párhuzamos PPO](PYTHON_ENV_PERFORMANCE.md).
+A teljes `HeroesEnv` adatprofilja megmaradt; a külön `BattleEnv` kisebb csatamegfigyelést ad,
+teljes világállapottal külön `world_snapshot()` kérésre. A folyamat újrafelhasználása csak önálló csatára,
+explicit `reuse_process=True` kapcsolóval engedélyezett. A leírás tartalmazza a bemért 1/2/4-env tanításokat
+és a teljes fennmaradó feladatlistát; következő a Linux/macOS és mobil SDK ellenőrzése.
+
 Az alábbi script helyi profilokat és JSON-jelentést ír a figyelmen kívül hagyott `build/python-env-acceptance` mappába:
 
 ```powershell

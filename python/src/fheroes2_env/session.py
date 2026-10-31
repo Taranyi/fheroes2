@@ -280,7 +280,7 @@ class HeroesSession:
         return self.request("configure_battle", {"config": deepcopy(dict(config)), "seed": seed})
 
     def reset(self, *, save=None, map_path=None, battle_config=None, seed: int | None = None, player_id: int | None = None, difficulty: int | None = None,
-              controllers=None, rule_profiles=None) -> dict[str, Any]:
+              controllers=None, rule_profiles=None, reuse_process: bool = False) -> dict[str, Any]:
         """Restart the engine, initialize an episode and return its decision and effective seed.
 
         Specify exactly one source on first use; subsequent calls reuse that source
@@ -291,7 +291,13 @@ class HeroesSession:
         reset reuses those assignments; save rule flags are never rewritten.
         battle_config instead starts a standalone native battle; its sides contain
         their own controllers/rule profiles, and no adventure session is started.
+        reuse_process=True explicitly keeps a healthy standalone-battle process:
+        a live arena is stopped/unwound, its tiny world is rebuilt and RNG reseeded.
+        Closed/dead sessions still launch a new process. Tokens from old episodes
+        remain invalid; same-process resets report stale_decision, not wrong_session.
         """
+        if type(reuse_process) is not bool:
+            raise TypeError("reuse_process must be a boolean")
         if sum(value is not None for value in (save, map_path, battle_config)) > 1:
             raise ValueError("Specify exactly one save, map_path or battle_config")
         if battle_config is not None and not isinstance(battle_config, Mapping):
@@ -324,6 +330,8 @@ class HeroesSession:
                 path = deepcopy(dict(battle_config)) if kind == "battle" else str(Path(save if save is not None else map_path).resolve())
             if difficulty is None:
                 difficulty = 1
+            if reuse_process and kind != "battle":
+                raise ValueError("Process reuse is supported only for standalone battles")
             if kind == "save" and rule_profiles is not None:
                 raise ValueError("Saved rule profiles are preserved; rule_profiles is only for new maps")
             if kind == "battle":
@@ -333,9 +341,21 @@ class HeroesSession:
                 if player_id is not None:
                     path["perspective_player_id"] = player_id
             effective_seed = secrets.randbits(32) if seed is None else seed
-            self._dispose()
             try:
-                self._launch()
+                reusable = (reuse_process and not self._closed and self._process.poll() is None
+                            and (self._reset_source is None or self._reset_source[0] == "battle"))
+                if reusable:
+                    try:
+                        current = self.get_decision()
+                    except EngineError as error:
+                        if error.code != "no_active_session":
+                            raise
+                    else:
+                        # Unwind a live arena before replacing its world; also detach terminal sessions.
+                        self.step("session.stop", token=current["token"])
+                else:
+                    self._dispose()
+                    self._launch()
                 if kind == "battle":
                     loaded = self.configure_battle(path, seed=effective_seed)
                     decision = self.step("battle.start", token=loaded["decision"]["token"])["decision"]

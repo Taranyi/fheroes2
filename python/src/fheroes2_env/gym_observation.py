@@ -73,6 +73,17 @@ def fill_army(out, army):
             out[i] = (troop["monster_id"], troop["count"])
 
 
+def check_limits(space, state, decision):
+    """Cheap entity bounds before potentially expensive adventure candidate enumeration."""
+    m = state["map"]
+    size = int(np.sqrt(space["tiles"].shape[0]))
+    require(m["width"] <= size and m["height"] <= size and len(m["tiles"]) <= size * size, "Map dimensions exceed max_map_size")
+    require(len(state["heroes"]) <= space["heroes"].shape[0], "Hero count exceeds max_heroes")
+    require(len(state["castles"]) <= space["castles"].shape[0], "Castle count exceeds max_castles")
+    if decision["battle"] is not None:
+        require(len(decision["battle"]["units"]) <= space["battle_units"].shape[0], "Battle unit limit exceeded")
+
+
 def encode(space, state, decision, commands, step, max_steps):
     out = {key: np.zeros(value.shape, dtype=value.dtype) for key, value in space.spaces.items()}
     phase = PHASES.index(decision["phase"])

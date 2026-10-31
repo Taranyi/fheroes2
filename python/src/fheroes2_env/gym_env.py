@@ -30,9 +30,19 @@ import numpy as np
 
 from .session import HeroesSession
 from .gym_candidates import candidates, ProfileLimitError
-from .gym_observation import encode, observation_space
+from .gym_observation import check_limits, encode, observation_space
 
 ENV_ID = "Fheroes2-v0"
+
+
+def _json_copy(value):
+    """Copy the owned JSON tree without deepcopy's generic object/memo dispatch."""
+    if type(value) is dict:
+        return {key: _json_copy(item) for key, item in value.items()}
+    if type(value) is list:
+        return [_json_copy(item) for item in value]
+    # Native JSON and internally constructed commands contain only immutable scalars here.
+    return value
 
 
 class HeroesEnv(gym.Env):
@@ -61,9 +71,13 @@ class HeroesEnv(gym.Env):
     def __init__(self, *, executable, save=None, map_path=None, battle_config=None, player_id=None, difficulty=1, timeout=60,
                  max_steps=1000, max_map_size=144, max_heroes=128, max_castles=128, max_battle_units=32,
                  max_actions=8192, render_mode=None, render_view="auto", width=640, height=480,
-                 hero_id=None, castle_id=None, cwd=None, env=None, sphinx_answers=(), max_text_bytes=4096, max_answer_bytes=256):
+                 hero_id=None, castle_id=None, cwd=None, env=None, sphinx_answers=(), max_text_bytes=4096, max_answer_bytes=256,
+                 reuse_process=False):
         if sum(value is not None for value in (save, map_path, battle_config)) != 1:
             raise ValueError("Specify exactly one save, map_path or battle_config")
+        if type(reuse_process) is not bool or (reuse_process and battle_config is None):
+            raise ValueError("reuse_process is a boolean option for standalone battles only")
+        self.reuse_process = reuse_process
         if render_mode not in (None, "rgb_array") or render_view not in ("auto", "adventure", "battle", "hero", "castle", "world", "oracle"):
             raise ValueError("Unsupported render_mode or render_view")
         for key, value, upper in (("max_steps", max_steps, 1000000000), ("max_map_size", max_map_size, 144),
@@ -128,7 +142,7 @@ class HeroesEnv(gym.Env):
         try:
             if self._session is None:
                 self._session = HeroesSession(self.executable, **self._process_options)
-            episode = self._session.reset(**setup, seed=seed)
+            episode = self._session.reset(**setup, seed=seed, reuse_process=self.reuse_process)
             self._episode_seed, self._decision = episode["seed"], episode["decision"]
             self._steps = 0
             self._refresh()
@@ -142,11 +156,14 @@ class HeroesEnv(gym.Env):
     def _refresh(self):
         self._state = self._session.get_state(include_serialized=False)
         # Check entity/map limits before any potentially expensive candidate enumeration.
-        encode(self.observation_space, self._state, self._decision, [], self._steps, self.max_steps)
+        check_limits(self.observation_space, self._state, self._decision)
         self._commands = candidates(self._session, self._state, self._decision, self.max_actions, text_answers=self._sphinx_answers)
         if self._decision["phase"] != "terminal" and not self._commands:
             raise ProfileLimitError("A live decision has no supported legal commands")
-        self._observation = encode(self.observation_space, self._state, self._decision, self._commands, self._steps, self.max_steps)
+        self._observation = self._encode_current()
+
+    def _encode_current(self):
+        return encode(self.observation_space, self._state, self._decision, self._commands, self._steps, self.max_steps)
 
     def step(self, action):
         if self._needs_reset:
@@ -158,7 +175,7 @@ class HeroesEnv(gym.Env):
             # Gym permits unmasked action_space.sample(). Padding is an explicit rejected
             # attempt, never silently translated into a native gameplay command.
             self._steps += 1
-            self._observation = encode(self.observation_space, self._state, self._decision, self._commands, self._steps, self.max_steps)
+            self._observation = self._encode_current()
             truncated = self._steps >= self.max_steps
             self._needs_reset = truncated
             info = self._info([])
@@ -194,7 +211,7 @@ class HeroesEnv(gym.Env):
         return {key: value.copy() for key, value in self._observation.items()}
 
     def _info(self, events):
-        return {"state": deepcopy(self._state), "actions": deepcopy(self._commands), "events": deepcopy(events),
+        return {"state": _json_copy(self._state), "actions": _json_copy(self._commands), "events": _json_copy(events),
                 "phase": self._decision["phase"], "player_id": self._decision["player_id"],
                 "seed": self._episode_seed, "episode_step": self._steps, "action_accepted": True, "rejection": None}
 

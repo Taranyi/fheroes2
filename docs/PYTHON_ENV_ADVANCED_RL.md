@@ -207,7 +207,7 @@ A ZIP cloudpickle-t tartalmazhat, ezért csak saját/megbízható modell tölthe
 
 ## Teljes fennmaradó munkasorrend
 
-2. Gym/reset gyorsítás, párhuzamos adatgyűjtés és tanítás, hosszabb RL-terhelés.
+2. **Kész:** [Gym/reset gyorsítás és párhuzamos tanítás](PYTHON_ENV_PERFORMANCE.md), bemért 1/2/4-env futásokkal.
 3. Linux/macOS tényleges futás és mobil SDK-buildellenőrzés.
 4. Kiválasztott normál adventure-pályák végigjátszásának ellenőrzése és az elakadások javítása.
 5. Adventure RL: feladathoz illő megfigyelés, jutalom, tanítás, teszt és helyi videók.

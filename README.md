@@ -19,6 +19,11 @@ You can find a complete list of all of our changes and enhancements in [**this p
 
 ## Download and Install
 
+This fork also provides an optional desktop Python/Gym interface. See the
+[Python environment guide](docs/PYTHON_ENV_GUIDE.md) and the
+[measured Gym/reset optimizations and parallel PPO examples](docs/PYTHON_ENV_PERFORMANCE.md).
+Python dependencies are optional; the native engine and mobile build configuration are unchanged by these optimizations.
+
 Please follow the [**installation guide**](docs/INSTALL.md) to download and install fheroes2.
 
 [![Github Downloads](https://img.shields.io/github/downloads/ihhub/fheroes2/total.svg)](https://github.com/ihhub/fheroes2/releases)

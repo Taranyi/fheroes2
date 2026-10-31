@@ -339,6 +339,18 @@ Külön seedes teszt és teljesen új lénytípusos/ostromfajos általánosítá
 ellenőrzött natív videó-replay és helyi galéria. A közös motorhoz vagy Gym-adapterhez nem nyúl.
 [Feladat, mérési módszer, videók és teljes fennmaradó sorrend](PYTHON_ENV_ADVANCED_RL.md).
 
-A következő munkaszakasz a korábban rögzített sorrendben a **Gym/reset gyorsítás és párhuzamos tanítás**.
-Utána Linux/macOS és mobil ellenőrzés; adventure végigjátszás; adventure RL; kampánykezelés;
-igény szerint láthatósági korlátozás, több agentes Gym és self-play.
+### Gym/reset gyorsítás és párhuzamos tanítás — kész
+
+A teljes Gym-adatprofil megőrzött optimalizálása, külön kisebb `BattleEnv`, opcionális folyamaton belüli
+csata-reset, Windows-safe párhuzamos PPO és opcionális packed jelöltpontozás elkészült.
+Azonos feladatmérésen 1,49× teljes-API és 13,22× kis csatafeladat-sebesség; azonos 8192 döntéses PPO-kerettel
+440,5→53,8 másodperc tanítás. A nem packed egyenv-kontroll súlyai bitpontosan egyeznek a régivel.
+[Módszer, összes konfiguráció eredménye és reprodukálás](PYTHON_ENV_PERFORMANCE.md).
+
+A teljes fennmaradó sorrend:
+
+3. Linux/macOS tényleges futás és mobil SDK-buildellenőrzés.
+4. Normál adventure-pályák végigjátszásának ellenőrzése és elakadások javítása.
+5. Adventure RL: megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.
+6. Kampányátmenetek, átvitt hősök/jutalmak és kampányválasztások.
+7. Igény szerint láthatósági korlátozás, több agentes Gym-wrapper és self-play.
