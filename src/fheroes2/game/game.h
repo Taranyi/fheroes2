@@ -75,7 +75,7 @@ namespace Game
     fheroes2::GameMode SelectCampaignScenario( const fheroes2::GameMode prevMode, const bool allowToRestart );
     fheroes2::GameMode SelectScenario( const uint8_t humanPlayerCount );
     fheroes2::GameMode StartGame();
-    // Resume a supported saved human turn through an external controller, before any UI initialization.
+    // Resume a supported saved or prepared new human turn through an external controller, before any UI initialization.
     // The callback owns the external decision/continuation loop until detach or close.
     fheroes2::GameMode StartGame( const std::function<fheroes2::GameMode( PlayerColor )> & controller );
     PlayerColor getLoadedAdventurePlayer();

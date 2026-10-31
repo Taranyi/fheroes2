@@ -151,7 +151,7 @@ class GymPreviewTests(unittest.TestCase):
 
     def test_gymnasium_official_checker(self):
         with self.preview() as env:
-            self.assertTrue(env.spec.nondeterministic)
+            self.assertFalse(env.spec.nondeterministic)
             check_env(env.unwrapped, skip_render_check=True)
 
     def test_choice_boundary_is_an_explicit_error_and_can_reset(self):

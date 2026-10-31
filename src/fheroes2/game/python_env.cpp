@@ -29,6 +29,7 @@
 #include <iostream>
 #include <istream>
 #include <limits>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -85,7 +86,9 @@ namespace
     {
         return { { "commands",
                    { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options",
-                     "get_army_options" } },
+                     "get_army_options", "new_game" } },
+                 { "seeded_new_game", true },
+                 { "seeded_save_continuation", true },
                  { "max_request_bytes", maxRequestBytes },
                  { "max_response_bytes", maxResponseBytes },
                  { "game_initialized", loaded },
@@ -153,11 +156,28 @@ namespace
     Json execute( const std::string & method, const Json & params, fheroes2::PythonEnvWorld & world, const std::function<void()> & choiceWait = {} )
     {
         if ( method == "load_save" ) {
-            if ( params.size() != 1 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty() ) {
-                throw fheroes2::PythonEnvError( "invalid_request", "load_save requires exactly one nonempty path string." );
+            if ( params.empty() || params.size() > 2 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty()
+                 || ( params.size() == 2 && !params.contains( "seed" ) )
+                 || ( params.contains( "seed" ) && ( !params["seed"].is_number_unsigned() || params["seed"].get<uint64_t>() > UINT32_MAX ) ) ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "load_save requires a path string and optional unsigned 32-bit seed." );
             }
             const DiagnosticRedirect redirect;
-            return world.loadSave( params["path"].get<std::string>() );
+            return world.loadSave( params["path"].get<std::string>(),
+                                   params.contains( "seed" ) ? std::optional<uint32_t>( params["seed"].get<uint32_t>() ) : std::nullopt );
+        }
+        if ( method == "new_game" ) {
+            if ( params.size() != 4 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty()
+                 || !params.contains( "seed" ) || !params["seed"].is_number_unsigned() || params["seed"].get<uint64_t>() > UINT32_MAX || !params.contains( "player_id" )
+                 || !params["player_id"].is_number_unsigned() || params["player_id"].get<uint64_t>() > 32 || !params.contains( "difficulty" )
+                 || !params["difficulty"].is_number_unsigned() || params["difficulty"].get<uint64_t>() > 4 ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "new_game requires path, uint32 seed, player_id color bit and difficulty 0..4." );
+            }
+            const int player = params["player_id"].get<int>();
+            if ( player == 0 || ( player & ( player - 1 ) ) != 0 ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "player_id must contain one player color bit." );
+            }
+            const DiagnosticRedirect redirect;
+            return world.newGame( params["path"].get<std::string>(), params["seed"].get<uint32_t>(), player, params["difficulty"].get<int>() );
         }
         if ( method == "get_state" ) {
             if ( params.size() > 1 || ( !params.empty() && ( !params.contains( "include_serialized" ) || !params["include_serialized"].is_boolean() ) ) ) {

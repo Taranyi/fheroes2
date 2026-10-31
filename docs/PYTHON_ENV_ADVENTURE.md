@@ -76,8 +76,8 @@ A parancs előtt a motor saját szerializálójával világ/settings/game-result
 motor főszálának RNG-állapotát, az objektum-UID számlálót és az adapter döntési állapotát. Kivételnél ezek visszaállnak,
 a tranziens AI/útkereső cache-ek érvénytelenednek. A visszaállítás nem fájlmentés, nem írja felül a bemeneti mentést.
 Ha maga a visszaállítás hibás, `session_faulted` és új mentésbetöltési igény következik; a hibát nem rejti el vereségként.
-A folyamat összeomlását/timeoutját továbbra is a Python-kliens jelzi. Az új seedelt reset a 12. lépés feladata;
-külön folyamatok tetszőleges AI-akciósorára még nincs reprodukálhatósági ígéret.
+A folyamat összeomlását/timeoutját továbbra is a Python-kliens jelzi. Az új [seedelt reset a 12. lépésben elkészült](PYTHON_ENV_RESET.md);
+az ismételhetőség a reset dokumentumában rögzített buildre, seedre, konfigurációra és támogatott akciósorra vonatkozik.
 
 ## Ellenőrzés
 

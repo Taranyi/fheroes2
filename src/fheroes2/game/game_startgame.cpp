@@ -259,7 +259,8 @@ std::vector<Player *> Game::getPlayersInTurnOrder()
 PlayerColor Game::getLoadedAdventurePlayer()
 {
     const Settings & settings = Settings::Get();
-    if ( !settings.LoadedGameVersion() || ( settings.GameType() & ~TYPE_LOADFILE ) != TYPE_STANDARD || world.CountDay() == 0
+    // Also accepts a new standard world after its native first-day preparation.
+    if ( ( settings.GameType() & ~TYPE_LOADFILE ) != TYPE_STANDARD || world.CountDay() == 0
          || GameOver::Result::Get().GetResult() != 0 ) {
         return PlayerColor::NONE;
     }

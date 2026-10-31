@@ -170,8 +170,8 @@ with make_preview(executable="fheroes2.exe",
 * A human battle/choice boundary, engine failure or transport error raises an exception. It is never disguised as game over
   or a time limit. The current engine rolls back unsupported gameplay interactions. Longer random runs can encounter these
   limits; this is not yet an adapter for complete arbitrary games.
-* `reset(seed=...)` seeds the Python action sampler, **not** the native RNG. Registration is explicitly marked
-  `nondeterministic=True`. The Gymnasium checker passes without claiming seeded native transitions.
+* `reset(seed=...)` seeds both the Python action sampler and the native continuation RNG. The saved world/map seed is
+  preserved. `info["seed"]` reports the effective engine seed; registration now allows the checker's determinism checks.
 * `render_mode="rgb_array"` returns a copy of the observation via `render()`; `"human"` needs the `viewer` extra.
   Use one human viewer per Python process. The CLI also checks `env.unwrapped.window_closed`; window closing is not a game result.
 
@@ -314,6 +314,29 @@ Gameplay requires matching H2D resources as well as AGG data. See the [action co
 uv run --project python python python/examples/adventure.py
 ```
 
+## Seeded episodes and reset
+
+```python
+episode = game.reset(save="checkpoint.sav", seed=123)
+decision = episode["decision"]  # already waiting for the external agent
+episode = game.reset(seed=123)  # same source, new process, repeatable continuation
+episode = game.reset(map_path="maps/THEOTHER.MP2", seed=123, player_id=1, difficulty=1)
+```
+
+`HeroesSession.reset` restarts the process, including from live choices/battles, terminal states, crashes and timeouts.
+It returns `seed`, `source`, `loaded` and `decision`. Omit `seed` for a fresh uint32 seed and retain the returned value for replay.
+The source is required on first use; later resets can reuse the last successful source/player/difficulty configuration.
+New games use existing standard MP2/MX2/FH2M maps and native setup rules. The current single-external-side profile still applies.
+For saves, the seed controls future main-thread random draws, preserving the entire saved world and its own map seed.
+The native save format does not restore the original unsaved main-thread RNG continuation. Lower-level `load_save(path, seed=...)`
+and `new_game(path, seed=..., player_id=1, difficulty=1)` are also available; they require a separate `start_session` afterward.
+See [the reset contract, lifecycle, RNG audit and example](../docs/PYTHON_ENV_RESET.md).
+
+```powershell
+uv run --project python python python/examples/reset.py
+uv run --project python python python/examples/reset.py --map maps/THEOTHER.MP2 --seed 123
+```
+
 ## Headless rendering
 
 ```python
@@ -407,9 +430,10 @@ Error:
 
 * `id`: unsigned 32-bit integer; replies echo it. Invalid/unreadable IDs produce `null` in the error response.
 * `api_version`: integer 1. Unsupported versions are rejected rather than interpreted as another protocol.
-* Methods: `hello`, `capabilities`, `load_save`, `get_state`, `get_castle_options`, `get_army_options`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
+* Methods: `hello`, `capabilities`, `load_save`, `new_game`, `get_state`, `get_castle_options`, `get_army_options`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
   `params` is optional and must be an object.
-  `load_save` requires exactly `{"path":"absolute save path"}`; `get_state` accepts only `{"include_serialized":true}`
+  `load_save` requires `{"path":"absolute save path"}` with an optional uint32 `seed`;
+  `new_game` requires `path`, uint32 `seed`, `player_id` and `difficulty` (0..4). `get_state` accepts only `{"include_serialized":true}`
   (optional, default true). `start_session` requires `{"player_id":1}` (one color bit); `step` requires `action`, `token`
   and `params`, as described in the controller contract. `render` uses the frame parameters described above.
   `get_castle_options` requires `{castle_id}`; `get_army_options` requires `{kind,id}`. Other methods require empty parameters.

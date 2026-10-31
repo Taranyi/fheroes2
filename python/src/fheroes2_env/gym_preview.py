@@ -79,13 +79,12 @@ class AdventurePreviewEnv(gym.Env):
             raise ValueError("This preview has no reset options; it reloads its configured save")
         if seed is not None:
             self.action_space.seed(seed)
-        if self._session is not None:
-            self._session.close()
-            self._session = None
         self._needs_reset = True
         try:
-            self._session = HeroesSession(self.executable, timeout=self.timeout)
-            self._session.load_save(self.save)
+            if self._session is None:
+                self._session = HeroesSession(self.executable, timeout=self.timeout)
+            episode = self._session.reset(save=self.save, seed=seed)
+            self._episode_seed = episode["seed"]
             self._state = self._session.get_state(include_serialized=False)
             humans = [p for p in self._state["players"] if p["is_human"]]
             if len(humans) != 1:
@@ -96,7 +95,7 @@ class AdventurePreviewEnv(gym.Env):
             if not own:
                 raise ValueError("No active owned hero matches this preview")
             self._hero_id = own[0]["id"]
-            self._decision = self._session.start_session(humans[0]["id"])
+            self._decision = episode["decision"]
             self._steps = 0
             self._action_name, self._accepted, self._rejection, self._events = "reset", True, None, []
             self._capture()
@@ -165,7 +164,7 @@ class AdventurePreviewEnv(gym.Env):
     def _info(self):
         return {"state": deepcopy(self._state), "events": deepcopy(self._events), "hero_id": self._hero_id,
                 "episode_step": self._steps, "action_name": self._action_name, "action_accepted": self._accepted,
-                "rejection": deepcopy(self._rejection)}
+                "rejection": deepcopy(self._rejection), "seed": self._episode_seed}
 
     def render(self):
         if self._frame is None:
@@ -229,13 +228,12 @@ class AdventurePreviewEnv(gym.Env):
 
 
 if ENV_ID not in gym.registry:
-    gym.register(ENV_ID, entry_point="fheroes2_env.gym_preview:AdventurePreviewEnv", nondeterministic=True)
+    gym.register(ENV_ID, entry_point="fheroes2_env.gym_preview:AdventurePreviewEnv")
 
 
 def make_preview(**kwargs):
     """Create the registered preview with Gymnasium's usual API/order checks.
 
-    reset(seed=...) seeds the Python sampler, not the native engine RNG. The
-    registration deliberately marks native transitions as nondeterministic.
+    reset(seed=...) seeds both the sampler and the native continuation RNG.
     """
     return gym.make(ENV_ID, **kwargs)

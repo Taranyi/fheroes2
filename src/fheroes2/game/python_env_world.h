@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -60,7 +61,8 @@ namespace fheroes2
         PythonEnvWorld & operator=( const PythonEnvWorld & ) = delete;
 
         bool loaded() const;
-        nlohmann::json loadSave( const std::string & path );
+        nlohmann::json loadSave( const std::string & path, std::optional<uint32_t> seed = {} );
+        nlohmann::json newGame( const std::string & path, uint32_t seed, int playerId, int difficulty );
         nlohmann::json getState( bool includeSerialized ) const;
         nlohmann::json getCastleOptions( uint32_t castleId ) const;
         nlohmann::json getArmyOptions( const nlohmann::json & params ) const;

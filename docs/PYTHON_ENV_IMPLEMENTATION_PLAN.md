@@ -1,7 +1,7 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
-Dátum: 2026-10-25; frissítve: 2026-10-29. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
-a 8–11. lépés a deklarált profilon szintén kész, korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
+Dátum: 2026-10-25; frissítve: 2026-10-31. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
+a 8–12. lépés a deklarált profilon szintén kész, korlátozott Gym-példa is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
 
@@ -235,7 +235,7 @@ Győzelem/vereség: `terminated=True`. Külső lépésszámkorlát: `truncated=T
 - [ ] Kalandtérkép -> csata -> választás, ha van -> kalandtérkép út működik.
 - [ ] Térkép, vár, hős és csata RGB-képe kérhető, a szimuláció módosítása nélkül.
 - [ ] Hibás parancs nem okoz részleges tiltott műveletet; nem támogatott helyzet nem fagy le.
-- [ ] Ismételt reset, seedelt új játék és több külön session ellenőrizve.
+- [x] Ismételt reset, seedelt új játék és több külön session ellenőrizve a dokumentált profilon/builden.
 - [ ] Gymnasium space-ek fixek, a jelöltek és akciómaszk következetesek, `check_env` sikeres.
 - [ ] Győzelem/vereség és időlimit helyesen különbözik; folyamat-/motorhiba látható.
 - [ ] Több epizódos példa, telepítési leírás és támogatási mátrix elkészült.
@@ -264,7 +264,9 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 9 | Kész a kezdeti, deklarált választás/varázslat profilon | Élő C++ veremben felfüggesztett láda → szintlépés lánc, ingyenes/fizetős csatlakozás és üldözés, lámpa/Wagon Camp toborzás. Köztes lekérdezés/render, hibás válasz változatlan állapottal; megszakításkor teljes műveleti rollback, csatához jutáskor a 10. lépés vezérlője folytatja. Identify Hero és Visions natív árral/hatással; a célzott és további varázslatok külön bővítések. [Szerződés és példa](PYTHON_ENV_CHOICES.md). |
 | 10 | Kész a deklarált csataprofilon | Élő natív Arena, egységkörönkénti Python-döntés és szabályos akciójelöltek; mozgás, közelharc, lövés, 13 célzott varázslat, menekülés, megadás. Semleges/hős elleni csata, támadó ostrom és AI-körből induló saját várvédelem. Natív veszteség, pénz, tapasztalat, nekromancia és szintlépés után visszatérés adventure/terminal helyzetbe. Lekérdezés és megszakítás élő csatából, teljes műveleti rollback. [Szerződés, profilkorlátok és példa](PYTHON_ENV_BATTLE.md). |
 | 11 | Kész a deklarált profilon | Adventure, aktív csata, saját/AI-hős és vár natív RGB-képe ablak nélkül. Közös memóriacélú épület-/UI-rajzolás; statikus képek és méretezés. Nyolc új motoros teszt és képi ellenőrzés; a teljes csatavégállapot képkérésekkel/anélkül is egyezik. [API, példa és korlátok](PYTHON_ENV_VIEWS.md). |
-| 12–14 | Tervezett | Közvetlenül a reset/seed és reprodukálhatóság következik. A többoldalas vezérlés, hajózás és a profilon kívüli műveletek/varázslatok nyitott követelménye megmarad. |
+| 12 | Kész a deklarált profilon | Mentéses és natív MP2/MX2/FH2M pályás, seedelt reset friss motorfolyamatban. Csata/választás/terminális állapotból és crash/timeout után is újraindítható. A mentett világseed változatlan; főszál-PCG és új világ kezdőállapota szabályozott. [Szerződés, példa és korlátok](PYTHON_ENV_RESET.md). |
+| 13 | Következő | Teljes Gym-adapter: fix megfigyelés és akciójelöltek, választás/csata, akciómaszk, reward, epizódlezárás. |
+| 14 | Tervezett | Teljes elfogadási forgatókönyv, többepizódos futás, mérések és használati útmutató. A többoldalas vezérlés, hajózás és a profilon kívüli műveletek/varázslatok nyitott követelménye megmarad. |
 
 Külön felmerült bővítési irány: konfigurálható battle-only reset/indítás, kalandtérképes játékmenet előzménye nélkül.
 A csatavezérlő már alapot ad hozzá, de az önálló konfigurációs API és a terep-/ostrom-/hajós esetek külön ellenőrzése még nincs megvalósítva.
@@ -276,9 +278,10 @@ A felhasználó kérésére már most készült egy opcionális `AdventurePrevie
 [futtatható bemutató](../python/examples/gym_loop.py), [használati leírással](../python/README.md#runnable-gymnasium-preview).
 A meglévő C++ motor köré kerül: egy saját hős nyolc iránya és kör vége, valódi RGB-kép, teljes világállapot az `info` mezőben,
 friss folyamatból történő reset, ötértékű `step`, külön Python-megjelenítő vagy teljesen ablak nélküli futás.
-A jutalom egyelőre mindig nulla, nincs akciómaszk, a seed nem vezérli a motor véletlenét; a nem támogatott csata/választás
+A jutalom egyelőre mindig nulla, nincs akciómaszk; a 12. lépéstől a seed a motor főgenerátorának folytatását is szabályozza. A nem támogatott csata/választás
 továbbra is kivétel. A 12 próbálkozásos bemutató-időlimit `truncated`, a valódi motorbeli végállapot `terminated`.
 A Gymnasium saját ellenőrzőjének sikeres futása ezt a szűk profilt igazolja; a 13. lépés teljes szerződése továbbra is tervezett.
-Ez a kiegészítés csak Python-kódot és opcionális Python-függőségeket ad, új C++-módosítás nélkül.
-Windows alatt mind az 51 Python-teszt sikeres (ebből 8 az opcionális Gym-példát ellenőrzi); a látható bemutató
+A preview eredeti bevezetése csak Python-kódot és opcionális Python-függőségeket adott, új C++-módosítás nélkül;
+a 12. lépés óta a közös reset API-t használja. A bevezetéskori Windows-ellenőrzésen mind az 51 Python-teszt sikeres volt
+(ebből 8 az opcionális Gym-példát ellenőrizte); a látható bemutató
 két epizódon át lefutott. A base Python-csomag külső függőség nélkül is importálható maradt.

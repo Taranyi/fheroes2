@@ -28,6 +28,7 @@ import math
 import os
 from pathlib import Path
 import queue
+import secrets
 import subprocess
 import tempfile
 import threading
@@ -102,6 +103,14 @@ class HeroesSession:
             raise ValueError("executable must name a file")
         self._timeout = timeout
         self._lock = threading.RLock()
+        self._executable = executable_path
+        self._cwd = cwd
+        self._env = dict(env) if env is not None else None
+        self._reset_source = None
+        self._launch()
+
+    def _launch(self):
+        executable_path, cwd, env = self._executable, self._cwd, self._env
         self._closed = False
         self._next_id = 1
         self._outgoing = queue.Queue()
@@ -216,13 +225,84 @@ class HeroesSession:
     def capabilities(self) -> dict[str, Any]:
         return self.request("capabilities")
 
-    def load_save(self, path: str | os.PathLike[str]) -> dict[str, Any]:
+    def load_save(self, path: str | os.PathLike[str], *, seed: int | None = None) -> dict[str, Any]:
         """Load a trusted standard-game save without advancing turns.
 
         The save is read-only. A failed load clears the current loaded world;
         another valid save can then be loaded in the same session.
+        An optional seed controls future main-thread draws, preserving the saved
+        map seed. Use reset for isolation and replay from a fresh engine process.
         """
-        return self.request("load_save", {"path": str(Path(path).resolve())})
+        params = {"path": str(Path(path).resolve())}
+        if seed is not None:
+            self._validate_seed(seed)
+            params["seed"] = seed
+        return self.request("load_save", params)
+
+    @staticmethod
+    def _validate_seed(seed):
+        if type(seed) is not int or not 0 <= seed <= 0xFFFFFFFF:
+            raise ValueError("seed must be an unsigned 32-bit integer")
+
+    def new_game(self, path: str | os.PathLike[str], *, seed: int, player_id: int = 1, difficulty: int = 1) -> dict[str, Any]:
+        """Initialize a standard MP2/MX2/FH2M map using native seeded setup rules."""
+        self._validate_seed(seed)
+        if type(player_id) is not int or player_id not in (1, 2, 4, 8, 16, 32):
+            raise ValueError("player_id must be one player color bit")
+        if type(difficulty) is not int or not 0 <= difficulty <= 4:
+            raise ValueError("difficulty must be an integer from 0 to 4")
+        return self.request("new_game", {"path": str(Path(path).resolve()), "seed": seed, "player_id": player_id, "difficulty": difficulty})
+
+    def reset(self, *, save=None, map_path=None, seed: int | None = None, player_id: int | None = None, difficulty: int | None = None) -> dict[str, Any]:
+        """Restart the engine, initialize an episode and return its decision and effective seed.
+
+        Specify exactly one source on first use; subsequent calls reuse that source
+        and player/difficulty configuration. A missing seed generates a fresh uint32.
+        Reset also recovers closed, crashed and timed-out sessions.
+        """
+        if save is not None and map_path is not None:
+            raise ValueError("Specify save or map_path, not both")
+        if seed is not None:
+            self._validate_seed(seed)
+        if player_id is not None and (type(player_id) is not int or player_id not in (1, 2, 4, 8, 16, 32)):
+            raise ValueError("player_id must be one player color bit")
+        if difficulty is not None and (type(difficulty) is not int or not 0 <= difficulty <= 4):
+            raise ValueError("difficulty must be an integer from 0 to 4")
+        with self._lock:
+            if save is None and map_path is None:
+                if self._reset_source is None:
+                    raise ValueError("First reset requires save or map_path")
+                kind, path, configured_player, configured_difficulty = self._reset_source
+                if player_id is None:
+                    player_id = configured_player
+                if difficulty is None:
+                    difficulty = configured_difficulty
+            else:
+                kind = "save" if save is not None else "map"
+                path = str(Path(save if save is not None else map_path).resolve())
+            if difficulty is None:
+                difficulty = 1
+            effective_seed = secrets.randbits(32) if seed is None else seed
+            self._dispose()
+            try:
+                self._launch()
+                if kind == "save":
+                    loaded = self.load_save(path, seed=effective_seed)
+                    if player_id is None:
+                        humans = [p["id"] for p in self.get_state(include_serialized=False)["players"] if p["is_human"] and p["in_play"]]
+                        if len(humans) != 1:
+                            raise ValueError("The saved-game profile requires exactly one live human-rule player")
+                        player_id = humans[0]
+                else:
+                    if player_id is None:
+                        player_id = 1
+                    loaded = self.new_game(path, seed=effective_seed, player_id=player_id, difficulty=difficulty)
+                decision = self.start_session(player_id)
+                self._reset_source = (kind, path, player_id, difficulty)
+                return {"seed": effective_seed, "source": kind, "loaded": loaded, "decision": decision}
+            except BaseException:
+                self._dispose()
+                raise
 
     def get_state(self, *, include_serialized: bool = True) -> dict[str, Any]:
         """Return the omniscient world, including AI and fog-hidden objects.

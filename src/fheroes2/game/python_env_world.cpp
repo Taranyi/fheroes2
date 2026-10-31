@@ -58,6 +58,7 @@
 #include "maps_tiles_helper.h"
 #include "payment.h"
 #include "players.h"
+#include "puzzle.h"
 #include "python_env_army.h"
 #include "python_env_battle.h"
 #include "python_env_castle.h"
@@ -72,6 +73,7 @@
 #include "skill.h"
 #include "spell.h"
 #include "system.h"
+#include "ui_language.h"
 #include "world.h"
 #include "world_object_uid.h"
 
@@ -283,7 +285,7 @@ void fheroes2::PythonEnvWorld::clear()
     GameOver::Result::Get().Reset();
 }
 
-nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path )
+nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path, const std::optional<uint32_t> seed )
 {
     if ( _waiting ) {
         throw PythonEnvError( "session_active", "Stop the active decision before loading another save." );
@@ -329,6 +331,11 @@ nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path 
             throw PythonEnvError( "load_failed", "The save did not contain a valid world." );
         }
         _loaded = true;
+        // Saves persist the map seed, but not the main thread's PCG continuation.
+        // An explicit continuation seed never rewrites serialized world data.
+        if ( seed ) {
+            Rand::CurrentThreadRandomDevice() = Rand::PCG32( *seed );
+        }
     }
     catch ( ... ) {
         clear();
@@ -336,6 +343,90 @@ nlohmann::json fheroes2::PythonEnvWorld::loadSave( const std::string & utf8Path 
     }
     return { { "loaded", true },      { "state_version", _stateVersion }, { "map_name", text( settings.getCurrentMapInfo().name ) }, { "width", world.w() },
              { "height", world.h() }, { "warnings", _warnings } };
+}
+
+nlohmann::json fheroes2::PythonEnvWorld::newGame( const std::string & utf8Path, const uint32_t seed, const int playerId, const int difficulty )
+{
+    if ( _waiting ) {
+        throw PythonEnvError( "session_active", "Stop the active decision before creating a game." );
+    }
+    clear();
+    ++_stateVersion;
+    ++_episodeId;
+    const std::string path = System::encUTF8ToLocal( utf8Path );
+    if ( System::encLocalToUTF8( path ) != utf8Path ) {
+        throw PythonEnvError( "invalid_path", "This map path cannot be represented by the engine's filesystem encoding." );
+    }
+    std::error_code error;
+    const auto size = std::filesystem::file_size( std::filesystem::path{ path }, error );
+    if ( error || size == 0 || size > 64 * 1024 * 1024 ) {
+        throw PythonEnvError( "load_failed", "Expected an accessible map of at most 64 MiB." );
+    }
+    Settings & settings = Settings::Get();
+    settings.SetProgramPath( _executablePath.c_str() );
+    settings.SetGameType( Game::TYPE_STANDARD );
+    settings.SetGameDifficulty( difficulty );
+    try {
+        if ( !_resources ) {
+            try {
+                _resources = std::make_unique<AGG::AGGInitializer>();
+            }
+            catch ( const std::exception & ) {
+                throw PythonEnvError( "assets_unavailable", "Game data could not be opened. Set FHEROES2_DATA before starting the session." );
+            }
+        }
+        Rand::CurrentThreadRandomDevice() = Rand::PCG32( seed );
+        // Kingdom puzzle orders are otherwise shuffled during static world construction,
+        // before this episode's seed exists. Recreate them with the same native constructor.
+        for ( const int color : { 0, 1, 2, 4, 8, 16, 32 } ) {
+            world.GetKingdom( static_cast<PlayerColor>( color ) ).PuzzleMaps() = Puzzle();
+        }
+        Maps::FileInfo info;
+        const bool resurrection = std::filesystem::path{ path }.extension() == ".fh2m";
+        const bool read = resurrection ? info.readResurrectionMap( path, false, fheroes2::getCurrentLanguage() ) : info.readMP2Map( path, false );
+        if ( !read ) {
+            throw PythonEnvError( "load_failed", "The engine could not read this standard map." );
+        }
+        const auto color = static_cast<PlayerColor>( playerId );
+        if ( !( info.kingdomColors & color ) || !( info.colorsAvailableForHumans & color ) || ( info.HumanOnlyColors() & ~playerId ) != 0 ) {
+            throw PythonEnvError( "unsupported_state", "The map must allow the selected sole human-rule player and AI opponents." );
+        }
+        settings.setCurrentMapInfo( info );
+        for ( Player * player : settings.GetPlayers() ) {
+            player->SetControl( player->GetColor() == color ? CONTROL_HUMAN : CONTROL_AI );
+        }
+        settings.GetPlayers().SetStartGame();
+        const bool loaded = resurrection ? world.loadResurrectionMap( path ) : world.LoadMapMP2( path, info.version == GameVersion::SUCCESSION_WARS );
+        if ( !loaded ) {
+            throw PythonEnvError( "load_failed", "The engine could not initialize this map." );
+        }
+        AI::Planner::Get().resetWorldCaches();
+        GameOver::Result::Get().Reset();
+        world.NewDay();
+        settings.SetCurrentColor( color );
+        for ( const Player * player : Game::getPlayersInTurnOrder() ) {
+            world.ClearFog( player->GetColor() );
+        }
+        Kingdom & kingdom = world.GetKingdom( color );
+        kingdom.ActionBeforeTurn();
+        kingdom.ActionNewDayResourceUpdate( nullptr );
+        if ( Game::getLoadedAdventurePlayer() != color ) {
+            throw PythonEnvError( "unsupported_state", "The new map has no live supported external player." );
+        }
+        _turnPrepared = true;
+        _loaded = true;
+    }
+    catch ( ... ) {
+        clear();
+        throw;
+    }
+    return { { "loaded", true },
+             { "state_version", _stateVersion },
+             { "map_name", text( settings.getCurrentMapInfo().name ) },
+             { "width", world.w() },
+             { "height", world.h() },
+             { "seed", seed },
+             { "warnings", _warnings } };
 }
 
 bool fheroes2::PythonEnvWorld::waiting() const
