@@ -123,3 +123,7 @@ induló várvédelem/rollback próbájával együtt. Támadó ostromban a vár t
 A Python-bemutató varázslással is végigfutott videó/hang nélkül. A bekapcsolt fejlesztői build és a külön
 `ENABLE_PYTHON_ENV=OFF` normál Windows-build is sikeres. A gyökérben a példákhoz használható bekapcsolt program maradt.
 Más platformok SDK-fordítása és a normál GUI kézi kattintásos ellenőrzése ebben a munkaszakaszban nem történt meg.
+
+A [konfigurálható önálló csataszimulátor](PYTHON_ENV_STANDALONE_BATTLE.md) is elkészült:
+`reset(battle_config=...)` mentés és kalandtérkép nélkül, saját seregekkel/hősökkel,
+oldalanként Python vagy natív AI vezérléssel, terep/ostrom/hajós környezettel és körlimittel.

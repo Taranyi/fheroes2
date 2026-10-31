@@ -45,12 +45,25 @@ class HeroesEnv(gym.Env):
 
     metadata = {"render_modes": ["rgb_array"], "render_fps": 4}
 
-    def __init__(self, *, executable, save=None, map_path=None, player_id=None, difficulty=1, timeout=60,
+    @staticmethod
+    def _battle_setup(battle_config, player_id, capture):
+        if not isinstance(battle_config, dict) or any(not isinstance(battle_config.get(name), dict) for name in ("attacker", "defender")):
+            raise ValueError("battle_config requires attacker and defender dicts")
+        config = deepcopy(battle_config)
+        agents = [1 << i for i, name in enumerate(("attacker", "defender"))
+                  if config[name].get("controller", "python" if i == 0 else "builtin_ai") == "python"]
+        if len(agents) != 1 or config.get("perspective_player_id", agents[0]) != agents[0] or player_id not in (None, agents[0]):
+            raise ValueError("Gym standalone battles require one Python side as the reward perspective; use HeroesSession for multiple agents or AI-only")
+        if capture:
+            config["capture_final_frame"] = True
+        return config
+
+    def __init__(self, *, executable, save=None, map_path=None, battle_config=None, player_id=None, difficulty=1, timeout=60,
                  max_steps=1000, max_map_size=144, max_heroes=128, max_castles=128, max_battle_units=32,
                  max_actions=8192, render_mode=None, render_view="auto", width=640, height=480,
                  hero_id=None, castle_id=None, cwd=None, env=None, sphinx_answers=(), max_text_bytes=4096, max_answer_bytes=256):
-        if (save is None) == (map_path is None):
-            raise ValueError("Specify exactly one save or map_path")
+        if sum(value is not None for value in (save, map_path, battle_config)) != 1:
+            raise ValueError("Specify exactly one save, map_path or battle_config")
         if render_mode not in (None, "rgb_array") or render_view not in ("auto", "adventure", "battle", "hero", "castle", "world", "oracle"):
             raise ValueError("Unsupported render_mode or render_view")
         for key, value, upper in (("max_steps", max_steps, 1000000000), ("max_map_size", max_map_size, 144),
@@ -76,6 +89,9 @@ class HeroesEnv(gym.Env):
         self._sphinx_answers = tuple(dict.fromkeys(("", *text_answers)))
         self.executable = Path(executable).resolve(strict=True)
         self._setup = {"save": save} if save is not None else {"map_path": map_path}
+        if battle_config is not None:
+            config = self._battle_setup(battle_config, player_id, render_mode is not None)
+            self._setup = {"battle_config": config}
         self._setup.update(player_id=player_id, difficulty=difficulty)
         self._process_options = dict(timeout=timeout, cwd=cwd, env=env)
         self.max_steps, self.max_actions = max_steps, max_actions
@@ -92,19 +108,23 @@ class HeroesEnv(gym.Env):
     def reset(self, *, seed=None, options=None):
         if seed is not None:
             HeroesSession._validate_seed(seed)
-        if options is not None and (not isinstance(options, dict) or set(options) - {"save", "map_path", "player_id", "difficulty"}):
-            raise ValueError("Reset options accept only save, map_path, player_id and difficulty")
+        if options is not None and (not isinstance(options, dict) or set(options) - {"save", "map_path", "battle_config", "player_id", "difficulty"}):
+            raise ValueError("Reset options accept only save, map_path, battle_config, player_id and difficulty")
         super().reset(seed=seed)
         if seed is not None:
             self.action_space.seed(seed)
         self._needs_reset = True
         setup = dict(self._setup)
         if options:
-            if "save" in options:
-                setup.pop("map_path", None)
-            if "map_path" in options:
-                setup.pop("save", None)
+            sources = [name for name in ("save", "map_path", "battle_config") if name in options]
+            if len(sources) > 1:
+                raise ValueError("Reset options may specify only one episode source")
+            if sources:
+                for name in ("save", "map_path", "battle_config"):
+                    setup.pop(name, None)
             setup.update(options)
+        if "battle_config" in setup:
+            setup["battle_config"] = self._battle_setup(setup["battle_config"], setup.get("player_id"), self.render_mode is not None)
         try:
             if self._session is None:
                 self._session = HeroesSession(self.executable, **self._process_options)
@@ -113,7 +133,7 @@ class HeroesEnv(gym.Env):
             self._steps = 0
             self._refresh()
             self._setup = setup
-            self._needs_reset = False
+            self._needs_reset = self._decision["phase"] == "terminal"
             return self._copy_observation(), self._info([])
         except BaseException:
             self.close()
@@ -150,15 +170,20 @@ class HeroesEnv(gym.Env):
             self._decision = result["decision"]
             self._steps += 1
             self._refresh()
-            terminated = self._decision["phase"] == "terminal"
-            truncated = self._steps >= self.max_steps and not terminated
+            standalone = self._state.get("standalone_battle")
+            native_truncated = bool(standalone and standalone["result"] and standalone["result"]["truncated"])
+            terminated = self._decision["phase"] == "terminal" and not native_truncated
+            truncated = native_truncated or (self._steps >= self.max_steps and not terminated)
             reward = 0.0
             if terminated:
                 outcome = self._state["game_result"]
                 win, loss = bool(outcome & 0x3F), bool(outcome & 0x70F00)
-                if win == loss:
+                if win == loss and standalone:
+                    reward = 0.0
+                elif win == loss:
                     raise ProfileLimitError(f"Unrecognized terminal result bits: {outcome}")
-                reward = 1.0 if win else -1.0
+                else:
+                    reward = 1.0 if win else -1.0
             self._needs_reset = terminated or truncated
             return self._copy_observation(), reward, terminated, truncated, self._info(result["events"])
         except BaseException:
@@ -186,7 +211,7 @@ class HeroesEnv(gym.Env):
             raise gym.error.ResetNeeded("Call reset before rendering")
         view = self.render_view
         if view == "auto":
-            view = "battle" if self._decision["phase"] == "battle" else "adventure"
+            view = "battle" if self._decision["phase"] == "battle" or self._state.get("standalone_battle") else "adventure"
         params = {"view": view, "width": self.width, "height": self.height}
         if view in ("hero", "castle"):
             key, items = ("hero_id", self._state["heroes"]) if view == "hero" else ("castle_id", self._state["castles"])

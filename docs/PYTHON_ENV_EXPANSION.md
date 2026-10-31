@@ -158,5 +158,5 @@ ez a munkaszakasz nem helyettesíti azokat új RL-benchmarkkal vagy más platfor
 
 A felsorolt speciális esetek azóta elkészültek: [Sphinx, Trading Post, események, átjárók, Magi, Magellan, Oracle és View World](PYTHON_ENV_SPECIAL.md). Az aktuális közös profil 91 objektumtípus és 17 adventure varázslat. A fenti 83/11-es adatok és tesztszámok a korábbi munkaszakasz történeti eredményei.
 
-Külön hátravan a konfigurálható önálló csataindítás, a szélesebb pálya-/terep-/ostrom-/hajós kombinációs lefedettség,
+Az [önálló csataindítás](PYTHON_ENV_STANDALONE_BATTLE.md) azóta elkészült. Külön hátravan a szélesebb pálya-/terep-/ostrom-/hajós kombinációs lefedettség,
 a Linux/macOS/mobil SDK-ellenőrzés és a nagy léptékű RL-profilozás. A Python/venv továbbra is csak opcionális desktop függőség.

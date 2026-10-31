@@ -41,5 +41,6 @@ namespace fheroes2
     };
 
     PythonEnvBattleDecision pythonEnvBattleDecision( Battle::Arena & arena, const Battle::Unit & unit );
+    nlohmann::json pythonEnvBattleSnapshot( Battle::Arena & arena );
 }
 #endif

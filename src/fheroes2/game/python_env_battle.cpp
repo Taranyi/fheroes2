@@ -225,4 +225,31 @@ fheroes2::PythonEnvBattleDecision fheroes2::pythonEnvBattleDecision( Battle::Are
                      { "actions", choices } };
     return result;
 }
+nlohmann::json fheroes2::pythonEnvBattleSnapshot( Battle::Arena & arena )
+{
+    using namespace Battle;
+    Json units = Json::array();
+    for ( const Force * force : { &arena.getAttackingForce(), &arena.getDefendingForce() } )
+        for ( const Unit * unit : force->getUnits() )
+            units.push_back( unitState( *unit ) );
+    Json board = Json::array();
+    for ( const Cell & cell : *Arena::GetBoard() )
+        board.push_back( { { "index", cell.GetIndex() },
+                           { "object", cell.GetObject() },
+                           { "unit_uid", cell.GetUnit() != nullptr ? Json( cell.GetUnit()->GetUID() ) : Json( nullptr ) } } );
+    return { { "map_index", arena.getMapIndex() },
+             { "width", Board::widthInCells },
+             { "height", Board::heightInCells },
+             { "round", arena.GetTurnNumber() },
+             { "current_unit_uid", 0 },
+             { "current_color", 0 },
+             { "attacker_color", static_cast<int>( arena.getAttackingArmyColor() ) },
+             { "defender_color", static_cast<int>( arena.getDefendingForce().GetColor() ) },
+             { "attacker_commander", commanderState( arena.getAttackingArmyCommander() ) },
+             { "defender_commander", commanderState( arena.getDefendingArmyCommander() ) },
+             { "siege", Arena::GetCastle() != nullptr },
+             { "units", units },
+             { "board", board },
+             { "actions", Json::array() } };
+}
 #endif

@@ -210,3 +210,7 @@ A 7. kiegészítéskor a hőssor 22 oszlopos volt; a további három mező az x/
 A [speciális interakciók](PYTHON_ENV_SPECIAL.md#gym) új, fix mezőkkel bővítik a megfigyelést:
 `text`, `text_mask`, `action_text`, `view`, `view_tiles`, `view_markers`, `oracle`, `oracle_mask`.
 Az `actions` most 31 oszlopos; a szöveges Sphinx a konstruktorban megadott `sphinx_answers` szótárral működik.
+
+Az [önálló csataszimulátor](PYTHON_ENV_STANDALONE_BATTLE.md#gym) `battle_config` forrással is használja ezt az adaptert:
+mentés/térképfájl nélkül, pontosan egy Python-agenttel a támadó vagy védő oldalon.
+Natív győzelem/vereség +1/-1, döntetlen 0, a natív körlimit pedig `truncated`.

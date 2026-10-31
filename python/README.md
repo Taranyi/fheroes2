@@ -585,3 +585,29 @@ uv run --project python --cache-dir .tools/uv-cache python python/examples/speci
 ```
 
 See [the complete special-case API, Gym schema and remaining roadmap](../docs/PYTHON_ENV_SPECIAL.md).
+
+### Configurable standalone battles
+
+No map or saved game is required:
+
+```python
+config = {
+    "terrain": "grass",
+    "attacker": {"army": [{"monster_id": 3, "count": 30}], "controller": "python"},
+    "defender": {"army": [{"monster_id": 1, "count": 30}], "controller": "builtin_ai"},
+}
+episode = game.reset(battle_config=config, seed=123)
+decision = episode["decision"]
+# Choose current native action_id and pass decision["token"] to game.battle_action.
+```
+
+Supports all nine terrains, six castle races with configurable siege defenses, heroes or uncommanded armies,
+spell books, skills, artifacts, formation and gold. Either side can be Python or native AI, including AI-only battles.
+`max_rounds` bounds simulations; results distinguish native battle outcomes from round-limit truncation.
+The same `battle_config` works with `HeroesEnv` for a single Python agent against native AI.
+
+```powershell
+uv run --project python --cache-dir .tools/uv-cache python python/examples/standalone_battle.py --scenario siege
+```
+
+See [the complete configuration, API, Gym loop, render lifecycle and remaining roadmap](../docs/PYTHON_ENV_STANDALONE_BATTLE.md).

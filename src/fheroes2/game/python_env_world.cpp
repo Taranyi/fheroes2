@@ -316,6 +316,11 @@ bool fheroes2::PythonEnvWorld::loaded() const
 
 void fheroes2::PythonEnvWorld::clear()
 {
+    _standaloneConfig = nullptr;
+    _standaloneResult = nullptr;
+    _captureBattleFrame = false;
+    for ( auto & army : _standaloneArmies )
+        army.reset();
     _loaded = false;
     _controlled = false;
     _simulationFinished = false;
@@ -542,6 +547,8 @@ void fheroes2::PythonEnvWorld::startSession( const int playerId, const std::func
 
 const char * fheroes2::PythonEnvWorld::decisionPhase() const
 {
+    if ( !_standaloneConfig.is_null() )
+        return _simulationFinished ? "terminal" : ( _battleState.is_null() ? "battle_ready" : "battle" );
     if ( _controlled && _pendingChoice.is_null() && _battleState.is_null() ) {
         const int player = !_waiting && !_turnOrder.empty() ? _turnOrder.at( _turnIndex ) : _controllerPlayer;
         return _simulationFinished ? "terminal" : ( externalPlayer( player ) ? "adventure" : "simulation" );
@@ -579,6 +586,7 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                                                : ( _pendingChoice.value( "input_type", "integer" ) == "text" ? Json{ "choice.answer_text", "session.stop" }
                                                                                                              : Json{ "choice.answer", "session.stop" } ) )
                : _controlled && _simulationFinished    ? Json{ "session.stop" }
+               : !_standaloneConfig.is_null()          ? Json{ "battle.start", "session.stop" }
                : _controlled && _controllerPlayer == 0 ? Json{ "simulation.advance", "session.stop" }
                : gameResult() == 0 ? Json{ "session.stop",        "hero.move",       "turn.end",          "castle.build", "castle.recruit", "castle.refresh_heroes",
                                            "castle.hire",         "castle.buy_boat", "market.trade",      "hero.meet",    "army.transfer",  "army.swap",
@@ -680,6 +688,15 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         _tradingPost = nullptr;
         _waiting = false;
         return { { "stopped", true }, { "state_version", _stateVersion } };
+    }
+    if ( !_standaloneConfig.is_null() ) {
+        if ( action != "battle.start" || !params.empty() )
+            throw PythonEnvError( "unsupported_action", "Standalone battles support battle.start, battle.act and session.stop." );
+        if ( _simulationFinished )
+            throw PythonEnvError( "episode_finished", "Reset before starting another standalone battle." );
+        if ( validateOnly )
+            return Json::object();
+        return runStandaloneBattle( choiceWait );
     }
     const bool simulationAction = action == "simulation.advance";
     if ( _controlled && _simulationFinished )
@@ -831,32 +848,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             [&]( const std::string & title, const std::string & message ) {
                 _events.push_back( { { "type", "notification" }, { "title", text( title ) }, { "message", text( message ) } } );
             },
-            [&]( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions ) {
-                if ( !choiceWait
-                     || ( _controlled ? !externalPlayer( static_cast<int>( arena.GetCurrentColor() ) )
-                                      : static_cast<int>( arena.GetCurrentColor() ) != _controllerPlayer ) ) {
-                    throw PythonEnvError( "unsupported_interaction", "This battle side has no matching external controller." );
-                }
-                const int previousController = _controllerPlayer;
-                if ( _controlled )
-                    _controllerPlayer = static_cast<int>( arena.GetCurrentColor() );
-                auto decision = pythonEnvBattleDecision( arena, unit );
-                _battleState = std::move( decision.state );
-                _battleRender = [&]( Image & output ) { Battle::Interface::renderSnapshot( arena, unit, output ); };
-                _pendingChoice = { { "choice_id", ++_nextChoiceId }, { "kind", "battle.unit" }, { "unit_uid", unit.GetUID() } };
-                ++_stateVersion;
-                ++_decisionId;
-                _events.push_back(
-                    { { "type", "battle_decision" }, { "round", arena.GetTurnNumber() }, { "unit_uid", unit.GetUID() }, { "player_id", _controllerPlayer } } );
-                choiceWait();
-                const size_t selected = static_cast<size_t>( _choiceAnswer );
-                _events.push_back( { { "type", "battle_action" }, { "action", _battleState["actions"][selected] }, { "round", arena.GetTurnNumber() } } );
-                actions.push_back( decision.commands.at( selected ) );
-                _pendingChoice = nullptr;
-                _battleState = nullptr;
-                _battleRender = {};
-                _controllerPlayer = previousController;
-            },
+            [&]( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions ) { battleDecision( arena, unit, actions, choiceWait ); },
             [&]( const Battle::Result & result, const int32_t tile ) {
                 _events.push_back( { { "type", "battle_completed" },
                                      { "tile", tile },
@@ -1092,8 +1084,10 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
     }
     const std::string view = params["view"].get<std::string>();
     if ( view != "adventure" && view != "hero" && view != "castle" && view != "battle" && view != "world" && view != "oracle" ) {
-        throw PythonEnvError( "unsupported_view", "Supported views are adventure, hero, castle and battle." );
+        throw PythonEnvError( "unsupported_view", "Supported views are adventure, hero, castle, battle, world and oracle." );
     }
+    if ( !_standaloneConfig.is_null() && view != "battle" )
+        throw PythonEnvError( "unsupported_view", "Standalone battles provide only the battle view." );
     Heroes * hero = nullptr;
     Castle * castle = nullptr;
     if ( ( view != "adventure" && ( params.contains( "center_x" ) || params.contains( "center_y" ) ) ) || ( view != "hero" && params.contains( "hero_id" ) )
@@ -1208,6 +1202,8 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
     if ( !output ) {
         throw PythonEnvError( "render_failed", "Could not write the RGB frame." );
     }
+    if ( !_standaloneConfig.is_null() && view == "battle" )
+        _captureBattleFrame = true;
     return { { "view", view },
              { "perspective", ( view == "world" || view == "oracle" ) ? "native_information" : "omniscient" },
              { "format", "rgb8" },
@@ -1329,6 +1325,7 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
 
     const auto & map = settings.getCurrentMapInfo();
     Json result{ { "schema_version", 1 },
+                 { "standalone_battle", standaloneState() },
                  { "state_version", _stateVersion },
                  { "perspective", "omniscient" },
                  { "information_view", _informationView },

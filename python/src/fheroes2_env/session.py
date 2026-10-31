@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 import contextlib
+from copy import deepcopy
 import json
 import math
 import os
@@ -271,7 +272,14 @@ class HeroesSession:
             params["rule_profiles"] = self._assignments(rule_profiles, ("human", "ai"), "rule_profiles")
         return self.request("new_game", params)
 
-    def reset(self, *, save=None, map_path=None, seed: int | None = None, player_id: int | None = None, difficulty: int | None = None,
+    def configure_battle(self, config: Mapping[str, Any], *, seed: int) -> dict[str, Any]:
+        """Prepare a native battle without a map/save; battle.start begins its live arena."""
+        self._validate_seed(seed)
+        if not isinstance(config, Mapping):
+            raise ValueError("Battle configuration must be a mapping")
+        return self.request("configure_battle", {"config": deepcopy(dict(config)), "seed": seed})
+
+    def reset(self, *, save=None, map_path=None, battle_config=None, seed: int | None = None, player_id: int | None = None, difficulty: int | None = None,
               controllers=None, rule_profiles=None) -> dict[str, Any]:
         """Restart the engine, initialize an episode and return its decision and effective seed.
 
@@ -281,9 +289,13 @@ class HeroesSession:
         Optional controllers assign every participant to python or builtin_ai.
         New maps may separately select native human/ai rule_profiles. A source-less
         reset reuses those assignments; save rule flags are never rewritten.
+        battle_config instead starts a standalone native battle; its sides contain
+        their own controllers/rule profiles, and no adventure session is started.
         """
-        if save is not None and map_path is not None:
-            raise ValueError("Specify save or map_path, not both")
+        if sum(value is not None for value in (save, map_path, battle_config)) > 1:
+            raise ValueError("Specify exactly one save, map_path or battle_config")
+        if battle_config is not None and not isinstance(battle_config, Mapping):
+            raise ValueError("battle_config must be a mapping")
         if seed is not None:
             self._validate_seed(seed)
         if player_id is not None and (type(player_id) is not int or player_id not in (1, 2, 4, 8, 16, 32)):
@@ -295,9 +307,9 @@ class HeroesSession:
         if rule_profiles is not None:
             rule_profiles = self._assignments(rule_profiles, ("human", "ai"), "rule_profiles")
         with self._lock:
-            if save is None and map_path is None:
+            if save is None and map_path is None and battle_config is None:
                 if self._reset_source is None:
-                    raise ValueError("First reset requires save or map_path")
+                    raise ValueError("First reset requires save, map_path or battle_config")
                 kind, path, configured_player, configured_difficulty, configured_controllers, configured_rules = self._reset_source
                 if player_id is None:
                     player_id = configured_player
@@ -308,17 +320,26 @@ class HeroesSession:
                 if rule_profiles is None:
                     rule_profiles = configured_rules
             else:
-                kind = "save" if save is not None else "map"
-                path = str(Path(save if save is not None else map_path).resolve())
+                kind = "battle" if battle_config is not None else ("save" if save is not None else "map")
+                path = deepcopy(dict(battle_config)) if kind == "battle" else str(Path(save if save is not None else map_path).resolve())
             if difficulty is None:
                 difficulty = 1
             if kind == "save" and rule_profiles is not None:
                 raise ValueError("Saved rule profiles are preserved; rule_profiles is only for new maps")
+            if kind == "battle":
+                if controllers is not None or rule_profiles is not None:
+                    raise ValueError("Standalone controllers/rule profiles belong inside battle_config")
+                path = deepcopy(path)
+                if player_id is not None:
+                    path["perspective_player_id"] = player_id
             effective_seed = secrets.randbits(32) if seed is None else seed
             self._dispose()
             try:
                 self._launch()
-                if kind == "save":
+                if kind == "battle":
+                    loaded = self.configure_battle(path, seed=effective_seed)
+                    decision = self.step("battle.start", token=loaded["decision"]["token"])["decision"]
+                elif kind == "save":
                     loaded = self.load_save(path, seed=effective_seed)
                     if player_id is None and controllers is None:
                         humans = [p["id"] for p in self.get_state(include_serialized=False)["players"] if p["is_human"] and p["in_play"]]
@@ -329,7 +350,8 @@ class HeroesSession:
                     if player_id is None:
                         player_id = 1
                     loaded = self.new_game(path, seed=effective_seed, player_id=player_id, difficulty=difficulty, rule_profiles=rule_profiles)
-                decision = self.start_session(controllers=controllers) if controllers is not None else self.start_session(player_id)
+                if kind != "battle":
+                    decision = self.start_session(controllers=controllers) if controllers is not None else self.start_session(player_id)
                 self._reset_source = (kind, path, player_id, difficulty, controllers, rule_profiles)
                 return {"seed": effective_seed, "source": kind, "loaded": loaded, "decision": decision}
             except BaseException:

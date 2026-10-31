@@ -22,6 +22,7 @@
 
 #if defined( FHEROES2_ENABLE_PYTHON_ENV )
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -35,6 +36,14 @@
 namespace AGG
 {
     class AGGInitializer;
+}
+
+class Army;
+namespace Battle
+{
+    class Arena;
+    class Unit;
+    class Actions;
 }
 
 namespace fheroes2
@@ -61,6 +70,7 @@ namespace fheroes2
         PythonEnvWorld & operator=( const PythonEnvWorld & ) = delete;
 
         bool loaded() const;
+        nlohmann::json configureBattle( const nlohmann::json & config, uint32_t seed );
         nlohmann::json loadSave( const std::string & path, std::optional<uint32_t> seed = {} );
         nlohmann::json newGame( const std::string & path, uint32_t seed, int playerId, int difficulty, const nlohmann::json & ruleProfiles = nlohmann::json::object() );
         nlohmann::json getState( bool includeSerialized ) const;
@@ -79,6 +89,10 @@ namespace fheroes2
 
     private:
         void clear();
+        nlohmann::json runStandaloneBattle( const std::function<void()> & wait );
+        nlohmann::json standaloneState() const;
+        Army & standaloneArmy( size_t side ) const;
+        void battleDecision( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions, const std::function<void()> & wait );
         void showInformation( const std::string & kind, int color, int detail, int destination );
         nlohmann::json tradeAtPost( const nlohmann::json & params, int player, bool validateOnly );
         void ensureGraphicsData();
@@ -95,6 +109,11 @@ namespace fheroes2
         std::unique_ptr<AGG::AGGInitializer> _resources;
         std::unique_ptr<h2d::H2DInitializer> _renderResources;
         bool _loaded{ false };
+        nlohmann::json _standaloneConfig = nullptr;
+        nlohmann::json _standaloneResult = nullptr;
+        uint32_t _standaloneSeed{ 0 };
+        bool _captureBattleFrame{ false };
+        std::array<std::unique_ptr<Army>, 2> _standaloneArmies;
         uint64_t _stateVersion{ 0 };
         uint64_t _episodeId{ 0 };
         bool _turnPrepared{ false };

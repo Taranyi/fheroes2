@@ -402,6 +402,8 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
         DEBUG_LOG( DBG_BATTLE, DBG_INFO, "defending army: " << defendingArmy.String() )
 
         while ( arena.BattleValid() ) {
+            if ( System::isHeadlessMode() )
+                Game::ScopedExternalInteractions::beforeBattleRound( arena );
             arena.Turns();
         }
         result = arena.GetResult();
@@ -481,6 +483,8 @@ Battle::Result Battle::Loader( Army & attackingArmy, Army & defendingArmy, const
             necromancySkillAction( *winnerHero, result.numOfDeadUnitsForNecromancy, winnerHero->isControlHuman() );
         }
 
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::battleResolved( arena );
         break;
     }
 

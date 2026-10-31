@@ -329,6 +329,7 @@ namespace Battle
     public:
         Interface( Arena & battleArena, const int32_t tileIndex, bool offscreen = false );
         static void renderSnapshot( Arena & arena, const Unit & current, fheroes2::Image & output );
+        static void renderSnapshot( Arena & arena, fheroes2::Image & output );
         Interface( const Interface & ) = delete;
 
         ~Interface();

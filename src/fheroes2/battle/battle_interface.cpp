@@ -1573,6 +1573,16 @@ void Battle::Interface::renderSnapshot( Arena & arena, const Unit & current, fhe
     fheroes2::Copy( renderer._mainSurface, output );
 }
 
+void Battle::Interface::renderSnapshot( Arena & arena, fheroes2::Image & output )
+{
+    const fheroes2::ScopedDrawingTarget target( output );
+    Interface renderer( arena, arena.getMapIndex(), true );
+    renderer._redrawBattleGround();
+    fheroes2::Copy( renderer._battleGround, renderer._mainSurface );
+    renderer.RedrawArmies();
+    fheroes2::Copy( renderer._mainSurface, output );
+}
+
 void Battle::Interface::SetOrderOfUnits( const std::shared_ptr<const Units> & units )
 {
     _turnOrder.set( _interfacePosition, units, arena.getDefendingArmyColor() );
@@ -2065,7 +2075,14 @@ void Battle::Interface::RedrawTroopSprite( const Unit & unit )
 {
     const bool isCurrentMonsterAction = ( _currentUnit == &unit && _spriteInsteadCurrentUnit != nullptr );
 
-    const fheroes2::Sprite & monsterSprite = isCurrentMonsterAction ? *_spriteInsteadCurrentUnit : Assets::getImage( unit.GetMonsterSprite(), unit.GetFrame() );
+    int frame = unit.GetFrame();
+    if ( _offscreen && !unit.isValid() ) {
+        // Headless combat does not play death animations. Use the native corpse frame without changing the unit's animation state.
+        const auto & deathFrames = unit.animation.getAnimationVector( Monster_Info::KILL );
+        if ( !deathFrames.empty() )
+            frame = deathFrames.back();
+    }
+    const fheroes2::Sprite & monsterSprite = isCurrentMonsterAction ? *_spriteInsteadCurrentUnit : Assets::getImage( unit.GetMonsterSprite(), frame );
 
     fheroes2::Point drawnPosition;
 

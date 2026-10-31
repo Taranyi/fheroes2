@@ -160,10 +160,10 @@ Teljes séma és konfigurációs maximumok: [Gym-szerződés](PYTHON_ENV_GYM.md)
 | Sereg/hős/tárgy | Natív találkozás, seregátadás/csere, upgrade/dismiss, könyvvásárlás, tárgy/tekercs/set | Jogosultság és találkozási távolság a natív szabályok szerint |
 | Választás | Láda, szintlépés, semleges csatlakozás/üldözés, megerősítés és toborzási darabszám | Arena elsődleges képesség és térképi teleportcél is; szöveges Sphinx is támogatott |
 | Adventure varázslat | 17 varázslat: Identify/Visions, hajóidézés, Dimension Door, Town Gate/Portal, őrzőlények | Natív mana, könyv és játékszabályok szerint |
-| Csata | Térképi támadás/védekezés, egységkörök, mozgás, támadás, lövés, menekülés, megadás, natív eredmény | 48 tanítható harci varázslat, natív célzással; konfigurálható battle-only reset külön feladat |
+| Csata | Térképi támadás/védekezés, egységkörök, mozgás, támadás, lövés, menekülés, megadás, natív eredmény | 48 tanítható harci varázslat, natív célzással; konfigurálható battle-only reset is támogatott |
 | Render | Adventure, aktív csata, saját/AI-hős és vár, Oracle és View World, RGB; UI nélkül | Statikus képkérés, nem animációs/videóstream |
 | Gym | Több hős, választás/csata ugyanabban az epizódban, maszk, fix terek, terminális reward | Bounded profil, numerikus feature-ök; nem optimalizált tömeges RL backend |
-| Önálló csata | A vezérlő és render alapjai adottak | Konfigurálható battle-only reset nincs; terep/ostrom/hajós kombinációk külön bővítés |
+| Önálló csata | Python-konfigurációból indítható, natív AI/Python oldalak, kilenc terep, hat várfaj, RGB | Konfigurálható battle-only reset kész; szélesebb kombinációs tesztek még bővíthetők |
 | Platform | Opcionális desktop CMake-út; Windows futás és normál Windows UI ellenőrizve | Linux/macOS és mobil SDK-build most nem futott |
 
 ## 6. Elfogadási eredmény és mért sebesség
@@ -243,4 +243,4 @@ Tipikus hibák:
 
 A 7. kiegészítés hajózása/hajóvásárlása/saját várba belépése elkészült: [navigációs példa és API](PYTHON_ENV_NAVIGATION.md).
 A [9–10. bővítés](PYTHON_ENV_EXPANSION.md) 91 objektumot, 17 adventure és 48 harci varázslatot kezel.
-A [speciális objektumok és View World nézetek](PYTHON_ENV_SPECIAL.md) is elkészültek. További munka: konfigurálható battle-only indítás és szélesebb kombinációs ellenőrzés, Linux/macOS/mobil SDK-buildek. Nagy léptékű RL-optimalizálás és láthatóságra szűrt observation ezek mellett külön bővítés.
+A [speciális objektumok és View World nézetek](PYTHON_ENV_SPECIAL.md) is elkészültek. Az [önálló csataindítás](PYTHON_ENV_STANDALONE_BATTLE.md) is elkészült. További munka: szélesebb kombinációs ellenőrzés, Linux/macOS/mobil SDK-buildek. Nagy léptékű RL-optimalizálás és láthatóságra szűrt observation ezek mellett külön bővítés.

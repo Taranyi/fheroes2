@@ -268,7 +268,7 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 14 | Történeti profil-ellenőrzés és mérés kész | 146 teszt, 13 hosszabb Gym-epizód/2707 lépés hiba nélkül; összefüggő építés/toborzás/csata/szintlépés/AI-kör. Reset/lépés/render és két párhuzamos session mérése; normál, Python nélküli Windows UI smoke sikeres. [Útmutató és támogatási mátrix](PYTHON_ENV_GUIDE.md), [rögzített jelentés](python_env/acceptance.windows.2026-10-31.json). A 4/A követelményei az ezt követő munkaszakaszban elkészültek; a 14. lépés jelentése az akkori build történeti mérése. |
 
 Külön felmerült bővítési irány: konfigurálható battle-only reset/indítás, kalandtérképes játékmenet előzménye nélkül.
-A csatavezérlő már alapot ad hozzá, de az önálló konfigurációs API és a terep-/ostrom-/hajós esetek külön ellenőrzése még nincs megvalósítva.
+Ez azóta elkészült: [konfigurálható csataindítás, natív terep/ostrom/hajós csaták és ellenőrzés](PYTHON_ENV_STANDALONE_BATTLE.md).
 Ez nem módosítja a számozott lépések egyeztetett sorrendjét.
 
 ### Korai, futtatható Gym-példa a 6. lépés után
@@ -291,3 +291,11 @@ A Sphinx szöveges válasza, Trading Post, map eventek, Stone Lith/Whirlpool, Ma
 Magellan/Oracle és mind a hat View World nézet elkészült.
 Aktuális profil: 91 adventure objektum, 17 adventure és 48 harci varázslat.
 [Szerződés, futtatható példa és fennmaradó feladatlista](PYTHON_ENV_SPECIAL.md).
+
+### Önálló csataszimulátor
+
+Kész: `reset(battle_config=...)` mentés és kalandtérkép nélkül, natív Battle Only környezettel.
+Kilenc terep, hat várfaj ostroma, natív hajós csata, hős/sereg/képesség/tárgy/varázslat konfiguráció,
+oldalanként Python vagy AI, AI–AI futás, körlimit, terminális eredmény és opcionális végső RGB.
+A meglévő Gym adapter egy Python-oldallal ugyanezt a forrást is fogadja.
+[Részletes szerződés, futtatható példa és teljes fennmaradó lista](PYTHON_ENV_STANDALONE_BATTLE.md).

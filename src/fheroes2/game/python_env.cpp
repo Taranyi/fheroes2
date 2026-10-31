@@ -88,7 +88,14 @@ namespace
     {
         return { { "commands",
                    { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options",
-                     "get_army_options", "new_game", "check_actions", "get_information_view", "get_trading_post_options" } },
+                     "get_army_options", "new_game", "check_actions", "get_information_view", "get_trading_post_options", "configure_battle" } },
+                 { "standalone_battles", true },
+                 { "standalone_battle_profile",
+                   { { "max_army_slots", 5 },
+                     { "max_stack_count", 100000 },
+                     { "max_rounds", 100000 },
+                     { "player_ids", { 1, 2 } },
+                     { "terrains", { "grass", "snow", "swamp", "lava", "desert", "dirt", "wasteland", "beach", "water" } } } },
                  { "action_validation", true },
                  { "seeded_new_game", true },
                  { "seeded_save_continuation", true },
@@ -172,6 +179,13 @@ namespace
 
     Json execute( const std::string & method, const Json & params, fheroes2::PythonEnvWorld & world, const std::function<void()> & choiceWait = {} )
     {
+        if ( method == "configure_battle" ) {
+            if ( params.size() != 2 || !params.contains( "config" ) || !params["config"].is_object() || !params.contains( "seed" ) || !params["seed"].is_number_unsigned()
+                 || params["seed"].get<uint64_t>() > UINT32_MAX )
+                throw fheroes2::PythonEnvError( "invalid_request", "configure_battle requires config and uint32 seed." );
+            const DiagnosticRedirect redirect;
+            return world.configureBattle( params["config"], params["seed"].get<uint32_t>() );
+        }
         if ( method == "load_save" ) {
             if ( params.empty() || params.size() > 2 || !params.contains( "path" ) || !params["path"].is_string() || params["path"].get_ref<const std::string &>().empty()
                  || ( params.size() == 2 && !params.contains( "seed" ) )

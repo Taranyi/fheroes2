@@ -29,13 +29,12 @@ namespace
     thread_local Game::ScopedExternalInteractions * current = nullptr;
 }
 
-Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int64_t( const ExternalChoice & )> choose,
-                                                              std::function<void( const std::string &, const std::string & )> notify,
-                                                              std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle,
-                                                              std::function<void( const Battle::Result &, int32_t )> battleFinished,
-                                                              std::function<ControllerType( int )> controller, std::function<bool()> gameOver,
-                                                              std::function<std::string( const ExternalTextChoice & )> text,
-                                                              std::function<void( const std::string &, int, int )> information )
+Game::ScopedExternalInteractions::ScopedExternalInteractions(
+    std::function<int64_t( const ExternalChoice & )> choose, std::function<void( const std::string &, const std::string & )> notify,
+    std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle, std::function<void( const Battle::Result &, int32_t )> battleFinished,
+    std::function<ControllerType( int )> controller, std::function<bool()> gameOver, std::function<std::string( const ExternalTextChoice & )> text,
+    std::function<void( const std::string &, int, int )> information, std::function<void( Battle::Arena & )> battleResolved,
+    std::function<void( Battle::Arena & )> beforeBattleRound )
     : _previous( current )
     , _choose( std::move( choose ) )
     , _notify( std::move( notify ) )
@@ -45,6 +44,8 @@ Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int6
     , _gameOver( std::move( gameOver ) )
     , _text( std::move( text ) )
     , _information( std::move( information ) )
+    , _battleResolved( std::move( battleResolved ) )
+    , _beforeBattleRound( std::move( beforeBattleRound ) )
 {
     current = this;
 }
@@ -52,6 +53,18 @@ Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int6
 Game::ScopedExternalInteractions::~ScopedExternalInteractions()
 {
     current = _previous;
+}
+
+void Game::ScopedExternalInteractions::battleResolved( Battle::Arena & arena )
+{
+    if ( current != nullptr && current->_battleResolved )
+        current->_battleResolved( arena );
+}
+
+void Game::ScopedExternalInteractions::beforeBattleRound( Battle::Arena & arena )
+{
+    if ( current != nullptr && current->_beforeBattleRound )
+        current->_beforeBattleRound( arena );
 }
 
 bool Game::ScopedExternalInteractions::hasAssignments()

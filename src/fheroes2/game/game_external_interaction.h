@@ -70,7 +70,8 @@ namespace Game
                                     std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle = {},
                                     std::function<void( const Battle::Result &, int32_t )> battleFinished = {}, std::function<ControllerType( int )> controller = {},
                                     std::function<bool()> gameOver = {}, std::function<std::string( const ExternalTextChoice & )> text = {},
-                                    std::function<void( const std::string &, int, int )> information = {} );
+                                    std::function<void( const std::string &, int, int )> information = {}, std::function<void( Battle::Arena & )> battleResolved = {},
+                                    std::function<void( Battle::Arena & )> beforeBattleRound = {} );
         ~ScopedExternalInteractions();
         ScopedExternalInteractions( const ScopedExternalInteractions & ) = delete;
         ScopedExternalInteractions & operator=( const ScopedExternalInteractions & ) = delete;
@@ -80,6 +81,8 @@ namespace Game
         static bool hasBattleController();
         static void battle( Battle::Arena & arena, const Battle::Unit & unit, Battle::Actions & actions );
         static void battleFinished( const Battle::Result & result, int32_t tile );
+        static void battleResolved( Battle::Arena & arena );
+        static void beforeBattleRound( Battle::Arena & arena );
         static bool hasAssignments();
         static bool isExternal( int color );
         static bool isNative( int color );
@@ -98,5 +101,7 @@ namespace Game
         std::function<bool()> _gameOver;
         std::function<std::string( const ExternalTextChoice & )> _text;
         std::function<void( const std::string &, int, int )> _information;
+        std::function<void( Battle::Arena & )> _battleResolved;
+        std::function<void( Battle::Arena & )> _beforeBattleRound;
     };
 }
