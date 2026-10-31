@@ -1,7 +1,8 @@
 # Megvalósítási terv: fheroes2 Python API és headless Gymnasium env
 
 Dátum: 2026-10-25; frissítve: 2026-10-31. Állapot: az 1–6. lépés és a 7. lépés várlekérdezési, építési, toborzási, hősvásárlási és kereskedelmi része kész;
-a 8–13. lépés a deklarált profilon szintén kész, strukturált Gym-adapter és korlátozott vizuális preview is futtatható. A részletes állapot és korlátok a dokumentum végén szerepelnek.
+a 8–13. lépés a deklarált profilon szintén kész, a 14. lépés profilon végzett elfogadási próbái és mérései elkészültek.
+A globális végső elfogadás a 4/A két vezérlési követelménye miatt még nyitott. [Használati útmutató, mérések és támogatási mátrix](PYTHON_ENV_GUIDE.md).
 
 2026-10-26-i pontosítás: elsődleges követelmény a meglévő C++ motor kis mértékű, jól elkülönített módosítása és a játék önálló továbbfejleszthetősége.
 
@@ -224,22 +225,22 @@ Győzelem/vereség: `terminated=True`. Külső lépésszámkorlát: `truncated=T
 
 ## Végső elfogadási lista
 
-- [ ] Pythonból elindítható és lezárható, menükézi kezelés nélkül.
-- [ ] Ablak/hang nélkül betölt és léptet; grafikus felhasználói munkamenetre nincs szükség.
-- [ ] Minden résztvevő, köztük az AI-k állapota, hősei, várai, seregei és tárgyai lekérdezhetők és változásuk követhető.
+- [x] Pythonból elindítható és lezárható, menükézi kezelés nélkül.
+- [x] Ablak/hang nélkül betölt és léptet; grafikus felhasználói munkamenetre nincs szükség.
+- [x] Minden résztvevő, köztük az AI-k állapota, hősei, várai, seregei és tárgyai lekérdezhetők és változásuk követhető.
 - [ ] Résztvevőnként választható beépített AI vagy Python-vezérlő; több külső oldal szabályosan válthatja egymást.
 - [ ] Emberinek jelölt résztvevő nélkül is fut beépített AI–AI játék, korlátozott előreléptetéssel és köztes lekérdezéssel.
-- [ ] Hősmozgás, egyszerű felvétel, körváltás és beépített AI működik.
-- [ ] Várépítés, toborzás, hős/sereg/tárgy műveletek működnek a deklarált profilon.
-- [ ] A tesztpálya választásai nem nyitnak ablakot, Pythonból megválaszolhatók.
-- [ ] Kalandtérkép -> csata -> választás, ha van -> kalandtérkép út működik.
-- [ ] Térkép, vár, hős és csata RGB-képe kérhető, a szimuláció módosítása nélkül.
-- [ ] Hibás parancs nem okoz részleges tiltott műveletet; nem támogatott helyzet nem fagy le.
+- [x] Hősmozgás, egyszerű felvétel, körváltás és beépített AI működik.
+- [x] Várépítés, toborzás, hős/sereg/tárgy műveletek működnek a deklarált profilon.
+- [x] A tesztpálya választásai nem nyitnak ablakot, Pythonból megválaszolhatók.
+- [x] Kalandtérkép -> csata -> választás, ha van -> kalandtérkép út működik.
+- [x] Térkép, vár, hős és csata RGB-képe kérhető, a szimuláció módosítása nélkül.
+- [x] Hibás parancs nem okoz részleges tiltott műveletet; nem támogatott helyzet nem fagy le.
 - [x] Ismételt reset, seedelt új játék és több külön session ellenőrizve a dokumentált profilon/builden.
 - [x] Gymnasium space-ek fixek, a jelöltek és akciómaszk következetesek, `check_env` sikeres a dokumentált profilon.
-- [ ] Győzelem/vereség és időlimit helyesen különbözik; folyamat-/motorhiba látható.
-- [ ] Több epizódos példa, telepítési leírás és támogatási mátrix elkészült.
-- [ ] A normál játék és az env közös szabálymegvalósítást használ; nincs párhuzamos Python-/env-játéklogika. A meglévő C++ fájlok változásai célzottak, a szokásos játékút is ellenőrzött.
+- [x] Győzelem/vereség és időlimit helyesen különbözik; folyamat-/motorhiba látható.
+- [x] Több epizódos példa, telepítési leírás és támogatási mátrix elkészült.
+- [x] A normál játék és az env közös szabálymegvalósítást használ; nincs párhuzamos Python-/env-játéklogika. A meglévő C++ fájlok változásai célzottak; a szokásos Windows-játékút a 14. lépésben ellenőrzött. Más platformok SDK-buildjét ez nem helyettesíti.
 
 ## Hogyan haladunk ezen végig?
 
@@ -266,7 +267,7 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 11 | Kész a deklarált profilon | Adventure, aktív csata, saját/AI-hős és vár natív RGB-képe ablak nélkül. Közös memóriacélú épület-/UI-rajzolás; statikus képek és méretezés. Nyolc új motoros teszt és képi ellenőrzés; a teljes csatavégállapot képkérésekkel/anélkül is egyezik. [API, példa és korlátok](PYTHON_ENV_VIEWS.md). |
 | 12 | Kész a deklarált profilon | Mentéses és natív MP2/MX2/FH2M pályás, seedelt reset friss motorfolyamatban. Csata/választás/terminális állapotból és crash/timeout után is újraindítható. A mentett világseed változatlan; főszál-PCG és új világ kezdőállapota szabályozott. [Szerződés, példa és korlátok](PYTHON_ENV_RESET.md). |
 | 13 | Kész a deklarált profilon | `Fheroes2-v0`: fix numerikus Dict és Discrete jelöltek, natív maszk, minden saját aktív hős, vár/sereg/tárgy műveletek, választás és csata ugyanabban az epizódban, +1/-1 terminális jutalom, külön időlimit. Render nélkül nincs képkérés. [Séma, korlátok, példák és ellenőrzés](PYTHON_ENV_GYM.md). |
-| 14 | Következő | Teljes elfogadási forgatókönyv, többepizódos futás, mérések és használati útmutató. A többoldalas vezérlés, hajózás és a profilon kívüli műveletek/varázslatok nyitott követelménye megmarad. |
+| 14 | Profil-ellenőrzés és mérés kész; globális elfogadás még nyitott | 146 teszt, 13 hosszabb Gym-epizód/2707 lépés hiba nélkül; összefüggő építés/toborzás/csata/szintlépés/AI-kör. Reset/lépés/render és két párhuzamos session mérése; normál, Python nélküli Windows UI smoke sikeres. [Útmutató és támogatási mátrix](PYTHON_ENV_GUIDE.md), [rögzített jelentés](python_env/acceptance.windows.2026-10-31.json). A két 4/A vezérlési követelmény még nincs implementálva. |
 
 Külön felmerült bővítési irány: konfigurálható battle-only reset/indítás, kalandtérképes játékmenet előzménye nélkül.
 A csatavezérlő már alapot ad hozzá, de az önálló konfigurációs API és a terep-/ostrom-/hajós esetek külön ellenőrzése még nincs megvalósítva.

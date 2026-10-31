@@ -1,5 +1,8 @@
 # fheroes2 Python connection
 
+Start with the [usage guide, support matrix and measured acceptance results](../docs/PYTHON_ENV_GUIDE.md).
+The current single-external-side profile is verified; per-side controllers, multi-agent and AI-only execution remain task 4/A.
+
 Implementation steps 2–6 provide real save loading/state inspection, external decisions, offscreen adventure rendering,
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
 initialization. Selected native choices, two adventure spells and native battles work through the session API.
@@ -12,7 +15,7 @@ including AI-only simulation and multiple external agents with no manual player.
 for every side, but external control is limited to one side marked human in the save. That side can already be driven entirely
 by a Python policy; the human marker is an engine limitation, not a requirement for keyboard input.
 See the [implementation plan's participant requirements](../docs/PYTHON_ENV_IMPLEMENTATION_PLAN.md), task 4/A,
-for the required broader control model. It remains unimplemented and does not change the agreed step-7 development order.
+for the required broader control model. It remains unimplemented after the profile acceptance and measurements in step 14.
 
 Castle inspection, building and exact-count recruitment are also available through the native engine:
 

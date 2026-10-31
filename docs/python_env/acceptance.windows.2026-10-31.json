@@ -1,0 +1,431 @@
+{
+  "source_commit": "3d53ee697404db3c330f95a5bb9706e56702e5d8",
+  "executable_sha256": "6601d667df690a77af208218e4b31673645f3a32573a55c95b0b8cfe94943842",
+  "schema_version": 1,
+  "platform": "Windows-11-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+  "python": "3.14.7",
+  "updated_utc": "2026-10-31T01:27:13.788442+00:00",
+  "scenario": {
+    "passed": true,
+    "phases": [
+      "adventure",
+      "battle",
+      "choice"
+    ],
+    "native_decisions": 5,
+    "hero_level": 3,
+    "final_day": 2,
+    "event_types": [
+      "ai_turn_completed",
+      "army_transferred",
+      "battle_action",
+      "battle_completed",
+      "battle_decision",
+      "castle_built",
+      "castle_recruited",
+      "choice_answered",
+      "choice_requested",
+      "hero_moved",
+      "notification",
+      "turn_ended"
+    ],
+    "frame_sha256": {
+      "adventure": "23e04cb4ffa01dce33a4aa913f91955b0dc357f158171bff9667324ed13f508a",
+      "hero": "7e46c16f271235421ba8be45f7fe2fdbd1a3b693ab03c7a0f871f075d0a5714e",
+      "castle": "c32d4fe551b3276f581a6e239ee8c8ac90d03988f72f9a301b4b31bca90c452a",
+      "battle": "8a079f2cf1c45dae4479ce2f5e2aa12fb6dca929610cfa6d87e526b866afb67d"
+    },
+    "runtime": {
+      "animation_waits": false,
+      "audio_initialized": false,
+      "controller_initialized": false,
+      "headless": true,
+      "interactive_input": false,
+      "render_backend": "memory_image",
+      "video_initialized": false
+    },
+    "process_reaped": true,
+    "input_unchanged": true
+  },
+  "stress": {
+    "passed": true,
+    "episodes": [
+      {
+        "mode": "random",
+        "seed": 1000,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 3
+      },
+      {
+        "mode": "random",
+        "seed": 1001,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 7
+      },
+      {
+        "mode": "random",
+        "seed": 1002,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 4
+      },
+      {
+        "mode": "random",
+        "seed": 1003,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 5
+      },
+      {
+        "mode": "random",
+        "seed": 1004,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 8
+      },
+      {
+        "mode": "random",
+        "seed": 1005,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 8
+      },
+      {
+        "mode": "random",
+        "seed": 1006,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 7
+      },
+      {
+        "mode": "random",
+        "seed": 1007,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 5
+      },
+      {
+        "mode": "random",
+        "seed": 1008,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 6
+      },
+      {
+        "mode": "random",
+        "seed": 1009,
+        "steps": 250,
+        "reward": 0.0,
+        "phases": [
+          "adventure"
+        ],
+        "error": null,
+        "terminated": false,
+        "truncated": true,
+        "final_day": 7
+      },
+      {
+        "mode": "battle",
+        "seed": 1000,
+        "steps": 69,
+        "reward": -1.0,
+        "phases": [
+          "adventure",
+          "battle",
+          "choice",
+          "terminal"
+        ],
+        "error": null,
+        "terminated": true,
+        "truncated": false,
+        "final_day": 64
+      },
+      {
+        "mode": "battle",
+        "seed": 1001,
+        "steps": 69,
+        "reward": -1.0,
+        "phases": [
+          "adventure",
+          "battle",
+          "choice",
+          "terminal"
+        ],
+        "error": null,
+        "terminated": true,
+        "truncated": false,
+        "final_day": 64
+      },
+      {
+        "mode": "battle",
+        "seed": 1002,
+        "steps": 69,
+        "reward": -1.0,
+        "phases": [
+          "adventure",
+          "battle",
+          "choice",
+          "terminal"
+        ],
+        "error": null,
+        "terminated": true,
+        "truncated": false,
+        "final_day": 64
+      }
+    ],
+    "total_steps": 2707,
+    "render_requests": 0
+  },
+  "logical_cpus": 16,
+  "input_sha256": {
+    "build/python-env-baseline/fixtures/other-side-day1.sav": "fa8be2860072d5c9ea9bc57924e33e8495efb082661a8a18dfdba9e02083f7d5",
+    "build/python-env-baseline/fixtures/battles-boss-day1.sav": "18f75029004ce9518fc8b1ff4872c8a3f79097284a2d802ba98a7dd02875c643",
+    "maps/THEOTHER.MP2": "2699d53a977d7ffbbcd65c51b5490437f005fdeb85801728d1259143a35976d2",
+    "DATA/HEROES2.AGG": "7a11c86db8ec8fbf19d810c1f7ebf9d8520f63fbdc42d6f51f7538654004315d",
+    "DATA/HEROES2X.AGG": "1f3edad1bb88052da50b3fae5d00e8f7e73dd977f356463022aab132b54f4d41",
+    "files/data/resurrection.h2d": "5963a20776351035a9a1030170cf418570622cd3bed76e189b0868b8a9583f32"
+  },
+  "benchmark": {
+    "reset_save": {
+      "samples": 10,
+      "mean_ms": 66.24486000000616,
+      "median_ms": 65.53219999841531,
+      "p95_ms": 74.93100000283448,
+      "min_ms": 59.82890000450425,
+      "max_ms": 74.93100000283448
+    },
+    "reset_map": {
+      "samples": 10,
+      "mean_ms": 50.662020000163466,
+      "median_ms": 49.78030000347644,
+      "p95_ms": 62.9315999976825,
+      "min_ms": 43.90479999710806,
+      "max_ms": 62.9315999976825
+    },
+    "hello_roundtrip": {
+      "samples": 30,
+      "mean_ms": 0.08384666701507133,
+      "median_ms": 0.07804999768268317,
+      "p95_ms": 0.11519999679876491,
+      "min_ms": 0.07100000220816582,
+      "max_ms": 0.14579999697161838
+    },
+    "get_state": {
+      "samples": 30,
+      "mean_ms": 19.59492666768104,
+      "median_ms": 19.538650005415548,
+      "p95_ms": 20.419099993887357,
+      "min_ms": 18.776000004436355,
+      "max_ms": 20.82880000671139
+    },
+    "native_end_turn_with_ai": {
+      "samples": 10,
+      "mean_ms": 1.6963900008704513,
+      "median_ms": 1.7067000007955357,
+      "p95_ms": 1.7612000010558404,
+      "min_ms": 1.6113000019686297,
+      "max_ms": 1.7612000010558404
+    },
+    "render_adventure": {
+      "samples": 10,
+      "mean_ms": 2.5406300017493777,
+      "median_ms": 2.5069000039366074,
+      "p95_ms": 2.979800003231503,
+      "min_ms": 2.2171999953570776,
+      "max_ms": 2.979800003231503,
+      "first_request_ms": 10.055499995360151,
+      "width": 640,
+      "height": 480
+    },
+    "render_hero": {
+      "samples": 10,
+      "mean_ms": 2.699770001345314,
+      "median_ms": 2.644650001457194,
+      "p95_ms": 3.070899998419918,
+      "min_ms": 2.4875000017345883,
+      "max_ms": 3.070899998419918,
+      "first_request_ms": 6.216300003870856,
+      "width": 640,
+      "height": 480
+    },
+    "render_castle": {
+      "samples": 10,
+      "mean_ms": 2.657320000434993,
+      "median_ms": 2.552900001319358,
+      "p95_ms": 3.7618999995174818,
+      "min_ms": 2.264199996716343,
+      "max_ms": 3.7618999995174818,
+      "first_request_ms": 4.0789999984554015,
+      "width": 640,
+      "height": 480
+    },
+    "render_battle": {
+      "samples": 10,
+      "mean_ms": 2.9157600001781248,
+      "median_ms": 2.897400001529604,
+      "p95_ms": 3.0914000017219223,
+      "min_ms": 2.6947000005748123,
+      "max_ms": 3.0914000017219223,
+      "first_request_ms": 7.1992000011960045,
+      "width": 640,
+      "height": 480
+    },
+    "gym_reset": {
+      "samples": 10,
+      "mean_ms": 109.31882000004407,
+      "median_ms": 109.43414999928791,
+      "p95_ms": 112.02690000209259,
+      "min_ms": 106.91220000444446,
+      "max_ms": 112.02690000209259
+    },
+    "gym_step_end_turn_with_ai": {
+      "samples": 10,
+      "mean_ms": 42.76480999978958,
+      "median_ms": 42.91634999754024,
+      "p95_ms": 44.00539999915054,
+      "min_ms": 41.875000002619345,
+      "max_ms": 44.00539999915054,
+      "steps_per_second": 23.38371198199923
+    },
+    "two_parallel_sessions": {
+      "completed_resets_and_ai_turns": 20,
+      "wall_seconds": 1.061740800003463,
+      "each_seed_reproducible": true,
+      "same_profile_directory_no_writes": true
+    }
+  },
+  "verification": {
+    "python_tests": {
+      "passed": 146,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 78.669
+    },
+    "enabled_windows_build": {
+      "passed": true,
+      "incremental": true,
+      "build_type": "RelWithDebInfo"
+    },
+    "disabled_windows_build": {
+      "passed": true,
+      "incremental": true,
+      "enable_python_env": false
+    },
+    "headless_policy_checks_passed": true,
+    "baseline_identity_checks": {
+      "passed": true,
+      "save_snapshots": 2,
+      "maps": 2,
+      "agg_files": 2
+    },
+    "editable_base_install_passed": true,
+    "normal_ui_smoke": {
+      "passed": true,
+      "enable_python_env": false,
+      "isolated_profile": true,
+      "exit_code": 0,
+      "executable_sha256": "4b1e28829f8b24bcc07aa616cbd980b0cbd2391f538eca5b81c5730543b3d4d0",
+      "checked": [
+        "main_menu",
+        "load_standard_save",
+        "adventure_map",
+        "hero_dialog",
+        "castle_dialog",
+        "building_catalog",
+        "battle_quick_result",
+        "battle_restart_interactive",
+        "unit_movement_and_ai_turn",
+        "battle_result_and_necromancy",
+        "adventure_return",
+        "end_turn_day_2",
+        "normal_exit"
+      ],
+      "not_checked": [
+        "all_keyboard_shortcuts",
+        "all_maps_and_campaigns",
+        "non_Windows_SDK_builds"
+      ]
+    },
+    "overall_requirements_complete": false,
+    "remaining_requirements": [
+      "4/A: per-participant controllers, multi-agent and AI-only sessions",
+      "ship movement and purchase; own-castle reentry",
+      "remaining adventure objects/spells and combat spells",
+      "configurable standalone battle-only initialization"
+    ],
+    "acceptance_runner_negative_controls": {
+      "different_input_hash_rejected_without_overwrite": true,
+      "disabled_engine_failure_persisted": true
+    }
+  },
+  "benchmark_method": {
+    "map": "The Other Side, 36x36",
+    "render_size": [
+      640,
+      480
+    ],
+    "warmup_excluded": true,
+    "measurement": "wall-clock perf_counter around complete Python calls",
+    "gym_step": "end turn, native AI, full numeric observation/mask/info; no rendering",
+    "native_step": "end turn JSON request/result only; no get_state or Gym encoding",
+    "background_load": "stress, GUI smoke and test suite finished before benchmark",
+    "scope": "local machine/build and selected first-day state, not training throughput or cross-platform guarantee"
+  }
+}
