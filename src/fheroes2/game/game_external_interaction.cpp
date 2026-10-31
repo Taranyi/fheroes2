@@ -33,7 +33,9 @@ Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int6
                                                               std::function<void( const std::string &, const std::string & )> notify,
                                                               std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle,
                                                               std::function<void( const Battle::Result &, int32_t )> battleFinished,
-                                                              std::function<ControllerType( int )> controller, std::function<bool()> gameOver )
+                                                              std::function<ControllerType( int )> controller, std::function<bool()> gameOver,
+                                                              std::function<std::string( const ExternalTextChoice & )> text,
+                                                              std::function<void( const std::string &, int, int )> information )
     : _previous( current )
     , _choose( std::move( choose ) )
     , _notify( std::move( notify ) )
@@ -41,6 +43,8 @@ Game::ScopedExternalInteractions::ScopedExternalInteractions( std::function<int6
     , _battleFinished( std::move( battleFinished ) )
     , _controller( std::move( controller ) )
     , _gameOver( std::move( gameOver ) )
+    , _text( std::move( text ) )
+    , _information( std::move( information ) )
 {
     current = this;
 }
@@ -105,4 +109,18 @@ void Game::ScopedExternalInteractions::battleFinished( const Battle::Result & re
     if ( current != nullptr && current->_battleFinished ) {
         current->_battleFinished( result, tile );
     }
+}
+
+std::string Game::ScopedExternalInteractions::text( const ExternalTextChoice & choice )
+{
+    if ( current == nullptr || !current->_text )
+        throw System::HeadlessInteractionError( "text choice without an external controller" );
+    return current->_text( choice );
+}
+
+void Game::ScopedExternalInteractions::information( const std::string & kind, const int color, const int detail )
+{
+    if ( current == nullptr || !current->_information )
+        throw System::HeadlessInteractionError( "information view without an external controller" );
+    current->_information( kind, color, detail );
 }

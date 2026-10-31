@@ -48,10 +48,10 @@ class HeroesEnv(gym.Env):
     def __init__(self, *, executable, save=None, map_path=None, player_id=None, difficulty=1, timeout=60,
                  max_steps=1000, max_map_size=144, max_heroes=128, max_castles=128, max_battle_units=32,
                  max_actions=8192, render_mode=None, render_view="auto", width=640, height=480,
-                 hero_id=None, castle_id=None, cwd=None, env=None):
+                 hero_id=None, castle_id=None, cwd=None, env=None, sphinx_answers=(), max_text_bytes=4096, max_answer_bytes=256):
         if (save is None) == (map_path is None):
             raise ValueError("Specify exactly one save or map_path")
-        if render_mode not in (None, "rgb_array") or render_view not in ("auto", "adventure", "battle", "hero", "castle"):
+        if render_mode not in (None, "rgb_array") or render_view not in ("auto", "adventure", "battle", "hero", "castle", "world", "oracle"):
             raise ValueError("Unsupported render_mode or render_view")
         for key, value, upper in (("max_steps", max_steps, 1000000000), ("max_map_size", max_map_size, 144),
                                   ("max_heroes", max_heroes, 256), ("max_castles", max_castles, 512),
@@ -60,6 +60,20 @@ class HeroesEnv(gym.Env):
                 raise ValueError(f"{key} must be an integer from 1 to {upper}")
         if any(type(v) is not int or not 32 <= v <= 1024 for v in (width, height)):
             raise ValueError("width and height must be integers from 32 to 1024")
+        if type(max_text_bytes) is not int or not 1 <= max_text_bytes <= 65536 or type(max_answer_bytes) is not int or not 1 <= max_answer_bytes <= 4096:
+            raise ValueError("Invalid text/answer byte capacities")
+        if max_actions * max_answer_bytes > 16777216:
+            raise ValueError("Action text buffer exceeds the 16 MiB Gym profile limit")
+        if isinstance(sphinx_answers, (str, bytes)):
+            raise ValueError("sphinx_answers must be a sequence of answer strings")
+        try:
+            text_answers = tuple(sphinx_answers)
+        except TypeError:
+            raise ValueError("sphinx_answers must be a sequence of strings") from None
+        for answer in text_answers:
+            if not isinstance(answer, str) or any(c in answer for c in ("\0", "\r", "\n")) or len(answer.encode("utf-8")) > max_answer_bytes:
+                raise ValueError("Sphinx vocabulary contains an invalid or overlong answer")
+        self._sphinx_answers = tuple(dict.fromkeys(("", *text_answers)))
         self.executable = Path(executable).resolve(strict=True)
         self._setup = {"save": save} if save is not None else {"map_path": map_path}
         self._setup.update(player_id=player_id, difficulty=difficulty)
@@ -68,7 +82,7 @@ class HeroesEnv(gym.Env):
         self.render_mode, self.render_view = render_mode, render_view
         self.width, self.height, self.hero_id, self.castle_id = width, height, hero_id, castle_id
         self.action_space = spaces.Discrete(max_actions)
-        self.observation_space = observation_space(max_map_size, max_heroes, max_castles, max_battle_units, max_actions)
+        self.observation_space = observation_space(max_map_size, max_heroes, max_castles, max_battle_units, max_actions, max_text_bytes, max_answer_bytes)
         self._session = None
         self._needs_reset = True
         self._state = self._decision = self._observation = None
@@ -109,7 +123,7 @@ class HeroesEnv(gym.Env):
         self._state = self._session.get_state(include_serialized=False)
         # Check entity/map limits before any potentially expensive candidate enumeration.
         encode(self.observation_space, self._state, self._decision, [], self._steps, self.max_steps)
-        self._commands = candidates(self._session, self._state, self._decision, self.max_actions)
+        self._commands = candidates(self._session, self._state, self._decision, self.max_actions, text_answers=self._sphinx_answers)
         if self._decision["phase"] != "terminal" and not self._commands:
             raise ProfileLimitError("A live decision has no supported legal commands")
         self._observation = encode(self.observation_space, self._state, self._decision, self._commands, self._steps, self.max_steps)

@@ -115,7 +115,7 @@ ezért diagnosztikai pillanatkép, nem önállóan folytatható harci mentés.
 A csata az általános `HeroesSession` része. A korai kilencakciós Gym-példa csatánál `unsupported_battle` hibát és resetigényt ad;
 nem választ automatikusan, nem jelenti vereségnek vagy időlimitnek. A [13. lépés külön Gym-adaptere](PYTHON_ENV_GYM.md) már ugyanabban az epizódban kezeli a csatajelölteket.
 Ha a motor külső egységdöntés előtt tényleges vereséget állapít meg, az természetesen valódi terminal/terminated eredmény.
-A támogatott mozgási célok ellenséges hőssel/várral bővültek; a saját várba belépést a 7. kiegészítés, 83 térképi objektumtípust a 9–10. bővítés támogat. A speciális kivételek az aktuális profilban szerepelnek.
+A támogatott mozgási célok ellenséges hőssel/várral bővültek; a saját várba belépést a 7. kiegészítés, 91 térképi objektumtípust a 9–10. bővítés támogat. A speciális kivételek az aktuális profilban szerepelnek.
 A headless ágak az inputot és megjelenítést cserélik; a normál UI megmarad. Python/JSON csak az opcionális PC-s adapterhez kell.
 
 2026-10-29, Windows: mind a 111 Python-integrációs teszt sikeres, a 12 új csatateszttel, a Gym csatahatárával és az AI-körből

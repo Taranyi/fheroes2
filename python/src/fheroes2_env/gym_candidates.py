@@ -27,9 +27,9 @@ from .session import EngineError
 ACTION_NAMES = ("turn.end", "hero.move", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
                 "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap",
                 "hero.end_meeting", "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast",
-                "choice.answer", "battle.act", "castle.buy_boat")
+                "choice.answer", "battle.act", "castle.buy_boat", "choice.answer_text", "trading_post.trade")
 BATTLE_KINDS = ("skip", "move", "attack", "shoot", "spell", "retreat", "surrender")
-CHOICE_KINDS = ("treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count", "hero.primary_skill", "spell.town_portal", "spell.dimension_door")
+CHOICE_KINDS = ("treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count", "hero.primary_skill", "spell.town_portal", "spell.dimension_door", "sphinx.answer")
 DIRECTIONS = ((0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1))
 
 
@@ -90,6 +90,12 @@ def adventure_proposals(game, state, decision, capacity):
         for trade in options["market"]["trades"]:
             for lots in quantities(trade["max_lots"], capacity):
                 yield command("market.trade", castle_id=cid, resource_from=trade["resource_from"], resource_to=trade["resource_to"], lots=lots)
+    visit = state.get("trading_post")
+    if visit is not None:
+        options = game.get_trading_post_options(visit["hero_id"])
+        for trade in options["trades"]:
+            for lots in quantities(trade["max_lots"], capacity):
+                yield command("trading_post.trade", hero_id=visit["hero_id"], resource_from=trade["resource_from"], resource_to=trade["resource_to"], lots=lots)
     entities = [("hero", h["id"], h["army"], h["castle_id"]) for h in heroes]
     entities += [("castle", c["id"], c["garrison"], None) for c in castles]
     endpoints = []
@@ -134,7 +140,7 @@ def adventure_proposals(game, state, decision, capacity):
             yield command("artifact.transfer", source=b, target=a)
 
 
-def candidates(game, state, decision, capacity):
+def candidates(game, state, decision, capacity, *, text_answers=("",)):
     phase = decision["phase"]
     if phase == "terminal":
         return []
@@ -147,6 +153,11 @@ def candidates(game, state, decision, capacity):
         choice = decision["pending_choice"]
         if choice["kind"] not in CHOICE_KINDS:
             raise ProfileLimitError("Unknown native choice kind")
+        if choice.get("input_type") == "text":
+            if len(text_answers) > capacity:
+                raise ProfileLimitError("Text vocabulary exceeds max_actions")
+            return [dict(command("choice.answer_text", choice_id=choice["choice_id"], text=answer), text_id=i)
+                    for i, answer in enumerate(text_answers)]
         values = choice["options"]
         if not values:
             if choice["maximum"] - choice["minimum"] + 1 > capacity:

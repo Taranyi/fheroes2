@@ -30,7 +30,7 @@ RESOURCES = ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold")
 ACTION_FIELDS = ("type", "hero_id", "other_hero_id", "castle_id", "x", "y", "building_id", "dwelling_id", "count",
                  "resource_from", "resource_to", "lots", "spell_id", "choice_id", "value", "action_id", "source_kind",
                  "source_id", "source_slot", "target_kind", "target_id", "target_slot", "battle_kind", "unit_uid",
-                 "target_uid", "destination", "target_cell", "attack_direction", "spell_points", "gold")
+                 "target_uid", "destination", "target_cell", "attack_direction", "spell_points", "gold", "text_id")
 HERO_FIELDS = ("id", "owner", "active", "race", "level", "experience", "attack", "defense", "power", "knowledge",
                "spell_points", "max_spell_points", "move_points", "scouting_distance", "has_spell_book", "can_dismiss",
                "dismissal_prohibited", "can_buy_spell_book", "castle_id", "is_shipmaster", "max_move_points", "morale", "luck")
@@ -39,7 +39,7 @@ UNIT_FIELDS = ("uid", "monster_id", "count", "alive", "army_color", "current_col
 CHOICE_VALUES = ("gold", "experience", "monster_id", "count", "available", "gold_per_unit", "primary_skill", "first_level", "second_level", "wood", "mercury", "ore", "sulfur", "crystal", "gems", "artifact_id")
 
 
-def observation_space(map_size, heroes, castles, units, actions):
+def observation_space(map_size, heroes, castles, units, actions, text_bytes=4096, answer_bytes=256):
     shapes = {"global": (12,), "tiles": (map_size * map_size, 19), "tile_mask": (map_size * map_size,),
               "players": (6, 13), "player_mask": (6,), "heroes": (heroes, len(HERO_FIELDS) + 2), "hero_mask": (heroes,),
               "hero_armies": (heroes, 5, 2), "hero_artifacts": (heroes, 14, 2), "hero_skills": (heroes, 8, 2),
@@ -49,6 +49,14 @@ def observation_space(map_size, heroes, castles, units, actions):
               "battle_effects": (units, 32), "battle_board": (99, 3), "battle_commanders": (2, 3),
               "choice": (6,), "choice_values": (len(CHOICE_VALUES),), "choice_value_mask": (len(CHOICE_VALUES),), "actions": (actions, len(ACTION_FIELDS))}
     result = {key: spaces.Box(np.iinfo(np.int64).min, np.iinfo(np.int64).max, shape=shape, dtype=np.int64) for key, shape in shapes.items()}
+    result["text"] = spaces.Box(0, 255, shape=(text_bytes,), dtype=np.uint8)
+    result["text_mask"] = spaces.MultiBinary(text_bytes)
+    result["action_text"] = spaces.Box(0, 255, shape=(actions, answer_bytes), dtype=np.uint8)
+    result["view"] = spaces.Box(0, np.iinfo(np.int64).max, shape=(4,), dtype=np.int64)
+    result["view_tiles"] = spaces.Box(0, np.iinfo(np.int64).max, shape=(map_size * map_size, 3), dtype=np.int64)
+    result["view_markers"] = spaces.Box(0, np.iinfo(np.int64).max, shape=(map_size * map_size, 3), dtype=np.int64)
+    result["oracle"] = spaces.Box(np.iinfo(np.int64).min, np.iinfo(np.int64).max, shape=(6, 18), dtype=np.int64)
+    result["oracle_mask"] = spaces.MultiBinary(6)
     result["action_mask"] = spaces.MultiBinary(actions)
     return spaces.Dict(result)
 
@@ -136,8 +144,38 @@ def encode(space, state, decision, commands, step, max_steps):
                 out["choice_values"][i] = choice["values"][field]
                 out["choice_value_mask"][i] = 1
     require(len(commands) <= len(out["actions"]), "Action count exceeds max_actions")
+    if choice is not None and choice.get("input_type") == "text":
+        prompt = choice["prompt"].encode("utf-8")
+        require(len(prompt) <= len(out["text"]), "Riddle exceeds max_text_bytes")
+        out["text"][:len(prompt)] = np.frombuffer(prompt, dtype=np.uint8)
+        out["text_mask"][:len(prompt)] = 1
+    information = state.get("information_view")
+    if information is not None:
+        is_world = information["kind"] == "world"
+        out["view"][:] = (1 if is_world else 2, information["player_id"], information["mode"], information["day"])
+        if is_world:
+            for tile in information["tiles"]:
+                index = tile["index"]
+                require(index < len(out["view_tiles"]), "Information map exceeds profile")
+                out["view_tiles"][index] = (tile["terrain_image"], tile["terrain_flags"], 1)
+            for marker in information["markers"]:
+                index = marker["index"]
+                require(index < len(out["view_markers"]), "Information marker exceeds profile")
+                out["view_markers"][index, 0] |= 1 << ("hero", "town", "mine", "resource", "artifact").index(marker["kind"])
+                out["view_markers"][index, 1:] = (marker["owner"], marker["resource_id"])
+        else:
+            fields = ("player_id", "towns", "castles", "heroes", "gold", "wood_ore", "rare_resources", "obelisks", "artifacts", "army_strength", "income",
+                      "best_hero_id", "attack", "defense", "power", "knowledge", "best_monster_id", "is_human")
+            for row, player in enumerate(sorted(information["players"], key=lambda p: p["player_id"])):
+                require(row < 6, "Oracle exceeds player limit")
+                out["oracle"][row] = [player[field] for field in fields]
+                out["oracle_mask"][row] = 1
     for i, cmd in enumerate(commands):
-        values = dict(cmd["params"], type=ACTION_NAMES.index(cmd["action"]) + 1)
+        if cmd["action"] == "choice.answer_text":
+            answer = cmd["params"]["text"].encode("utf-8")
+            require(len(answer) <= out["action_text"].shape[1], "Answer exceeds max_answer_bytes")
+            out["action_text"][i, :len(answer)] = np.frombuffer(answer, dtype=np.uint8)
+        values = dict(cmd["params"], text_id=cmd.get("text_id", 0), type=ACTION_NAMES.index(cmd["action"]) + 1)
         if cmd["action"] == "battle.act":
             details = battle["actions"][cmd["params"]["action_id"]]
             require(details["kind"] in BATTLE_KINDS, "Unknown battle command kind")

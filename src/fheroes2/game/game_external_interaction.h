@@ -52,6 +52,14 @@ namespace Game
         int64_t maximum{ 0 };
     };
 
+    struct ExternalTextChoice
+    {
+        std::string kind;
+        int heroId;
+        std::string prompt;
+        size_t maxBytes{ 4096 };
+    };
+
     class ExternalActionCancelled final
     {};
 
@@ -61,7 +69,8 @@ namespace Game
         ScopedExternalInteractions( std::function<int64_t( const ExternalChoice & )> choose, std::function<void( const std::string &, const std::string & )> notify,
                                     std::function<void( Battle::Arena &, const Battle::Unit &, Battle::Actions & )> battle = {},
                                     std::function<void( const Battle::Result &, int32_t )> battleFinished = {}, std::function<ControllerType( int )> controller = {},
-                                    std::function<bool()> gameOver = {} );
+                                    std::function<bool()> gameOver = {}, std::function<std::string( const ExternalTextChoice & )> text = {},
+                                    std::function<void( const std::string &, int, int )> information = {} );
         ~ScopedExternalInteractions();
         ScopedExternalInteractions( const ScopedExternalInteractions & ) = delete;
         ScopedExternalInteractions & operator=( const ScopedExternalInteractions & ) = delete;
@@ -76,6 +85,8 @@ namespace Game
         static bool isNative( int color );
         static bool hasGameOverController();
         static bool gameOver();
+        static std::string text( const ExternalTextChoice & choice );
+        static void information( const std::string & kind, int color, int detail );
 
     private:
         ScopedExternalInteractions * _previous;
@@ -85,5 +96,7 @@ namespace Game
         std::function<void( const Battle::Result &, int32_t )> _battleFinished;
         std::function<ControllerType( int )> _controller;
         std::function<bool()> _gameOver;
+        std::function<std::string( const ExternalTextChoice & )> _text;
+        std::function<void( const std::string &, int, int )> _information;
     };
 }

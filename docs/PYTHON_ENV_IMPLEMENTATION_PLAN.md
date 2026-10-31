@@ -260,7 +260,7 @@ Ha egy technikai próba megcáfol egy feltételezést, az érintett megvalósít
 | 7 | Kész a dokumentált profilon | Várlekérdezés, építés, pontos toborzás, hősvásárlás, piaci kereskedelem; hajóvásárlás, beszállás/vízi mozgás/partraszállás és saját várba belépés. [Navigációs API és példa](PYTHON_ENV_NAVIGATION.md). |
 | 4/A | Kész a dokumentált standard profilon | Résztvevőnként Python/beépített AI, több Python-oldal, AI-only emberi natív profil nélkül, korlátozott előreléptetés, csata-/választásirányítás és natív oldalankénti eredmények. [API és tesztek](PYTHON_ENV_CONTROLLERS.md). |
 | 8 | Kész a deklarált profilon | Pontos slot-áthelyezés, split/merge, csapat- és tárgycsere közös natív függvényekkel. Tulajdonjog, utolsó kötelező csapat, varázskönyv-védelem és valódi találkozás ellenőrzött. Tekercsadat, Anduran-összeállítás és a találkozás végén alkalmazott natív felderítés megmarad. Teljes csapat fejlesztése/elbocsátása, önkéntes hőselbocsátás és varázskönyv-vétel a normál UI-val közös műveletekkel. Minden oldali, tisztán olvasó seregopciók és árak. [Seregpélda](PYTHON_ENV_ARMY.md), [tárgypélda](PYTHON_ENV_ARTIFACTS.md), [új hősműveletek és tesztmentések](PYTHON_ENV_HERO_OPERATIONS.md). |
-| 9 | Kész és bővített dokumentált profil | 83 térképi objektumtípus; natív fizetés, tanulás, látogatási szabály, foglalás és lakóhelyek. Arénaválasztás, utazási célok, 11 adventure varázslat; strukturált ár/jutalom és atomi rollback. [Aktuális lista és kivételek](PYTHON_ENV_EXPANSION.md). |
+| 9 | Kész és bővített dokumentált profil | 91 térképi objektumtípus; natív fizetés, tanulás, látogatási szabály, foglalás és lakóhelyek. Arénaválasztás, utazási célok, 17 adventure varázslat; strukturált ár/jutalom és atomi rollback. [Aktuális lista és kivételek](PYTHON_ENV_EXPANSION.md). |
 | 10 | Kész és bővített dokumentált profil | Élő támadó/védő csata, oldalankénti Python/AI, mind a 48 tanítható harci varázslat; teleport, tömegvarázslat, idézés, tükörkép, feltámasztás/Animate Dead és ostromvarázslat natív célpontlistával. [Szerződés és tesztek](PYTHON_ENV_EXPANSION.md). |
 | 11 | Kész a deklarált profilon | Adventure, aktív csata, saját/AI-hős és vár natív RGB-képe ablak nélkül. Közös memóriacélú épület-/UI-rajzolás; statikus képek és méretezés. Nyolc új motoros teszt és képi ellenőrzés; a teljes csatavégállapot képkérésekkel/anélkül is egyezik. [API, példa és korlátok](PYTHON_ENV_VIEWS.md). |
 | 12 | Kész a deklarált profilon | Mentéses és natív MP2/MX2/FH2M pályás, seedelt reset friss motorfolyamatban. Csata/választás/terminális állapotból és crash/timeout után is újraindítható. A mentett világseed változatlan; főszál-PCG és új világ kezdőállapota szabályozott. [Szerződés, példa és korlátok](PYTHON_ENV_RESET.md). |
@@ -284,3 +284,10 @@ A preview eredeti bevezetése csak Python-kódot és opcionális Python-függős
 a 12. lépés óta a közös reset API-t használja. A bevezetéskori Windows-ellenőrzésen mind az 51 Python-teszt sikeres volt
 (ebből 8 az opcionális Gym-példát ellenőrizte); a látható bemutató
 két epizódon át lefutott. A base Python-csomag külső függőség nélkül is importálható maradt.
+
+### Speciális esetek kiegészítése
+
+A Sphinx szöveges válasza, Trading Post, map eventek, Stone Lith/Whirlpool, Magi,
+Magellan/Oracle és mind a hat View World nézet elkészült.
+Aktuális profil: 91 adventure objektum, 17 adventure és 48 harci varázslat.
+[Szerződés, futtatható példa és fennmaradó feladatlista](PYTHON_ENV_SPECIAL.md).

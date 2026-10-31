@@ -411,7 +411,7 @@ class HeroesSession:
             result = self.request("render", params)
             try:
                 if (
-                    result.get("view") != view or result.get("format") != "rgb8" or result.get("perspective") != "omniscient"
+                    result.get("view") != view or result.get("format") != "rgb8" or result.get("perspective") != ("native_information" if view in ("world", "oracle") else "omniscient")
                     or type(result.get("width")) is not int or result["width"] != width
                     or type(result.get("height")) is not int or result["height"] != height
                     or type(result.get("channels")) is not int or result["channels"] != 3
@@ -513,6 +513,23 @@ class HeroesSession:
     def answer_choice(self, choice_id: int, value: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
         """Resume the suspended native action with an exact offered value."""
         return self.step("choice.answer", token=token, params={"choice_id": choice_id, "value": value})
+
+    def answer_text(self, choice_id: int, text: str, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Submit one free-form UTF-8 Sphinx answer; native matching decides the outcome."""
+        if not isinstance(text, str) or any(c in text for c in ("\0", "\r", "\n")) or len(text.encode("utf-8")) > 4096:
+            raise ValueError("Answer must be one line of at most 4096 UTF-8 bytes without NUL")
+        return self.step("choice.answer_text", token=token, params={"choice_id": choice_id, "text": text})
+
+    def get_information_view(self) -> dict[str, Any]:
+        """Read the last native Oracle/View World snapshot without recasting or advancing."""
+        return self.request("get_information_view")
+
+    def get_trading_post_options(self, hero_id: int) -> dict[str, Any]:
+        """Read exact native rates for an active Trading Post visit."""
+        return self.request("get_trading_post_options", {"hero_id": hero_id})
+
+    def trade_at_post(self, hero_id: int, resource_from: int, resource_to: int, lots: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        return self.step("trading_post.trade", token=token, params={"hero_id": hero_id, "resource_from": resource_from, "resource_to": resource_to, "lots": lots})
 
     def cast_spell(self, hero_id: int, spell_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
         """Cast an adventure spell supported by the current capability profile."""

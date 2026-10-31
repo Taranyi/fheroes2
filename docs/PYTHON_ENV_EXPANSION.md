@@ -156,11 +156,7 @@ Az opcionális és a normál `ENABLE_PYTHON_ENV=OFF` build lefordult; az `expans
 video/audio inicializálás nélkül lefutott. A korábbi 14. lépés teljesítménymérései történeti eredmények,
 ez a munkaszakasz nem helyettesíti azokat új RL-benchmarkkal vagy más platform SDK-buildjével.
 
-A támogatási lista továbbra is explicit. Még hiányzik többek között a szöveges Sphinx-válasz,
-a helyi Trading Post külön kereskedelmi felülete, a scripted map eventek, Stone Lith/Whirlpool,
-Hut of Magi, Magellan's Maps és Oracle speciális nézete, valamint a hat View World varázslat külön információs nézete.
-Ezekre nem adunk hamis sikeres vagy automatikus AI-műveletet; a profilon kívüli művelet elutasított és visszaállított.
-A beépített AI teljes natív stratégiai útja továbbra is megmarad.
+A felsorolt speciális esetek azóta elkészültek: [Sphinx, Trading Post, események, átjárók, Magi, Magellan, Oracle és View World](PYTHON_ENV_SPECIAL.md). Az aktuális közös profil 91 objektumtípus és 17 adventure varázslat. A fenti 83/11-es adatok és tesztszámok a korábbi munkaszakasz történeti eredményei.
 
 Külön hátravan a konfigurálható önálló csataindítás, a szélesebb pálya-/terep-/ostrom-/hajós kombinációs lefedettség,
 a Linux/macOS/mobil SDK-ellenőrzés és a nagy léptékű RL-profilozás. A Python/venv továbbra is csak opcionális desktop függőség.

@@ -99,7 +99,7 @@ Ez tisztán olvasó, az AI-hősöket is tartalmazza; módosítási jogosultságo
 A résztvevők `identify_hero` és `vision_monster_indices` mezői mutatják a natív hatásokat.
 Sikeres varázslás: `spell_cast` esemény, tényleges mana- és mozgáspont-levonással.
 Más varázslat: `unsupported_action`; hibás azonosító/típus: `invalid_request`; tiltott natív feltétel: `illegal_action`.
-A Dimension Door, Town Gate/Portal, hajóidézés és őrzőlények már támogatottak; a hat View World információs nézet még nincs bekötve.
+A Dimension Door, Town Gate/Portal, hajóidézés és őrzőlények már támogatottak; a hat View World információs nézet és a szöveges Sphinx-válasz is támogatott: [speciális interakciók](PYTHON_ENV_SPECIAL.md).
 
 ## Gym és platformhatár
 

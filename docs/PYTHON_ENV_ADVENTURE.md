@@ -101,5 +101,5 @@ más platformok SDK-buildjét helyben nem futtattuk.
 
 ## 9–10. bővítés
 
-Az aktuális, közös támogatási lista 83 objektumtípust kezel, az erőforráshelyektől és képességépületektől a bányákon át a csatával felszabadítható lakóhelyekig.
+Az aktuális, közös támogatási lista 91 objektumtípust kezel, az erőforráshelyektől és képességépületektől a bányákon át a csatával felszabadítható lakóhelyekig.
 A natív fizetés, látogatási szabály, választás és csata megmarad. [Teljes objektum-/varázslatprofil és futtatható példa](PYTHON_ENV_EXPANSION.md).

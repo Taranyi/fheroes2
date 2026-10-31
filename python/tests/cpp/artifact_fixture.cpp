@@ -37,6 +37,7 @@
 #include "kingdom.h"
 #include "map_object_info.h"
 #include "maps_fileinfo.h"
+#include "maps_objects.h"
 #include "maps_tiles.h"
 #include "maps_tiles_helper.h"
 #include "monster.h"
@@ -51,8 +52,9 @@
 
 int main( int argc, char ** argv )
 {
-    if ( argc != 3 && !( argc == 4 && ( std::string( argv[3] ) == "--gym-only" || std::string( argv[3] ) == "--expansion-only" ) ) ) {
-        std::cerr << "Usage: fheroes2_artifact_fixture BASE_SAVE OUTPUT_DIRECTORY [--gym-only|--expansion-only]\n";
+    if ( argc != 3
+         && !( argc == 4 && ( std::string( argv[3] ) == "--gym-only" || std::string( argv[3] ) == "--expansion-only" || std::string( argv[3] ) == "--special-only" ) ) ) {
+        std::cerr << "Usage: fheroes2_artifact_fixture BASE_SAVE OUTPUT_DIRECTORY [--gym-only|--expansion-only|--special-only]\n";
         return EXIT_FAILURE;
     }
     try {
@@ -85,9 +87,10 @@ int main( int argc, char ** argv )
                 throw std::runtime_error( "Could not save the native Gym victory fixture." );
             }
         };
-        if ( argc == 4 && std::string( argv[3] ) == "--expansion-only" ) {
-            if ( input.parent_path() == output && input.filename().string().find( "expansion-" ) == 0 )
-                throw std::runtime_error( "Expansion outputs must not overwrite the input." );
+        if ( argc == 4 && ( std::string( argv[3] ) == "--expansion-only" || std::string( argv[3] ) == "--special-only" ) ) {
+            if ( input.parent_path() == output && ( input.filename().string().find( "expansion-" ) == 0 || input.filename().string().find( "special-" ) == 0 ) )
+                throw std::runtime_error( "Generated outputs must not overwrite the input." );
+            const bool special = std::string( argv[3] ) == "--special-only";
             using Json = nlohmann::json;
             Json manifest = Json::array();
             constexpr int target = 18 * 36 + 15;
@@ -96,7 +99,7 @@ int main( int argc, char ** argv )
                 if ( world.w() != 36 || world.h() != 36 )
                     throw std::runtime_error( "Expansion fixtures require the recorded 36x36 base map." );
                 for ( int y = 10; y <= 21; ++y ) {
-                    for ( int x = 10; x <= 21; ++x ) {
+                    for ( int x = 10; x <= ( special ? 30 : 21 ); ++x ) {
                         auto & tile = world.getTile( y * 36 + x );
                         if ( tile.getMainObjectType() == MP2::OBJ_HERO || tile.getMainObjectType() == MP2::OBJ_CASTLE )
                             throw std::runtime_error( "Expansion patch must not replace a hero or castle." );
@@ -126,17 +129,33 @@ int main( int argc, char ** argv )
                     throw std::runtime_error( "Could not save an expansion fixture." );
             };
             for ( const auto type : fheroes2::pythonEnvAdventureObjects() ) {
+                const bool specialType = type == MP2::OBJ_SPHINX || type == MP2::OBJ_TRADING_POST || type == MP2::OBJ_EVENT || type == MP2::OBJ_STONE_LITHS
+                                         || type == MP2::OBJ_WHIRLPOOL || type == MP2::OBJ_HUT_OF_MAGI || type == MP2::OBJ_MAGELLANS_MAPS || type == MP2::OBJ_ORACLE;
+                if ( special != specialType )
+                    continue;
                 if ( type == MP2::OBJ_MONSTER || type == MP2::OBJ_JAIL || type == MP2::OBJ_SIGN || type == MP2::OBJ_BOTTLE )
                     continue; // Existing monster fixtures; jail/sign need authored map data.
-                const bool water = type == MP2::OBJ_SEA_CHEST || type == MP2::OBJ_FLOTSAM || type == MP2::OBJ_SHIPWRECK_SURVIVOR || type == MP2::OBJ_SHIPWRECK
-                                   || type == MP2::OBJ_DERELICT_SHIP || type == MP2::OBJ_BARREL || type == MP2::OBJ_BOTTLE || type == MP2::OBJ_BUOY
-                                   || type == MP2::OBJ_SIRENS || type == MP2::OBJ_MERMAID;
-                prepare( water );
+                const bool water = type == MP2::OBJ_WHIRLPOOL || type == MP2::OBJ_MAGELLANS_MAPS || type == MP2::OBJ_SEA_CHEST || type == MP2::OBJ_FLOTSAM
+                                   || type == MP2::OBJ_SHIPWRECK_SURVIVOR || type == MP2::OBJ_SHIPWRECK || type == MP2::OBJ_DERELICT_SHIP || type == MP2::OBJ_BARREL
+                                   || type == MP2::OBJ_BOTTLE || type == MP2::OBJ_BUOY || type == MP2::OBJ_SIRENS || type == MP2::OBJ_MERMAID;
+                Heroes * visitor = prepare( water );
+                if ( type == MP2::OBJ_WHIRLPOOL )
+                    visitor->Move2Dest( 23 * 36 + 15 );
+                if ( type == MP2::OBJ_STONE_LITHS || type == MP2::OBJ_WHIRLPOOL ) {
+                    for ( int i = 0; i < world.w() * world.h(); ++i ) {
+                        if ( world.getTile( i ).getMainObjectType() == type )
+                            Maps::removeMainObjectFromTile( world.getTile( i ) );
+                    }
+                }
                 bool placed = false;
                 for ( int group = static_cast<int>( Maps::ObjectGroup::ADVENTURE_ARTIFACTS ); group < static_cast<int>( Maps::ObjectGroup::GROUP_COUNT ) && !placed;
                       ++group ) {
                     for ( const auto & info : Maps::getObjectsByGroup( static_cast<Maps::ObjectGroup>( group ) ) ) {
                         if ( info.objectType == type && Maps::setObjectOnTile( world.getTile( target ), info, true ) ) {
+                            if ( type == MP2::OBJ_STONE_LITHS || type == MP2::OBJ_WHIRLPOOL ) {
+                                if ( !Maps::setObjectOnTile( world.getTile( 18 * 36 + 26 ), info, true ) )
+                                    throw std::runtime_error( "Could not place the second native portal." );
+                            }
                             placed = true;
                             break;
                         }
@@ -160,10 +179,87 @@ int main( int argc, char ** argv )
                     tile.metadata()[0] = Skill::Secondary::ARCHERY;
                 if ( type == MP2::OBJ_MINE || type == MP2::OBJ_SAWMILL || type == MP2::OBJ_ALCHEMIST_LAB || type == MP2::OBJ_LIGHTHOUSE )
                     world.CaptureObject( target, PlayerColor::NONE );
+                int destination = target;
+                if ( type == MP2::OBJ_SPHINX ) {
+                    auto riddle = std::make_unique<MapSphinx>();
+                    riddle->setUIDAndIndex( target );
+                    riddle->riddle = "What walks on four legs in the morning, two at noon and three in the evening?";
+                    riddle->answers = { "human", "man" };
+                    riddle->isTruncatedAnswer = false;
+                    riddle->resources = Funds( Resource::GOLD, 1234 );
+                    riddle->artifact = Artifact::TELESCOPE;
+                    riddle->validate();
+                    world.addMapObject( std::move( riddle ) );
+                }
+                if ( type == MP2::OBJ_EVENT ) {
+                    auto event = std::make_unique<MapEvent>();
+                    event->setUIDAndIndex( target );
+                    event->message = "Native map event: resources, artifact and experience.";
+                    event->colors = Color::allPlayerColors();
+                    event->isComputerPlayerAllowed = true;
+                    event->isSingleTimeEvent = true;
+                    event->resources = Funds( Resource::GOLD, 777 );
+                    event->artifact = Artifact::TELESCOPE;
+                    event->experience = 1500;
+                    event->secondarySkill = Skill::Secondary( Skill::Secondary::SCOUTING, Skill::Level::BASIC );
+                    world.addMapObject( std::move( event ) );
+                }
+                if ( type == MP2::OBJ_HUT_OF_MAGI ) {
+                    bool eye = false;
+                    for ( const auto & info : Maps::getObjectsByGroup( Maps::ObjectGroup::ADVENTURE_MISCELLANEOUS ) ) {
+                        if ( info.objectType == MP2::OBJ_EYE_OF_MAGI && Maps::setObjectOnTile( world.getTile( 18 * 36 + 26 ), info, true ) ) {
+                            eye = true;
+                            break;
+                        }
+                    }
+                    if ( !eye )
+                        throw std::runtime_error( "Could not place Eye of Magi." );
+                }
+                if ( type == MP2::OBJ_WHIRLPOOL ) {
+                    for ( int i = 10 * 36 + 10; i < 22 * 36; ++i ) {
+                        if ( i % 36 >= 10 && i % 36 <= 20 && world.getTile( i ).getMainObjectType() == type )
+                            destination = i;
+                    }
+                    visitor->Move2Dest( destination + 36 );
+                    visitor->Scout( visitor->GetIndex() );
+                }
                 world.updatePassabilities();
-                const auto name = "expansion-object-" + std::to_string( type ) + ".sav";
+                const auto name = std::string( special ? "special-object-" : "expansion-object-" ) + std::to_string( type ) + ".sav";
                 save( name );
-                manifest.push_back( { { "object_id", static_cast<int>( type ) }, { "name", MP2::StringObject( type ) }, { "save", name }, { "water", water } } );
+                manifest.push_back( { { "object_id", static_cast<int>( type ) },
+                                      { "name", MP2::StringObject( type ) },
+                                      { "save", name },
+                                      { "water", water },
+                                      { "target_index", destination } } );
+            }
+            if ( special ) {
+                for ( const auto & record : manifest ) {
+                    if ( record["name"] == "Event" ) {
+                        const auto original = output / record["save"].get<std::string>();
+                        for ( const auto & variant : { std::string( "repeat" ), std::string( "ai-denied" ), std::string( "ai-allowed" ), std::string( "wrong-color" ) } ) {
+                            session.loadSave( original.u8string() );
+                            auto * event = dynamic_cast<MapEvent *>( world.GetMapObject( target ) );
+                            if ( !event )
+                                throw std::runtime_error( "Native map event fixture is missing." );
+                            event->isSingleTimeEvent = false;
+                            event->experience = 0;
+                            event->artifact = Artifact::UNKNOWN;
+                            event->secondarySkill = {};
+                            if ( variant == "ai-denied" || variant == "ai-allowed" ) {
+                                event->isComputerPlayerAllowed = variant == "ai-allowed";
+                                Players::Get( PlayerColor::BLUE )->SetControl( CONTROL_AI );
+                                Settings::Get().GetPlayers().SetStartGame();
+                                Settings::Get().SetCurrentColor( PlayerColor::BLUE );
+                            }
+                            if ( variant == "wrong-color" )
+                                event->colors = static_cast<PlayerColorsSet>( PlayerColor::GREEN );
+                            save( "special-event-" + variant + ".sav" );
+                        }
+                    }
+                }
+                std::ofstream( output / "special-objects.json" ) << manifest.dump( 2 ) << '\n';
+                std::cout << "Special native fixtures: " << manifest.size() << " objects.\n";
+                return EXIT_SUCCESS;
             }
             Heroes * caster = prepare( false );
             caster->GetArmy().Reset();

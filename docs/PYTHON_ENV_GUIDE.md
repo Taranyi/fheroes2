@@ -155,13 +155,13 @@ Teljes séma és konfigurációs maximumok: [Gym-szerződés](PYTHON_ENV_GYM.md)
 | Betöltés/reset | Standard mentés, seedelt MP2/MX2/FH2M új játék; csatából/választásból reset | Kampányok, szerkesztő és hálózati játék nem célprofil |
 | Állapot | Minden oldal, AI-hősök/várak/seregek/tárgyak és teljes térkép | Láthatóságra szűrt `observe` nincs |
 | Vezérlés | Oldalanként Python/beépített AI, több Python-agent, AI-only, csata/választás útválasztás | Hozzárendelés resetkor; Gym egy külső oldalas; külön multi-agent wrapper nincs |
-| Adventure | Szárazföldi/vízi mozgás, beszállás/partraszállás, saját várba belépés, 83 deklarált objektumtípus, AI-körök | További objektumok és speciális tengeri interakciók |
-| Gazdaság | Natív építés, toborzás, hős- és hajóvásárlás, ajánlatfrissítés, piaci csere | További speciális gazdasági műveletek |
+| Adventure | Szárazföldi/vízi mozgás, beszállás/partraszállás, saját várba belépés, 91 deklarált objektumtípus, AI-körök | A deklarált profil és pályaadatok feltételei szerint |
+| Gazdaság | Natív építés, toborzás, hős- és hajóvásárlás, ajánlatfrissítés, piaci csere | Trading Post helyi natív rátákkal is támogatott |
 | Sereg/hős/tárgy | Natív találkozás, seregátadás/csere, upgrade/dismiss, könyvvásárlás, tárgy/tekercs/set | Jogosultság és találkozási távolság a natív szabályok szerint |
-| Választás | Láda, szintlépés, semleges csatlakozás/üldözés, megerősítés és toborzási darabszám | Arena elsődleges képesség és térképi teleportcél is; szöveges Sphinx még nincs |
-| Adventure varázslat | 11 varázslat: Identify/Visions, hajóidézés, Dimension Door, Town Gate/Portal, őrzőlények | Hat View World információs nézet |
+| Választás | Láda, szintlépés, semleges csatlakozás/üldözés, megerősítés és toborzási darabszám | Arena elsődleges képesség és térképi teleportcél is; szöveges Sphinx is támogatott |
+| Adventure varázslat | 17 varázslat: Identify/Visions, hajóidézés, Dimension Door, Town Gate/Portal, őrzőlények | Natív mana, könyv és játékszabályok szerint |
 | Csata | Térképi támadás/védekezés, egységkörök, mozgás, támadás, lövés, menekülés, megadás, natív eredmény | 48 tanítható harci varázslat, natív célzással; konfigurálható battle-only reset külön feladat |
-| Render | Adventure, aktív csata, saját/AI-hős és vár, RGB; UI nélkül | Statikus képkérés, nem animációs/videóstream |
+| Render | Adventure, aktív csata, saját/AI-hős és vár, Oracle és View World, RGB; UI nélkül | Statikus képkérés, nem animációs/videóstream |
 | Gym | Több hős, választás/csata ugyanabban az epizódban, maszk, fix terek, terminális reward | Bounded profil, numerikus feature-ök; nem optimalizált tömeges RL backend |
 | Önálló csata | A vezérlő és render alapjai adottak | Konfigurálható battle-only reset nincs; terep/ostrom/hajós kombinációk külön bővítés |
 | Platform | Opcionális desktop CMake-út; Windows futás és normál Windows UI ellenőrizve | Linux/macOS és mobil SDK-build most nem futott |
@@ -242,5 +242,5 @@ Tipikus hibák:
 - Timeout/crash: kivétel után reset; a motorfolyamat kilépése nem játékmeneti eredmény.
 
 A 7. kiegészítés hajózása/hajóvásárlása/saját várba belépése elkészült: [navigációs példa és API](PYTHON_ENV_NAVIGATION.md).
-A [9–10. bővítés](PYTHON_ENV_EXPANSION.md) 83 objektumot, 11 adventure és 48 harci varázslatot kezel.
-További munka: a dokumentált speciális objektumok és View World nézetek; konfigurálható battle-only indítás. Nagy léptékű RL-optimalizálás és láthatóságra szűrt observation ezek mellett külön bővítés.
+A [9–10. bővítés](PYTHON_ENV_EXPANSION.md) 91 objektumot, 17 adventure és 48 harci varázslatot kezel.
+A [speciális objektumok és View World nézetek](PYTHON_ENV_SPECIAL.md) is elkészültek. További munka: konfigurálható battle-only indítás és szélesebb kombinációs ellenőrzés, Linux/macOS/mobil SDK-buildek. Nagy léptékű RL-optimalizálás és láthatóságra szűrt observation ezek mellett külön bővítés.

@@ -563,9 +563,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File script/windows/python-env-ar
 uv run --project python python python/examples/expansion.py
 ```
 
-The explicit profile now includes 83 adventure object types, 11 adventure spells and all 48 teachable combat spells.
+The explicit profile now includes 91 adventure object types, 17 adventure spells and all 48 teachable combat spells.
 Use the existing move/cast/answer/battle APIs; native rules calculate prices, targets, effects and outcomes.
 New choices include arena primary skills and Town Portal/Dimension Door destinations. World state exposes
 maximum movement, morale/luck and captured-object owners/guardians for every side.
 Gym observation shapes are now heroes `(128,25)`, tiles `(20736,19)` and choice values `(16,)`.
-See [the complete contract, examples, verification and remaining special cases](../docs/PYTHON_ENV_EXPANSION.md).
+See [the expansion contract, examples and verification](../docs/PYTHON_ENV_EXPANSION.md).
+
+### Special objects and information views
+
+The profile now includes **91 adventure object types, 17 adventure spells and 48 combat spells**.
+Sphinx accepts free text via `answer_text`; an active Trading Post visit exposes native quotes via
+`get_trading_post_options` and `trade_at_post`. Map events, Stone Liths/Whirlpools, Magi and Magellan use native rules.
+Oracle and all six View World spells expose a frozen `get_information_view()` snapshot and native RGB
+with `render(view="oracle")` / `render(view="world")`. Gym supports a configured `sphinx_answers` vocabulary
+and fixed byte arrays for riddles/answers; it never reveals the solution automatically.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File script/windows/python-env-artifact-fixture.ps1 -ExpansionOnly
+uv run --project python --cache-dir .tools/uv-cache python python/examples/special.py
+```
+
+See [the complete special-case API, Gym schema and remaining roadmap](../docs/PYTHON_ENV_SPECIAL.md).

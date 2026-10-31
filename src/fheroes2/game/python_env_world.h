@@ -65,6 +65,8 @@ namespace fheroes2
         nlohmann::json newGame( const std::string & path, uint32_t seed, int playerId, int difficulty, const nlohmann::json & ruleProfiles = nlohmann::json::object() );
         nlohmann::json getState( bool includeSerialized ) const;
         nlohmann::json getCastleOptions( uint32_t castleId ) const;
+        nlohmann::json getTradingPostOptions( uint32_t heroId ) const;
+        nlohmann::json getInformationView() const;
         nlohmann::json getArmyOptions( const nlohmann::json & params ) const;
         bool waiting() const;
         void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
@@ -77,6 +79,8 @@ namespace fheroes2
 
     private:
         void clear();
+        void showInformation( const std::string & kind, int color, int detail, int destination );
+        nlohmann::json tradeAtPost( const nlohmann::json & params, int player, bool validateOnly );
         void ensureGraphicsData();
         const char * decisionPhase() const;
         bool externalPlayer( int color ) const;
@@ -100,6 +104,10 @@ namespace fheroes2
         nlohmann::json _battleState = nullptr;
         std::function<void( Image & )> _battleRender;
         int64_t _choiceAnswer{ 0 };
+        std::string _textAnswer;
+        nlohmann::json _tradingPost = nullptr;
+        nlohmann::json _informationView = nullptr;
+        std::shared_ptr<Image> _informationImage;
         uint64_t _nextChoiceId{ 0 };
         const std::string _sessionId;
         uint64_t _decisionId{ 0 };

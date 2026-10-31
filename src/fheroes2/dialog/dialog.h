@@ -131,6 +131,7 @@ namespace Dialog
     void Marketplace( Kingdom & kingdom, bool fromTradingPost );
     int MakeGiftResource( Kingdom & kingdom );
     int BuyBoat( bool enable );
+    void renderOracleSnapshot( fheroes2::Image & image );
     void ThievesGuild( const bool oracle );
     void GameInfo();
 

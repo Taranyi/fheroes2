@@ -29,6 +29,11 @@
 
 enum class PlayerColor : uint8_t;
 
+namespace fheroes2
+{
+    class Image;
+}
+
 namespace Interface
 {
     class BaseInterface;
@@ -50,6 +55,8 @@ enum class ViewWorldMode : int32_t
 class ViewWorld
 {
 public:
+    static void renderSnapshot( PlayerColor color, ViewWorldMode mode, fheroes2::Image & image );
+    static bool revealsObject( ViewWorldMode mode, int objectType );
     static void ViewWorldWindow( const PlayerColor color, const ViewWorldMode mode, Interface::BaseInterface & interface );
 
     class ZoomROIs

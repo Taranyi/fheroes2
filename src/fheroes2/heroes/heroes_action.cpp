@@ -350,7 +350,8 @@ namespace
                 weakestTroop->SetCount( newCount );
             }
 
-            Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+            if ( !System::isHeadlessMode() )
+                Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
         }
     }
 
@@ -1352,7 +1353,10 @@ namespace
     {
         DEBUG_LOG( DBG_GAME, DBG_INFO, hero.GetName() )
 
-        Dialog::Marketplace( hero.GetKingdom(), true );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "trading_post", static_cast<int>( hero.GetColor() ), hero.GetID() );
+        else
+            Dialog::Marketplace( hero.GetKingdom(), true );
     }
 
     void ActionToPrimarySkillObject( Heroes & hero, const MP2::MapObjectType objectType, int32_t dst_index )
@@ -2033,7 +2037,8 @@ namespace
 
         AudioManager::PlaySound( M82::KILLFADE );
         hero.ShowPath( false );
-        hero.FadeOut();
+        if ( !System::isHeadlessMode() )
+            hero.FadeOut();
 
         const fheroes2::Point fromPoint = Maps::GetPoint( index_from );
 
@@ -2042,17 +2047,19 @@ namespace
         hero.GetPath().Reset();
 
         // Clear the previous hero position
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-        I.getRadar().SetRenderArea( { fromPoint.x, fromPoint.y, 1, 1 } );
-        I.redraw( Interface::REDRAW_RADAR );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( { fromPoint.x, fromPoint.y, 1, 1 } );
+            I.redraw( Interface::REDRAW_RADAR );
 
-        I.getGameArea().SetCenter( hero.GetCenter() );
+            I.getGameArea().SetCenter( hero.GetCenter() );
 
-        I.getRadar().SetRenderArea( hero.GetScoutRoi() );
-        I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
-
+            I.getRadar().SetRenderArea( hero.GetScoutRoi() );
+            I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+        }
         AudioManager::PlaySound( M82::KILLFADE );
-        hero.FadeIn();
+        if ( !System::isHeadlessMode() )
+            hero.FadeIn();
         hero.ShowPath( true );
 
         hero.ActionNewPosition( false );
@@ -2072,7 +2079,8 @@ namespace
 
         AudioManager::PlaySound( M82::KILLFADE );
         hero.ShowPath( false );
-        hero.FadeOut();
+        if ( !System::isHeadlessMode() )
+            hero.FadeOut();
 
         const fheroes2::Point fromPoint = Maps::GetPoint( index_from );
 
@@ -2083,17 +2091,19 @@ namespace
         WhirlpoolTroopLoseEffect( hero );
 
         // Clear the previous hero position
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-        I.getRadar().SetRenderArea( { fromPoint.x, fromPoint.y, 1, 1 } );
-        I.redraw( Interface::REDRAW_RADAR );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( { fromPoint.x, fromPoint.y, 1, 1 } );
+            I.redraw( Interface::REDRAW_RADAR );
 
-        I.getGameArea().SetCenter( hero.GetCenter() );
+            I.getGameArea().SetCenter( hero.GetCenter() );
 
-        I.getRadar().SetRenderArea( hero.GetScoutRoi() );
-        I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
-
+            I.getRadar().SetRenderArea( hero.GetScoutRoi() );
+            I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+        }
         AudioManager::PlaySound( M82::KILLFADE );
-        hero.FadeIn();
+        if ( !System::isHeadlessMode() )
+            hero.FadeIn();
         hero.ShowPath( true );
 
         hero.ActionNewPosition( false );
@@ -2885,9 +2895,11 @@ namespace
                     hero.setVisitedForAllies( dst_index );
 
                     // Fully update fog directions and redraw radar and game area.
-                    Interface::GameArea::updateMapFogDirections();
-                    Interface::AdventureMap & I = Interface::AdventureMap::Get();
-                    I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+                    if ( !System::isHeadlessMode() ) {
+                        Interface::GameArea::updateMapFogDirections();
+                        Interface::AdventureMap & I = Interface::AdventureMap::Get();
+                        I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+                    }
                 }
             }
             else {
@@ -2915,7 +2927,7 @@ namespace
             return;
         }
 
-        if ( !mapEvent->isAllow( hero.GetColor() ) ) {
+        if ( !mapEvent->isAllow( hero.GetColor() ) || ( hero.isControlAI() && !mapEvent->isComputerPlayerAllowed ) ) {
             return;
         }
 
@@ -2979,24 +2991,27 @@ namespace
         const fheroes2::Text emptyText;
         const fheroes2::Text body( mapEvent->message, fheroes2::FontType::normalWhite(), Settings::Get().getCurrentMapInfo().getSupportedLanguage() );
 
-        int32_t dialogHeight = fheroes2::getDialogHeight( emptyText, body, Dialog::OK, elementUI );
-        const int32_t displayHeight = fheroes2::Display::instance().height();
-        if ( dialogHeight > displayHeight && !elementUI.empty() ) {
-            // We have to split the message into 2 as it is too big.
-            std::vector<const fheroes2::DialogElement *> secondDialogUIElement;
-            while ( dialogHeight > displayHeight && !elementUI.empty() ) {
-                secondDialogUIElement.push_back( elementUI.back() );
-                elementUI.pop_back();
-                dialogHeight = fheroes2::getDialogHeight( emptyText, body, Dialog::OK, elementUI );
-            }
-
+        if ( System::isHeadlessMode() )
             fheroes2::showMessage( emptyText, body, Dialog::OK, elementUI );
-            fheroes2::showMessage( emptyText, emptyText, Dialog::OK, secondDialogUIElement );
-        }
         else {
-            fheroes2::showMessage( emptyText, body, Dialog::OK, elementUI );
-        }
+            int32_t dialogHeight = fheroes2::getDialogHeight( emptyText, body, Dialog::OK, elementUI );
+            const int32_t displayHeight = fheroes2::Display::instance().height();
+            if ( dialogHeight > displayHeight && !elementUI.empty() ) {
+                // We have to split the message into 2 as it is too big.
+                std::vector<const fheroes2::DialogElement *> secondDialogUIElement;
+                while ( dialogHeight > displayHeight && !elementUI.empty() ) {
+                    secondDialogUIElement.push_back( elementUI.back() );
+                    elementUI.pop_back();
+                    dialogHeight = fheroes2::getDialogHeight( emptyText, body, Dialog::OK, elementUI );
+                }
 
+                fheroes2::showMessage( emptyText, body, Dialog::OK, elementUI );
+                fheroes2::showMessage( emptyText, emptyText, Dialog::OK, secondDialogUIElement );
+            }
+            else {
+                fheroes2::showMessage( emptyText, body, Dialog::OK, elementUI );
+            }
+        }
         // PickupArtifact() has a built-in check for Artifact correctness, the presence of a magic book
         // and the fullness of the bag. It also displays appropriate text when an artifact cannot be picked up.
         hero.PickupArtifact( art );
@@ -3130,7 +3145,10 @@ namespace
                 Dialog::OK );
         }
 
-        Dialog::ThievesGuild( true );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "oracle", static_cast<int>( hero.GetColor() ), 0 );
+        else
+            Dialog::ThievesGuild( true );
     }
 
     void ActionToDaemonCave( Heroes & hero, const MP2::MapObjectType objectType, const int32_t dst_index )
@@ -3550,7 +3568,12 @@ namespace
             hero.SetVisited( dst_index, Visit::GLOBAL );
 
             const auto & eyeMagiIndexes = world.getAllEyeOfMagiPositions();
-            if ( !eyeMagiIndexes.empty() ) {
+            if ( System::isHeadlessMode() ) {
+                const int32_t range = GameStatic::getFogDiscoveryDistance( GameStatic::FogDiscoveryType::MAGI_EYES );
+                for ( const int32_t index : eyeMagiIndexes )
+                    Maps::ClearFog( index, range, hero.GetColor() );
+            }
+            else if ( !eyeMagiIndexes.empty() ) {
                 Interface::AdventureMap & I = Interface::AdventureMap::Get();
 
                 fheroes2::Display & display = fheroes2::Display::instance();
@@ -3636,7 +3659,7 @@ namespace
 
         MapSphinx * riddle = dynamic_cast<MapSphinx *>( world.GetMapObject( dst_index ) );
 
-        const Outcome outcome = [objectType, riddle]() {
+        const Outcome outcome = [objectType, riddle, &hero]() {
             const std::string title = MP2::StringObject( objectType );
             const MusicalEffectPlayer musicalEffectPlayer( MUS::ARABIAN );
 
@@ -3663,7 +3686,10 @@ namespace
             questionText.add( { _( "sphinx|'\n\nYour answer?" ), fheroes2::FontType::normalWhite() } );
 
             std::string answer;
-            Dialog::inputString( fheroes2::Text{ title, fheroes2::FontType::normalYellow() }, questionText, answer, 0, false, {} );
+            if ( System::isHeadlessMode() )
+                answer = Game::ScopedExternalInteractions::text( { "sphinx.answer", hero.GetID(), riddle->riddle, 4096 } );
+            else
+                Dialog::inputString( fheroes2::Text{ title, fheroes2::FontType::normalYellow() }, questionText, answer, 0, false, {} );
 
             if ( !riddle->isCorrectAnswer( answer ) ) {
                 fheroes2::showStandardTextMessage(

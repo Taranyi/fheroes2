@@ -32,6 +32,14 @@ namespace fheroes2
     inline const std::vector<MP2::MapObjectType> & pythonEnvAdventureObjects()
     {
         static const std::vector<MP2::MapObjectType> objects = {
+            MP2::OBJ_SPHINX,
+            MP2::OBJ_TRADING_POST,
+            MP2::OBJ_EVENT,
+            MP2::OBJ_STONE_LITHS,
+            MP2::OBJ_WHIRLPOOL,
+            MP2::OBJ_HUT_OF_MAGI,
+            MP2::OBJ_MAGELLANS_MAPS,
+            MP2::OBJ_ORACLE,
             MP2::OBJ_RESOURCE,
             MP2::OBJ_TREASURE_CHEST,
             MP2::OBJ_MONSTER,
@@ -122,8 +130,9 @@ namespace fheroes2
     inline const std::vector<int> & pythonEnvAdventureSpells()
     {
         static const std::vector<int> spells
-            = { Spell::IDENTIFYHERO, Spell::VISIONS,      Spell::SUMMONBOAT,   Spell::TOWNGATE,     Spell::TOWNPORTAL,  Spell::DIMENSIONDOOR,
-                Spell::HAUNT,        Spell::SETEGUARDIAN, Spell::SETAGUARDIAN, Spell::SETFGUARDIAN, Spell::SETWGUARDIAN };
+            = { Spell::VIEWMINES,    Spell::VIEWRESOURCES, Spell::VIEWARTIFACTS, Spell::VIEWTOWNS,    Spell::VIEWHEROES,  Spell::VIEWALL,
+                Spell::IDENTIFYHERO, Spell::VISIONS,       Spell::SUMMONBOAT,    Spell::TOWNGATE,     Spell::TOWNPORTAL,  Spell::DIMENSIONDOOR,
+                Spell::HAUNT,        Spell::SETEGUARDIAN,  Spell::SETAGUARDIAN,  Spell::SETFGUARDIAN, Spell::SETWGUARDIAN };
         return spells;
     }
 

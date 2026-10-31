@@ -83,7 +83,7 @@ motorprofilhoz: ekkor továbbra is kivétel jön, nem automatikus válasz vagy h
 
 ## Fix megfigyelés
 
-`observation_space` egy `Dict`. A numerikus adatok `int64`, a `action_mask` `int8`.
+`observation_space` egy `Dict`. Az egészértékű adatok `int64`, a maszkok `int8`, a UTF-8 szövegbufferek `uint8` típusúak.
 Nincs string, változó méretű tömb vagy kép az RL-megfigyelésben. A hiányzó sorok nulla kitöltést kapnak;
 a sorok érvényességét külön maszk jelzi. Null entitásazonosító/hely egy létező soron belül általában `-1`.
 A natív ID-kat megtartjuk; a hős/vár sorindex nem ugyanaz, mint a hős/vár ID.
@@ -105,7 +105,7 @@ A natív ID-kat megtartjuk; a hős/vár sorindex nem ugyanaz, mint a hős/vár I
 | `battle_effects`, `battle_board` | 32×32, 99×3 | Egység módonként hátralévő kör; mezőindex, objektum és egység-UID |
 | `battle_commanders` | 2×3 | Szín, mana, varázsolt-e ebben a körben; támadó, majd védő |
 | `choice`, `choice_values`, `choice_value_mask` | 6, 16, 16 | Választástípus, ID, hős-ID, minimum/maximum, jelöltszám; jutalom/költség/képességadatok |
-| `actions`, `action_mask` | 8192×30, 8192 | Numerikus akcióleírások és aktuális érvényességük |
+| `actions`, `action_mask` | 8192×31, 8192 | Numerikus akcióleírások és aktuális érvényességük |
 
 A `global` pontos sorrendje: phase, player_id, current_player, width, height, map_seed, total_days, total_weeks, month,
 game_result, episode_step, remaining_steps. Fáziskód: adventure=0, choice=1, battle=2, terminal=3.
@@ -157,7 +157,7 @@ A reset a 12. lépés seedelt, friss folyamatú API-ját használja. `options` m
 
 `render_mode=None`: a reset, léptetés és render egyáltalán nem kér képet a motortól. A numerikus megfigyelés ettől független.
 `render_mode="rgb_array"`: csak az explicit `env.render()` kér RGB uint8 HWC képet.
-`render_view="auto"` csatánál a csatát, egyébként a kalandtérképet rajzolja. Megadható adventure/battle/hero/castle is;
+`render_view="auto"` csatánál a csatát, egyébként a kalandtérképet rajzolja. Megadható adventure/battle/hero/castle/world/oracle is; az utóbbi kettő korábban megnyitott információs pillanatképet igényel;
 hős/vár esetén `hero_id`/`castle_id`, vagy az első aktív saját entitás. A battle nézet aktív csatát követel.
 Az általános session API minden további renderparamétere külön is elérhető.
 Az új adapter ablakos `human` módot nem tartalmaz; a meglévő preview külső megjelenítője megmarad.
@@ -200,9 +200,13 @@ A korábbi 128×21 bemenetet használó modelleket módosítani kell; az epizód
 
 ## 9–10. bővítés
 
-83 térképi objektumtípus, 11 adventure és 48 tanítható harci varázslat a natív maszk/célpontlista alapján.
+91 térképi objektumtípus, 17 adventure és 48 tanítható harci varázslat a natív maszk/célpontlista alapján.
 Új választástípusok: `hero.primary_skill`, `spell.town_portal`, `spell.dimension_door`. Az eddigi típuskódok megmaradtak.
 A hősök max. mozgást/morált/szerencsét, a térkép tulajdonost/őrséget, a választás erőforrásárat és artifact ID-t is ad.
 Az aktuális alapméretek: `heroes=128×25`, `tiles=20736×19`, `choice_values=16`. Régi modell bemenete módosítandó.
 A 7. kiegészítéskor a hőssor 22 oszlopos volt; a további három mező az x/y elé került.
 [Teljes szerződés, kivételek és ellenőrzések](PYTHON_ENV_EXPANSION.md).
+
+A [speciális interakciók](PYTHON_ENV_SPECIAL.md#gym) új, fix mezőkkel bővítik a megfigyelést:
+`text`, `text_mask`, `action_text`, `view`, `view_tiles`, `view_markers`, `oracle`, `oracle_mask`.
+Az `actions` most 31 oszlopos; a szöveges Sphinx a konstruktorban megadott `sphinx_answers` szótárral működik.

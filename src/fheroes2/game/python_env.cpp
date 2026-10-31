@@ -37,6 +37,7 @@
 #include "../../thirdparty/nlohmann/json.hpp"
 #include "core.h"
 #include "game_external_interaction.h"
+#include "heroes.h"
 #include "python_env_profile.h"
 #include "python_env_world.h"
 #include "version.h"
@@ -87,7 +88,7 @@ namespace
     {
         return { { "commands",
                    { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options",
-                     "get_army_options", "new_game", "check_actions" } },
+                     "get_army_options", "new_game", "check_actions", "get_information_view", "get_trading_post_options" } },
                  { "action_validation", true },
                  { "seeded_new_game", true },
                  { "seeded_save_continuation", true },
@@ -107,25 +108,28 @@ namespace
                  { "castle_actions", { "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire", "castle.buy_boat" } },
                  { "sailing", true },
                  { "own_castle_entry", true },
-                 { "market_actions", { "market.trade" } },
+                 { "market_actions", { "market.trade", "trading_post.trade" } },
                  { "army_actions", { "hero.meet", "army.transfer", "army.swap", "army.upgrade", "army.dismiss" } },
                  { "hero_actions", { "hero.dismiss", "hero.buy_spell_book", "hero.cast" } },
                  { "artifact_actions", { "artifact.transfer", "artifact.swap", "hero.end_meeting" } },
                  { "choices", true },
+                 { "text_choices", true },
+                 { "information_views", { "world", "oracle" } },
+                 { "trading_post", true },
                  { "battles", true },
                  { "battle_spell_profile", "native_combat" },
                  { "battle_actions", { "skip", "move", "attack", "shoot", "spell", "retreat", "surrender" } },
                  { "choice_types",
                    { "treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count", "hero.primary_skill",
-                     "spell.town_portal", "spell.dimension_door" } },
+                     "spell.town_portal", "spell.dimension_door", "sphinx.answer" } },
                  { "adventure_spell_ids", fheroes2::pythonEnvAdventureSpells() },
                  { "adventure_spells",
-                   { "identify_hero", "visions", "summon_boat", "town_gate", "town_portal", "dimension_door", "haunt", "set_earth_guardian", "set_air_guardian",
-                     "set_fire_guardian", "set_water_guardian" } },
+                   { "view_mines", "view_resources", "view_artifacts", "view_towns", "view_heroes", "view_all", "identify_hero", "visions", "summon_boat", "town_gate",
+                     "town_portal", "dimension_door", "haunt", "set_earth_guardian", "set_air_guardian", "set_fire_guardian", "set_water_guardian" } },
                  { "adventure_object_ids", fheroes2::pythonEnvAdventureObjects() },
                  { "simulation", true },
                  { "render", true },
-                 { "render_views", { "adventure", "battle", "hero", "castle" } },
+                 { "render_views", { "adventure", "battle", "hero", "castle", "world", "oracle" } },
                  { "render_backend", "memory_image" },
                  { "headless_gameplay", true } };
     }
@@ -228,6 +232,17 @@ namespace
             }
             const DiagnosticRedirect redirect;
             return world.getState( params.value( "include_serialized", true ) );
+        }
+        if ( method == "get_information_view" ) {
+            if ( !params.empty() )
+                throw fheroes2::PythonEnvError( "invalid_request", "get_information_view requires no params." );
+            return world.getInformationView();
+        }
+        if ( method == "get_trading_post_options" ) {
+            if ( params.size() != 1 || !params.contains( "hero_id" ) || !params["hero_id"].is_number_unsigned()
+                 || params["hero_id"].get<uint64_t>() > Heroes::DEBUG_HERO )
+                throw fheroes2::PythonEnvError( "invalid_request", "get_trading_post_options requires hero_id." );
+            return world.getTradingPostOptions( params["hero_id"].get<uint32_t>() );
         }
         if ( method == "get_army_options" ) {
             const DiagnosticRedirect redirect;

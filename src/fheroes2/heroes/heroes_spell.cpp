@@ -100,37 +100,57 @@ namespace
 
     bool ActionSpellViewMines()
     {
-        ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewMines, Interface::AdventureMap::Get() );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "world", static_cast<int>( Settings::Get().CurrentColor() ), static_cast<int>( ViewWorldMode::ViewMines ) );
+        else
+            ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewMines, Interface::AdventureMap::Get() );
         return true;
     }
 
     bool ActionSpellViewResources()
     {
-        ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewResources, Interface::AdventureMap::Get() );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "world", static_cast<int>( Settings::Get().CurrentColor() ),
+                                                           static_cast<int>( ViewWorldMode::ViewResources ) );
+        else
+            ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewResources, Interface::AdventureMap::Get() );
         return true;
     }
 
     bool ActionSpellViewArtifacts()
     {
-        ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewArtifacts, Interface::AdventureMap::Get() );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "world", static_cast<int>( Settings::Get().CurrentColor() ),
+                                                           static_cast<int>( ViewWorldMode::ViewArtifacts ) );
+        else
+            ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewArtifacts, Interface::AdventureMap::Get() );
         return true;
     }
 
     bool ActionSpellViewTowns()
     {
-        ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewTowns, Interface::AdventureMap::Get() );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "world", static_cast<int>( Settings::Get().CurrentColor() ), static_cast<int>( ViewWorldMode::ViewTowns ) );
+        else
+            ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewTowns, Interface::AdventureMap::Get() );
         return true;
     }
 
     bool ActionSpellViewHeroes()
     {
-        ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewHeroes, Interface::AdventureMap::Get() );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "world", static_cast<int>( Settings::Get().CurrentColor() ), static_cast<int>( ViewWorldMode::ViewHeroes ) );
+        else
+            ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewHeroes, Interface::AdventureMap::Get() );
         return true;
     }
 
     bool ActionSpellViewAll()
     {
-        ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewAll, Interface::AdventureMap::Get() );
+        if ( System::isHeadlessMode() )
+            Game::ScopedExternalInteractions::information( "world", static_cast<int>( Settings::Get().CurrentColor() ), static_cast<int>( ViewWorldMode::ViewAll ) );
+        else
+            ViewWorld::ViewWorldWindow( Settings::Get().CurrentColor(), ViewWorldMode::ViewAll, Interface::AdventureMap::Get() );
         return true;
     }
 

@@ -273,7 +273,7 @@ namespace
             const bool supportedTransition
                 = step.GetIndex() == destination
                   && ( ( !movingHero->isShipMaster() && type == MP2::OBJ_BOAT ) || ( movingHero->isShipMaster() && tile.isSuitableForDisembarkation() ) );
-            if ( ( changesMedium && !supportedTransition ) || type == MP2::OBJ_EVENT
+            if ( ( changesMedium && !supportedTransition ) || ( type == MP2::OBJ_EVENT && !supportedTarget )
                  || ( MP2::isInGameActionObject( type, movingHero->isShipMaster() ) && !supportedTarget ) || protectedTile ) {
                 throw PythonEnvError( "unsupported_action", "The route reaches a battle, choice or unsupported adventure object." );
             }
@@ -329,6 +329,10 @@ void fheroes2::PythonEnvWorld::clear()
     _battleRender = {};
     _events = Json::array();
     _warnings.clear();
+    _tradingPost = nullptr;
+    _informationView = nullptr;
+    _informationImage.reset();
+    _textAnswer.clear();
     world.Reset();
     Settings::Get().GetPlayers().clear();
     GameOver::Result::Get().Reset();
@@ -568,15 +572,19 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                  { "player_id", static_cast<uint32_t>( _controllerPlayer ) } } },
              { "turn_order", order },
              { "army_meeting", _armyMeeting },
-             { "available_actions", !_pendingChoice.is_null()
-                                        ? ( !_battleState.is_null() ? Json{ "battle.act", "session.stop" } : Json{ "choice.answer", "session.stop" } )
-                                    : _controlled && _simulationFinished    ? Json{ "session.stop" }
-                                    : _controlled && _controllerPlayer == 0 ? Json{ "simulation.advance", "session.stop" }
-                                    : gameResult() == 0 ? Json{ "session.stop",          "hero.move",    "turn.end",          "castle.build",        "castle.recruit",
-                                                                "castle.refresh_heroes", "castle.hire",  "castle.buy_boat",   "market.trade",        "hero.meet",
-                                                                "army.transfer",         "army.swap",    "artifact.transfer", "artifact.swap",       "hero.end_meeting",
-                                                                "army.upgrade",          "army.dismiss", "hero.dismiss",      "hero.buy_spell_book", "hero.cast" }
-                                                        : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
+             { "trading_post", _tradingPost },
+             { "available_actions",
+               !_pendingChoice.is_null()
+                   ? ( !_battleState.is_null() ? Json{ "battle.act", "session.stop" }
+                                               : ( _pendingChoice.value( "input_type", "integer" ) == "text" ? Json{ "choice.answer_text", "session.stop" }
+                                                                                                             : Json{ "choice.answer", "session.stop" } ) )
+               : _controlled && _simulationFinished    ? Json{ "session.stop" }
+               : _controlled && _controllerPlayer == 0 ? Json{ "simulation.advance", "session.stop" }
+               : gameResult() == 0 ? Json{ "session.stop",        "hero.move",       "turn.end",          "castle.build", "castle.recruit", "castle.refresh_heroes",
+                                           "castle.hire",         "castle.buy_boat", "market.trade",      "hero.meet",    "army.transfer",  "army.swap",
+                                           "artifact.transfer",   "artifact.swap",   "hero.end_meeting",  "army.upgrade", "army.dismiss",   "hero.dismiss",
+                                           "hero.buy_spell_book", "hero.cast",       "trading_post.trade" }
+                                   : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
              { "events", _events },
              { "pending_choice", _pendingChoice },
              { "notifications", { { { "type", "decision_required" }, { "phase", decisionPhase() }, { "player_id", _controllerPlayer } } } } };
@@ -627,6 +635,20 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         if ( !_battleState.is_null() ) {
             throw PythonEnvError( "battle_action_required", "Select a battle action before sending another gameplay action." );
         }
+        if ( _pendingChoice.value( "input_type", "integer" ) == "text" ) {
+            if ( action != "choice.answer_text" )
+                throw PythonEnvError( "choice_required", "Submit a text answer to the pending riddle." );
+            if ( params.size() != 2 || !params.contains( "choice_id" ) || !params["choice_id"].is_number_unsigned() || !params.contains( "text" )
+                 || !params["text"].is_string() )
+                throw PythonEnvError( "invalid_request", "choice.answer_text requires choice_id and text." );
+            if ( params["choice_id"] != _pendingChoice["choice_id"] )
+                throw PythonEnvError( "stale_choice", "This text choice is no longer pending." );
+            const auto & value = params["text"].get_ref<const std::string &>();
+            if ( value.size() > _pendingChoice["max_bytes"].get<size_t>() || value.find_first_of( std::string( "\0\r\n", 3 ) ) != std::string::npos )
+                throw PythonEnvError( "invalid_request", "Text answer must be one line within the advertised byte limit, without NUL." );
+            _textAnswer = value;
+            return Json::object();
+        }
         if ( action != "choice.answer" ) {
             throw PythonEnvError( "choice_required", "Answer the pending choice before sending another gameplay action." );
         }
@@ -655,6 +677,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             // Close the native meeting through the same checkpointed path before detaching.
             dispatch( "hero.end_meeting", token, Json::object() );
         }
+        _tradingPost = nullptr;
         _waiting = false;
         return { { "stopped", true }, { "state_version", _stateVersion } };
     }
@@ -677,7 +700,8 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                             || action == "hero.end_meeting" || action == "army.upgrade" || action == "army.dismiss";
     const bool heroAction = action == "hero.dismiss" || action == "hero.buy_spell_book";
     const bool spellAction = action == "hero.cast";
-    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction && !heroAction && !spellAction && !simulationAction ) {
+    const bool postAction = action == "trading_post.trade";
+    if ( action != "hero.move" && action != "turn.end" && !castleAction && !armyAction && !heroAction && !spellAction && !simulationAction && !postAction ) {
         throw PythonEnvError( "unsupported_action", "This action is not supported; see available_actions." );
     }
     if ( GameOver::Result::Get().GetResult() != 0 && action != "hero.end_meeting" ) {
@@ -733,10 +757,12 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "illegal_action", text( reason ) );
         }
     }
-    else if ( !castleAction && !armyAction && !heroAction && !simulationAction && !params.empty() ) {
+    else if ( !castleAction && !armyAction && !heroAction && !simulationAction && !postAction && !params.empty() ) {
         throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
     }
 
+    if ( postAction )
+        tradeAtPost( params, _controllerPlayer, true );
     if ( validateOnly ) {
         if ( armyAction || heroAction ) {
             pythonEnvArmyAction( action, params, _controllerPlayer, _armyMeeting, true );
@@ -773,6 +799,9 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     const auto oldDecisionId = _decisionId;
     const Json oldEvents = _events;
     const Json oldMeeting = _armyMeeting;
+    const Json oldPost = _tradingPost;
+    const Json oldInformation = _informationView;
+    const auto oldInformationImage = _informationImage;
     try {
         const Game::ScopedExternalInteractions interactions(
             [&]( const Game::ExternalChoice & choice ) -> int64_t {
@@ -840,7 +869,34 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             _controlled ? std::function<Game::ControllerType( int )>(
                               [&]( const int color ) { return externalPlayer( color ) ? Game::ControllerType::External : Game::ControllerType::Native; } )
                         : std::function<Game::ControllerType( int )>{},
-            _controlled ? std::function<bool()>( [&]() { return evaluateSimulation(); } ) : std::function<bool()>{} );
+            _controlled ? std::function<bool()>( [&]() { return evaluateSimulation(); } ) : std::function<bool()>{},
+            [&]( const Game::ExternalTextChoice & choice ) -> std::string {
+                const Heroes * hero = world.GetHeroes( choice.heroId );
+                if ( !choiceWait || hero == nullptr
+                     || ( _controlled ? !externalPlayer( static_cast<int>( hero->GetColor() ) ) : static_cast<int>( hero->GetColor() ) != _controllerPlayer ) )
+                    throw PythonEnvError( "unsupported_interaction", "No external text controller for this hero." );
+                const int previous = _controllerPlayer;
+                _controllerPlayer = static_cast<int>( hero->GetColor() );
+                _pendingChoice = { { "choice_id", ++_nextChoiceId },
+                                   { "kind", choice.kind },
+                                   { "hero_id", choice.heroId },
+                                   { "input_type", "text" },
+                                   { "prompt", text( choice.prompt ) },
+                                   { "max_bytes", choice.maxBytes },
+                                   { "options", Json::array() },
+                                   { "values", Json::object() },
+                                   { "minimum", 0 },
+                                   { "maximum", 0 } };
+                ++_stateVersion;
+                ++_decisionId;
+                _events.push_back( { { "type", "choice_requested" }, { "choice", _pendingChoice } } );
+                choiceWait();
+                _events.push_back( { { "type", "text_answered" }, { "choice_id", _pendingChoice["choice_id"] }, { "text", _textAnswer } } );
+                _pendingChoice = nullptr;
+                _controllerPlayer = previous;
+                return _textAnswer;
+            },
+            [&]( const std::string & kind, const int color, const int detail ) { showInformation( kind, color, detail, destination ); } );
         _events = Json::array();
         if ( !armyAction ) {
             const auto ended = pythonEnvEndMeeting( _armyMeeting );
@@ -860,7 +916,12 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             world.GetKingdom( static_cast<PlayerColor>( _controllerPlayer ) ).ActionBeforeTurn();
             _turnPrepared = true;
         }
-        if ( simulationAction ) {
+        if ( !postAction )
+            _tradingPost = nullptr;
+        if ( postAction ) {
+            _events.push_back( tradeAtPost( params, _controllerPlayer, false ) );
+        }
+        else if ( simulationAction ) {
             advanceSimulation( params["max_turns"].get<uint32_t>() );
         }
         else if ( spellAction ) {
@@ -888,7 +949,8 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             const int from = movingHero->GetIndex();
             const int id = movingHero->GetID();
             const uint32_t movement = movingHero->GetMovePoints();
-            const Funds before = movingHero->GetKingdom().GetFunds();
+            const Kingdom & movingKingdom = movingHero->GetKingdom();
+            const Funds before = movingKingdom.GetFunds();
             const auto targetType = world.getTile( destination ).getMainObjectType();
             const bool wasShipmaster = movingHero->isShipMaster();
             movingHero->GetPath().setPath( path );
@@ -915,7 +977,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
                                  { "to", movingHero->GetIndex() },
                                  { "target", destination },
                                  { "movement_spent", movement - movingHero->GetMovePoints() } } );
-            const Funds delta = movingHero->GetKingdom().GetFunds() - before;
+            const Funds delta = movingKingdom.GetFunds() - before;
             if ( delta.GetValidItemsCount() != 0 ) {
                 _events.push_back( { { "type", targetType == MP2::OBJ_RESOURCE ? "resource_collected" : "adventure_object_interacted" },
                                      { "hero_id", id },
@@ -973,6 +1035,9 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             _decisionId = oldDecisionId;
             _events = oldEvents;
             _armyMeeting = oldMeeting;
+            _tradingPost = oldPost;
+            _informationView = oldInformation;
+            _informationImage = oldInformationImage;
             _pendingChoice = nullptr;
             _battleState = nullptr;
             _battleRender = {};
@@ -1026,7 +1091,7 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
         throw PythonEnvError( "invalid_request", "Render requires view, width/height between 32 and 1024, and output_path." );
     }
     const std::string view = params["view"].get<std::string>();
-    if ( view != "adventure" && view != "hero" && view != "castle" && view != "battle" ) {
+    if ( view != "adventure" && view != "hero" && view != "castle" && view != "battle" && view != "world" && view != "oracle" ) {
         throw PythonEnvError( "unsupported_view", "Supported views are adventure, hero, castle and battle." );
     }
     Heroes * hero = nullptr;
@@ -1061,6 +1126,8 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
     if ( view == "battle" && ( _battleState.is_null() || !_battleRender ) ) {
         throw PythonEnvError( "no_active_battle", "A battle image requires a pending external battle decision." );
     }
+    if ( ( view == "world" || view == "oracle" ) && ( _informationView.is_null() || !_informationImage || _informationView["kind"] != view ) )
+        throw PythonEnvError( "no_information_view", "Open this native information view before rendering its snapshot." );
     const int width = params["width"].get<int>();
     const int height = params["height"].get<int>();
     int centerX = world.w() / 2;
@@ -1105,7 +1172,10 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
     }
     else {
         Image native;
-        if ( hero != nullptr ) {
+        if ( view == "world" || view == "oracle" ) {
+            native = *_informationImage;
+        }
+        else if ( hero != nullptr ) {
             renderHeroSnapshot( *hero, native );
             centerX = hero->GetCenter().x;
             centerY = hero->GetCenter().y;
@@ -1139,7 +1209,7 @@ nlohmann::json fheroes2::PythonEnvWorld::render( const nlohmann::json & params )
         throw PythonEnvError( "render_failed", "Could not write the RGB frame." );
     }
     return { { "view", view },
-             { "perspective", "omniscient" },
+             { "perspective", ( view == "world" || view == "oracle" ) ? "native_information" : "omniscient" },
              { "format", "rgb8" },
              { "width", width },
              { "height", height },
@@ -1261,11 +1331,13 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
     Json result{ { "schema_version", 1 },
                  { "state_version", _stateVersion },
                  { "perspective", "omniscient" },
+                 { "information_view", _informationView },
                  { "phase", decisionPhase() },
                  { "battle", _battleState },
                  { "pending_choice", _pendingChoice },
                  { "current_player", static_cast<int>( settings.GetPlayers().getCurrentColor() ) },
                  { "army_meeting", _armyMeeting },
+                 { "trading_post", _tradingPost },
                  { "date",
                    { { "day", world.GetDay() },
                      { "week", world.GetWeek() },

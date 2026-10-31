@@ -502,6 +502,10 @@ public:
     }
 
     void RemoveMapObject( const MapBaseObject * obj );
+    void addMapObject( std::unique_ptr<MapBaseObject> object )
+    {
+        map_objects.add( std::move( object ) );
+    }
     const MapRegion & getRegion( size_t id ) const;
     size_t getRegionCount() const;
 

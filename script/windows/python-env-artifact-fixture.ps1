@@ -48,6 +48,8 @@ try {
     }
     & (Join-Path $taskRoot 'build/windows-local/fheroes2_artifact_fixture.exe') $taskBase $taskOutput --expansion-only
     if ($LASTEXITCODE -ne 0) { throw 'Native object/spell expansion fixture generation failed.' }
+    & (Join-Path $taskRoot 'build/windows-local/fheroes2_artifact_fixture.exe') $taskBase $taskOutput --special-only
+    if ($LASTEXITCODE -ne 0) { throw 'Native special fixture generation failed.' }
 }
 finally {
     $env:PATH = $taskOldPath

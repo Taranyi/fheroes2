@@ -239,6 +239,194 @@ namespace
     }
 }
 
+namespace
+{
+    void drawGuildBody( fheroes2::Image & display, const fheroes2::Rect & dialogRoi, const bool oracle )
+    {
+        const bool isEvilInterfaceTown = Settings::Get().isEvilInterfaceEnabled();
+
+        const fheroes2::Sprite & backgroundSprite = Assets::getImage( isEvilInterfaceTown ? ICN::STONEBAK_EVIL : ICN::STONEBAK, 0 );
+        fheroes2::Copy( backgroundSprite, 0, 0, display, dialogRoi.x, dialogRoi.y, backgroundSprite.width(), backgroundSprite.height() );
+
+        const uint32_t thievesGuildCount = oracle ? 0xFF : world.GetKingdom( Settings::Get().CurrentColor() ).GetCountBuilding( BUILD_THIEVESGUILD );
+
+        std::vector<ValueColors> valuesForPlayerColors;
+        const PlayerColorsVector colors( Game::GetActualKingdomColors() );
+        const size_t playersCount = colors.size();
+        valuesForPlayerColors.reserve( playersCount );
+        const int32_t textOffsetX = dialogRoi.x + 207;
+        const int32_t startOffsetX = dialogRoi.x + 264;
+        const int32_t stepX = 68;
+        fheroes2::Text text;
+        fheroes2::Point offset( startOffsetX, dialogRoi.y + 3 );
+
+        for ( size_t player = 0; player < playersCount; ++player ) {
+            text.set( getPlayerOrderString( player ), fheroes2::FontType::normalWhite() );
+            text.draw( offset.x - text.width() / 2, offset.y, display );
+            offset.x += stepX;
+        }
+
+        // Status bar.
+        const int32_t exitWidth = Assets::getImage( ICN::BUTTON_GUILDWELL_EXIT, 0 ).width();
+        const int32_t bottomBarOffsetY = 461;
+
+        const fheroes2::Sprite & bottomBar = Assets::getImage( ICN::SMALLBAR, 0 );
+        const int32_t barHeight = bottomBar.height();
+        offset.y = dialogRoi.y + bottomBarOffsetY;
+
+        // ICN::SMALLBAR image's first column contains all black pixels. This should not be drawn.
+        fheroes2::Copy( bottomBar, 1, 0, display, dialogRoi.x, offset.y, fheroes2::Display::DEFAULT_WIDTH / 2, barHeight );
+        fheroes2::Copy( bottomBar, bottomBar.width() - fheroes2::Display::DEFAULT_WIDTH / 2 + exitWidth - 1, 0, display,
+                        dialogRoi.x + fheroes2::Display::DEFAULT_WIDTH / 2, offset.y, fheroes2::Display::DEFAULT_WIDTH / 2 - exitWidth + 1, barHeight );
+
+        // Exit button.
+        offset.x = dialogRoi.x + fheroes2::Display::DEFAULT_WIDTH - exitWidth;
+
+        // Text on status bar.
+        text.set( oracle ? _( "Oracle: Player Rankings" ) : _( "Thieves' Guild: Player Rankings" ), fheroes2::FontType::normalWhite() );
+        offset.x = dialogRoi.x + ( fheroes2::Display::DEFAULT_WIDTH - exitWidth - text.width() ) / 2;
+        text.draw( offset.x, dialogRoi.y + 464, display );
+
+        text.set( _( "Number of Towns:" ), fheroes2::FontType::normalWhite() );
+        offset.y = dialogRoi.y + 31;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        offset.x = startOffsetX;
+        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetCountTown() ); } );
+        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+
+        text.set( _( "Number of Castles:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetCountCastle() ); } );
+        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+
+        text.set( _( "Number of Heroes:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetHeroes().size() ); } );
+        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+
+        text.set( _( "Gold in Treasury:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 1 ) {
+            getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return world.GetKingdom( color ).GetFunds().Get( Resource::GOLD ); } );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        text.set( _( "Wood & Ore:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 1 ) {
+            getInfo( valuesForPlayerColors, colors, getWoodOreValue );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        text.set( _( "Gems, Cr, Slf & Mer:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 2 ) {
+            getInfo( valuesForPlayerColors, colors, getGemsCrSlfMerValue );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        text.set( _( "Obelisks Found:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 2 ) {
+            getInfo( valuesForPlayerColors, colors,
+                     []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).CountVisitedObjects( MP2::OBJ_OBELISK ) ); } );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        text.set( _( "Artifacts:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 3 ) {
+            getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetCountArtifacts() ); } );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        text.set( _( "Total Army Strength:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 3 ) {
+            getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetArmiesStrength() ); } );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        text.set( _( "Income:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 24;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        if ( thievesGuildCount > 4 ) {
+            getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return world.GetKingdom( color ).GetIncome().gold; } );
+            drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
+        }
+
+        // Render color's names for each player.
+        offset.y += 24;
+        bool shiftVertically = false;
+        for ( const PlayerColor color : colors ) {
+            text.set( Color::String( color ), fheroes2::FontType::normalWhite() );
+            text.draw( offset.x - text.width() / 2, shiftVertically ? ( offset.y + 15 ) : offset.y, display );
+            offset.x += stepX;
+            shiftVertically = !shiftVertically;
+        }
+
+        text.set( _( "Best Hero:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 38;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        offset.x = startOffsetX;
+        offset.y -= 4;
+        const int frameIcnID = isEvilInterfaceTown ? ICN::LOCATORE : ICN::LOCATORS;
+        drawHeroIcons( colors, thievesGuildCount > 1, offset, stepX, frameIcnID, display );
+
+        text.set( _( "Best Hero Stats:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 47;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        text.set( _( "Personality:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 42;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        offset.y += 3;
+        if ( thievesGuildCount > 2 ) {
+            drawPersonality( colors, offset, stepX, display );
+        }
+
+        text.set( _( "Best Monster:" ), fheroes2::FontType::normalWhite() );
+        offset.y += 32;
+        text.draw( textOffsetX - text.width(), offset.y, display );
+
+        offset.y += text.height() / 2;
+        if ( thievesGuildCount > 3 ) {
+            drawBestMonsterIcons( colors, offset, stepX, display );
+        }
+
+        const auto & exit = Assets::getImage( ICN::BUTTON_GUILDWELL_EXIT, 0 );
+        fheroes2::Blit( exit, display, dialogRoi.x + 640 - exit.width(), dialogRoi.y + 461 );
+    }
+}
+
+void Dialog::renderOracleSnapshot( fheroes2::Image & image )
+{
+    image._disableTransformLayer();
+    image.resize( 640, 480 );
+    image.fill( 0 );
+    drawGuildBody( image, { 0, 0, 640, 480 }, true );
+}
+
 void Dialog::ThievesGuild( const bool oracle )
 {
     // Set the cursor image.This dialog does not require a cursor restorer. It is called from other dialogs that have the same cursor
@@ -271,178 +459,9 @@ void Dialog::ThievesGuild( const bool oracle )
         fheroes2::fadeOutDisplay( dialogRoi, !isDefaultScreenSize );
     }
 
-    const bool isEvilInterfaceTown = Settings::Get().isEvilInterfaceEnabled();
-
-    const fheroes2::Sprite & backgroundSprite = Assets::getImage( isEvilInterfaceTown ? ICN::STONEBAK_EVIL : ICN::STONEBAK, 0 );
-    fheroes2::Copy( backgroundSprite, 0, 0, display, dialogRoi.x, dialogRoi.y, backgroundSprite.width(), backgroundSprite.height() );
-
-    const uint32_t thievesGuildCount = oracle ? 0xFF : world.GetKingdom( Settings::Get().CurrentColor() ).GetCountBuilding( BUILD_THIEVESGUILD );
-
-    std::vector<ValueColors> valuesForPlayerColors;
-    const PlayerColorsVector colors( Game::GetActualKingdomColors() );
-    const size_t playersCount = colors.size();
-    valuesForPlayerColors.reserve( playersCount );
-    const int32_t textOffsetX = dialogRoi.x + 207;
-    const int32_t startOffsetX = dialogRoi.x + 264;
-    const int32_t stepX = 68;
-    fheroes2::Text text;
-    fheroes2::Point offset( startOffsetX, dialogRoi.y + 3 );
-
-    for ( size_t player = 0; player < playersCount; ++player ) {
-        text.set( getPlayerOrderString( player ), fheroes2::FontType::normalWhite() );
-        text.draw( offset.x - text.width() / 2, offset.y, display );
-        offset.x += stepX;
-    }
-
-    // Status bar.
-    const int32_t exitWidth = Assets::getImage( ICN::BUTTON_GUILDWELL_EXIT, 0 ).width();
-    const int32_t bottomBarOffsetY = 461;
-
-    const fheroes2::Sprite & bottomBar = Assets::getImage( ICN::SMALLBAR, 0 );
-    const int32_t barHeight = bottomBar.height();
-    offset.y = dialogRoi.y + bottomBarOffsetY;
-
-    // ICN::SMALLBAR image's first column contains all black pixels. This should not be drawn.
-    fheroes2::Copy( bottomBar, 1, 0, display, dialogRoi.x, offset.y, fheroes2::Display::DEFAULT_WIDTH / 2, barHeight );
-    fheroes2::Copy( bottomBar, bottomBar.width() - fheroes2::Display::DEFAULT_WIDTH / 2 + exitWidth - 1, 0, display, dialogRoi.x + fheroes2::Display::DEFAULT_WIDTH / 2,
-                    offset.y, fheroes2::Display::DEFAULT_WIDTH / 2 - exitWidth + 1, barHeight );
-
-    // Exit button.
-    offset.x = dialogRoi.x + fheroes2::Display::DEFAULT_WIDTH - exitWidth;
-    fheroes2::Button buttonExit( offset.x, offset.y, ICN::BUTTON_GUILDWELL_EXIT, 0, 1 );
-
-    // Text on status bar.
-    text.set( oracle ? _( "Oracle: Player Rankings" ) : _( "Thieves' Guild: Player Rankings" ), fheroes2::FontType::normalWhite() );
-    offset.x = dialogRoi.x + ( fheroes2::Display::DEFAULT_WIDTH - exitWidth - text.width() ) / 2;
-    text.draw( offset.x, dialogRoi.y + 464, display );
-
-    text.set( _( "Number of Towns:" ), fheroes2::FontType::normalWhite() );
-    offset.y = dialogRoi.y + 31;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    offset.x = startOffsetX;
-    getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetCountTown() ); } );
-    drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-
-    text.set( _( "Number of Castles:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetCountCastle() ); } );
-    drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-
-    text.set( _( "Number of Heroes:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetHeroes().size() ); } );
-    drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-
-    text.set( _( "Gold in Treasury:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 1 ) {
-        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return world.GetKingdom( color ).GetFunds().Get( Resource::GOLD ); } );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    text.set( _( "Wood & Ore:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 1 ) {
-        getInfo( valuesForPlayerColors, colors, getWoodOreValue );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    text.set( _( "Gems, Cr, Slf & Mer:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 2 ) {
-        getInfo( valuesForPlayerColors, colors, getGemsCrSlfMerValue );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    text.set( _( "Obelisks Found:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 2 ) {
-        getInfo( valuesForPlayerColors, colors,
-                 []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).CountVisitedObjects( MP2::OBJ_OBELISK ) ); } );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    text.set( _( "Artifacts:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 3 ) {
-        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetCountArtifacts() ); } );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    text.set( _( "Total Army Strength:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 3 ) {
-        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return static_cast<int>( world.GetKingdom( color ).GetArmiesStrength() ); } );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    text.set( _( "Income:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 24;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    if ( thievesGuildCount > 4 ) {
-        getInfo( valuesForPlayerColors, colors, []( const PlayerColor color ) { return world.GetKingdom( color ).GetIncome().gold; } );
-        drawFlags( valuesForPlayerColors, offset, stepX, playersCount, display );
-    }
-
-    // Render color's names for each player.
-    offset.y += 24;
-    bool shiftVertically = false;
-    for ( const PlayerColor color : colors ) {
-        text.set( Color::String( color ), fheroes2::FontType::normalWhite() );
-        text.draw( offset.x - text.width() / 2, shiftVertically ? ( offset.y + 15 ) : offset.y, display );
-        offset.x += stepX;
-        shiftVertically = !shiftVertically;
-    }
-
-    text.set( _( "Best Hero:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 38;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    offset.x = startOffsetX;
-    offset.y -= 4;
-    const int frameIcnID = isEvilInterfaceTown ? ICN::LOCATORE : ICN::LOCATORS;
-    drawHeroIcons( colors, thievesGuildCount > 1, offset, stepX, frameIcnID, display );
-
-    text.set( _( "Best Hero Stats:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 47;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    text.set( _( "Personality:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 42;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    offset.y += 3;
-    if ( thievesGuildCount > 2 ) {
-        drawPersonality( colors, offset, stepX, display );
-    }
-
-    text.set( _( "Best Monster:" ), fheroes2::FontType::normalWhite() );
-    offset.y += 32;
-    text.draw( textOffsetX - text.width(), offset.y, display );
-
-    offset.y += text.height() / 2;
-    if ( thievesGuildCount > 3 ) {
-        drawBestMonsterIcons( colors, offset, stepX, display );
-    }
-
+    drawGuildBody( display, dialogRoi, oracle );
+    const int exitWidth = Assets::getImage( ICN::BUTTON_GUILDWELL_EXIT, 0 ).width();
+    fheroes2::Button buttonExit( dialogRoi.x + 640 - exitWidth, dialogRoi.y + 461, ICN::BUTTON_GUILDWELL_EXIT, 0, 1 );
     buttonExit.draw();
 
     // Fade-in thieves guild dialog.

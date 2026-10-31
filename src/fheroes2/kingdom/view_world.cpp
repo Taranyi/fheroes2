@@ -316,12 +316,11 @@ namespace
 
     void DrawObjectsIcons( const PlayerColor color, const ViewWorldMode mode, CacheForMapWithResources & cache )
     {
-        const bool revealAll = mode == ViewWorldMode::ViewAll;
-        const bool revealMines = revealAll || ( mode == ViewWorldMode::ViewMines );
-        const bool revealHeroes = revealAll || ( mode == ViewWorldMode::ViewHeroes );
-        const bool revealTowns = revealAll || ( mode == ViewWorldMode::ViewTowns );
-        const bool revealArtifacts = revealAll || ( mode == ViewWorldMode::ViewArtifacts );
-        const bool revealResources = revealAll || ( mode == ViewWorldMode::ViewResources );
+        const bool revealMines = ViewWorld::revealsObject( mode, MP2::OBJ_MINE );
+        const bool revealHeroes = ViewWorld::revealsObject( mode, MP2::OBJ_HERO );
+        const bool revealTowns = ViewWorld::revealsObject( mode, MP2::OBJ_CASTLE );
+        const bool revealArtifacts = ViewWorld::revealsObject( mode, MP2::OBJ_ARTIFACT );
+        const bool revealResources = ViewWorld::revealsObject( mode, MP2::OBJ_RESOURCE );
 
         const int32_t worldWidth = world.w();
         const int32_t worldHeight = world.h();
@@ -382,8 +381,8 @@ namespace
         std::array<MP2::MapObjectType, 2> objectTypes{};
         uint32_t objectCount{ 0 };
 
-        for ( int32_t posY = 0; posY < worldWidth; ++posY ) {
-            for ( int32_t posX = 0; posX < worldHeight; ++posX ) {
+        for ( int32_t posY = 0; posY < worldHeight; ++posY ) {
+            for ( int32_t posX = 0; posX < worldWidth; ++posX ) {
                 const Maps::Tile & tile = world.getTile( posX, posY );
 
                 objectTypes[0] = tile.getMainObjectType( false );
@@ -792,4 +791,45 @@ void ViewWorld::ViewWorldWindow( const PlayerColor color, const ViewWorldMode mo
     else {
         radar.SetRedraw( Interface::REDRAW_RADAR_CURSOR );
     }
+}
+
+bool ViewWorld::revealsObject( const ViewWorldMode mode, const int type )
+{
+    if ( mode == ViewWorldMode::ViewAll )
+        return true;
+    switch ( type ) {
+    case MP2::OBJ_HERO:
+        return mode == ViewWorldMode::ViewHeroes;
+    case MP2::OBJ_CASTLE:
+        return mode == ViewWorldMode::ViewTowns;
+    case MP2::OBJ_MINE:
+    case MP2::OBJ_ALCHEMIST_LAB:
+    case MP2::OBJ_SAWMILL:
+        return mode == ViewWorldMode::ViewMines;
+    case MP2::OBJ_RESOURCE:
+        return mode == ViewWorldMode::ViewResources;
+    case MP2::OBJ_ARTIFACT:
+        return mode == ViewWorldMode::ViewArtifacts;
+    default:
+        return false;
+    }
+}
+
+void ViewWorld::renderSnapshot( const PlayerColor color, const ViewWorldMode mode, fheroes2::Image & image )
+{
+    const PlayerColor previous = Settings::Get().CurrentColor();
+    struct RestoreColor
+    {
+        PlayerColor color;
+        ~RestoreColor()
+        {
+            Settings::Get().SetCurrentColor( color );
+        }
+    } restore{ previous };
+    Settings::Get().SetCurrentColor( color );
+    Interface::GameArea area;
+    area.generate( { 576, 576 }, true );
+    CacheForMapWithResources cache( mode, area, 1 );
+    DrawObjectsIcons( color, mode, cache );
+    image = cache.cachedImages.front();
 }
