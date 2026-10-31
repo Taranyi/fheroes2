@@ -28,7 +28,9 @@
 
 #include "army.h"
 #include "artifact.h"
+#include "castle.h"
 #include "core.h"
+#include "direction.h"
 #include "game_io.h"
 #include "heroes.h"
 #include "kingdom.h"
@@ -55,10 +57,12 @@ int main( int argc, char ** argv )
         const auto input = std::filesystem::absolute( std::filesystem::u8path( argv[1] ) );
         const auto output = std::filesystem::absolute( std::filesystem::u8path( argv[2] ) );
         std::filesystem::create_directories( output );
-        for ( const char * name : { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav", "choices-chest-day1.sav",
-                                    "choices-join-day1.sav", "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav",
-                                    "choices-paid-join-day1.sav", "battles-melee-day1.sav", "battles-ranged-day1.sav", "battles-heroes-day1.sav", "battles-loss-day1.sav",
-                                    "battles-boss-day1.sav", "controllers-ai-boss-day1.sav", "battles-siege-day1.sav", "gym-victory-day1.sav" } ) {
+        for ( const char * name :
+              { "artifacts-day1.sav",           "artifacts-full-day1.sav",     "heroes-full-day1.sav",      "heroes-protected-day1.sav", "choices-chest-day1.sav",
+                "choices-join-day1.sav",        "choices-pursue-day1.sav",     "choices-recruit-day1.sav",  "choices-spells-day1.sav",   "choices-paid-join-day1.sav",
+                "battles-melee-day1.sav",       "battles-ranged-day1.sav",     "battles-heroes-day1.sav",   "battles-loss-day1.sav",     "battles-boss-day1.sav",
+                "controllers-ai-boss-day1.sav", "battles-siege-day1.sav",      "gym-victory-day1.sav",      "navigation-coast-day1.sav", "navigation-shipyard-day1.sav",
+                "navigation-poor-day1.sav",     "navigation-blocked-day1.sav", "navigation-battle-day1.sav" } ) {
             const auto file = output / name;
             if ( std::filesystem::exists( file ) && std::filesystem::equivalent( input, file ) ) {
                 throw std::runtime_error( "The output must not overwrite the input save." );
@@ -144,6 +148,53 @@ int main( int argc, char ** argv )
             }
             throw std::runtime_error( "Could not place native adventure object." );
         };
+        // Separate synthetic harbor scenario; no original save or map asset is modified.
+        load();
+        for ( int y = 26; y <= 29; ++y ) {
+            for ( int x = 31; x <= 34; ++x ) {
+                auto & tile = world.getTile( y * world.w() + x );
+                if ( tile.getMainObjectType() == MP2::OBJ_HERO || tile.getMainObjectType() == MP2::OBJ_CASTLE )
+                    throw std::runtime_error( "Navigation fixture must not replace heroes or castles." );
+                if ( tile.getMainObjectType() != MP2::OBJ_NONE )
+                    Maps::removeMainObjectFromTile( tile );
+                tile.resetMainObjectPart();
+                tile.setMainObjectType( MP2::OBJ_NONE );
+                tile.setTerrain( 0, 0 );
+            }
+        }
+        world.updatePassabilities();
+        Castle * harbor = world.getCastleEntrance( { 32, 24 } );
+        if ( harbor == nullptr || !harbor->HasSeaAccess() )
+            throw std::runtime_error( "Expected a coastal test castle." );
+        harbor->GetKingdom().AddFundsResource( Funds( Resource::GOLD, 20000 ) + Funds( Resource::WOOD, 40 ) );
+        save( "navigation-coast-day1.sav" );
+        harbor->SetModes( Castle::ALLOW_TO_BUILD_TODAY );
+        if ( !harbor->BuyBuilding( BUILD_SHIPYARD ) )
+            throw std::runtime_error( "Could not prepare the native test shipyard." );
+        save( "navigation-shipyard-day1.sav" );
+        if ( !harbor->BuyBoat() )
+            throw std::runtime_error( "Could not prepare a blocked native harbor." );
+        save( "navigation-blocked-day1.sav" );
+        Heroes * sailor = world.GetHeroes( 52 );
+        sailor->GetArmy().Reset();
+        sailor->GetArmy().JoinTroop( Monster::BONE_DRAGON, 100, false );
+        sailor->Move2Dest( 968 );
+        auto & embarkedTile = world.getTile( 968 );
+        embarkedTile.resetMainObjectPart();
+        embarkedTile.updateObjectType();
+        sailor->setObjectTypeUnderHero( embarkedTile.getMainObjectType( true ) );
+        embarkedTile.setMainObjectType( MP2::OBJ_HERO );
+        embarkedTile.resetBoatOwnerColor();
+        sailor->SetShipMaster( true );
+        Heroes * opponent = world.GetHeroes( 42 );
+        opponent->Move2Dest( 1040 );
+        opponent->SetShipMaster( true );
+        opponent->GetArmy().Reset();
+        opponent->GetArmy().JoinTroop( Monster::PEASANT, 30, false );
+        save( "navigation-battle-day1.sav" );
+        session.loadSave( ( output / "navigation-shipyard-day1.sav" ).u8string() );
+        world.GetKingdom( PlayerColor::BLUE ).OddFundsResource( world.GetKingdom( PlayerColor::BLUE ).GetFunds() );
+        save( "navigation-poor-day1.sav" );
         load();
         auto & chest = place( MP2::OBJ_TREASURE_CHEST );
         chest.metadata() = { Artifact::UNKNOWN, 2500, 0 };

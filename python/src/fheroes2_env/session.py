@@ -470,6 +470,10 @@ class HeroesSession:
         """Buy one currently offered hero through the native castle recruitment path."""
         return self.step("castle.hire", token=token, params={"castle_id": castle_id, "hero_id": hero_id})
 
+    def buy_boat(self, castle_id: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
+        """Buy one native shipyard boat at an owned castle's available harbor."""
+        return self.step("castle.buy_boat", token=token, params={"castle_id": castle_id})
+
     def trade_resources(self, castle_id: int, resource_from: int, resource_to: int, lots: int, *, token: Mapping[str, Any]) -> dict[str, Any]:
         """Trade an exact number of native lots at the owner's kingdom marketplace rate."""
         return self.step("market.trade", token=token, params={"castle_id": castle_id, "resource_from": resource_from, "resource_to": resource_to, "lots": lots})

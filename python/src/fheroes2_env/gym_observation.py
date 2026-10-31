@@ -33,7 +33,7 @@ ACTION_FIELDS = ("type", "hero_id", "other_hero_id", "castle_id", "x", "y", "bui
                  "target_uid", "destination", "target_cell", "attack_direction", "spell_points", "gold")
 HERO_FIELDS = ("id", "owner", "active", "race", "level", "experience", "attack", "defense", "power", "knowledge",
                "spell_points", "max_spell_points", "move_points", "scouting_distance", "has_spell_book", "can_dismiss",
-               "dismissal_prohibited", "can_buy_spell_book", "castle_id")
+               "dismissal_prohibited", "can_buy_spell_book", "castle_id", "is_shipmaster")
 UNIT_FIELDS = ("uid", "monster_id", "count", "alive", "army_color", "current_color", "head", "tail", "wide", "flying",
                "hit_points", "shots", "speed", "attack", "defense", "modes")
 CHOICE_VALUES = ("gold", "experience", "monster_id", "count", "available", "gold_per_unit", "primary_skill", "first_level", "second_level")

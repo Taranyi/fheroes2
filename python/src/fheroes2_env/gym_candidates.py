@@ -27,7 +27,7 @@ from .session import EngineError
 ACTION_NAMES = ("turn.end", "hero.move", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
                 "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap",
                 "hero.end_meeting", "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast",
-                "choice.answer", "battle.act")
+                "choice.answer", "battle.act", "castle.buy_boat")
 BATTLE_KINDS = ("skip", "move", "attack", "shoot", "spell", "retreat", "surrender")
 CHOICE_KINDS = ("treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count")
 DIRECTIONS = ((0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1))
@@ -74,6 +74,8 @@ def adventure_proposals(game, state, decision, capacity):
     for castle in castles:
         cid = castle["id"]
         options = game.get_castle_options(cid)
+        if options["boat"]["can_buy"]:
+            yield command("castle.buy_boat", castle_id=cid)
         for building in options["buildings"]:
             if building["can_build"]:
                 yield command("castle.build", castle_id=cid, building_id=building["building_id"])

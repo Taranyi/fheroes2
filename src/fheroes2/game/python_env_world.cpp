@@ -184,6 +184,7 @@ namespace
                  { "spell_points", hero.GetSpellPoints() },
                  { "max_spell_points", hero.GetMaxSpellPoints() },
                  { "move_points", hero.GetMovePoints() },
+                 { "is_shipmaster", hero.isShipMaster() },
                  { "scouting_distance", hero.GetScoutingDistance() },
                  { "has_spell_book", hero.HaveSpellBook() },
                  { "adventure_spell_options", adventureSpells },
@@ -258,11 +259,17 @@ namespace
                 = step.GetIndex() == destination
                   && ( type == MP2::OBJ_RESOURCE || type == MP2::OBJ_TREASURE_CHEST || type == MP2::OBJ_MONSTER || type == MP2::OBJ_GENIE_LAMP
                        || type == MP2::OBJ_WAGON_CAMP || ( type == MP2::OBJ_HERO && tile.getHero() != nullptr && !movingHero->isFriends( tile.getHero()->GetColor() ) )
-                       || ( targetCastle != nullptr && !movingHero->isFriends( targetCastle->GetColor() ) ) );
+                       || ( !movingHero->isShipMaster() && type == MP2::OBJ_BOAT ) || ( movingHero->isShipMaster() && tile.isSuitableForDisembarkation() )
+                       || ( targetCastle != nullptr && ( targetCastle->GetColor() == movingHero->GetColor() || !movingHero->isFriends( targetCastle->GetColor() ) ) ) );
             const auto guards = Maps::getMonstersProtectingTile( step.GetIndex(), false );
             const bool protectedTile = std::any_of( guards.begin(), guards.end(),
                                                     [&]( const int32_t guard ) { return !( supportedTarget && type == MP2::OBJ_MONSTER && guard == destination ); } );
-            if ( tile.isWater() || type == MP2::OBJ_EVENT || ( MP2::isInGameActionObject( type ) && !supportedTarget ) || protectedTile ) {
+            const bool changesMedium = tile.isWater() != movingHero->isShipMaster();
+            const bool supportedTransition
+                = step.GetIndex() == destination
+                  && ( ( !movingHero->isShipMaster() && type == MP2::OBJ_BOAT ) || ( movingHero->isShipMaster() && tile.isSuitableForDisembarkation() ) );
+            if ( ( changesMedium && !supportedTransition ) || type == MP2::OBJ_EVENT
+                 || ( MP2::isInGameActionObject( type, movingHero->isShipMaster() ) && !supportedTarget ) || protectedTile ) {
                 throw PythonEnvError( "unsupported_action", "The route reaches a battle, choice or unsupported adventure object." );
             }
             cost += step.GetPenalty();
@@ -555,14 +562,15 @@ nlohmann::json fheroes2::PythonEnvWorld::getDecision() const
                  { "player_id", static_cast<uint32_t>( _controllerPlayer ) } } },
              { "turn_order", order },
              { "army_meeting", _armyMeeting },
-             { "available_actions",
-               !_pendingChoice.is_null()               ? ( !_battleState.is_null() ? Json{ "battle.act", "session.stop" } : Json{ "choice.answer", "session.stop" } )
-               : _controlled && _simulationFinished    ? Json{ "session.stop" }
-               : _controlled && _controllerPlayer == 0 ? Json{ "simulation.advance", "session.stop" }
-               : gameResult() == 0 ? Json{ "session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire",
-                                           "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting",
-                                           "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast" }
-                                   : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
+             { "available_actions", !_pendingChoice.is_null()
+                                        ? ( !_battleState.is_null() ? Json{ "battle.act", "session.stop" } : Json{ "choice.answer", "session.stop" } )
+                                    : _controlled && _simulationFinished    ? Json{ "session.stop" }
+                                    : _controlled && _controllerPlayer == 0 ? Json{ "simulation.advance", "session.stop" }
+                                    : gameResult() == 0 ? Json{ "session.stop",          "hero.move",    "turn.end",          "castle.build",        "castle.recruit",
+                                                                "castle.refresh_heroes", "castle.hire",  "castle.buy_boat",   "market.trade",        "hero.meet",
+                                                                "army.transfer",         "army.swap",    "artifact.transfer", "artifact.swap",       "hero.end_meeting",
+                                                                "army.upgrade",          "army.dismiss", "hero.dismiss",      "hero.buy_spell_book", "hero.cast" }
+                                                        : ( _armyMeeting.is_null() ? Json{ "session.stop" } : Json{ "session.stop", "hero.end_meeting" } ) },
              { "events", _events },
              { "pending_choice", _pendingChoice },
              { "notifications", { { { "type", "decision_required" }, { "phase", decisionPhase() }, { "player_id", _controllerPlayer } } } } };
@@ -657,8 +665,8 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
     }
     else if ( _controlled && _controllerPlayer == 0 )
         throw PythonEnvError( "simulation_advance_required", "Use simulation.advance at a native AI turn boundary." );
-    const bool castleAction
-        = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire" || action == "market.trade";
+    const bool castleAction = action == "castle.build" || action == "castle.recruit" || action == "castle.refresh_heroes" || action == "castle.hire"
+                              || action == "castle.buy_boat" || action == "market.trade";
     const bool armyAction = action == "hero.meet" || action == "army.transfer" || action == "army.swap" || action == "artifact.transfer" || action == "artifact.swap"
                             || action == "hero.end_meeting" || action == "army.upgrade" || action == "army.dismiss";
     const bool heroAction = action == "hero.dismiss" || action == "hero.buy_spell_book";
@@ -691,9 +699,6 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         }
         if ( movingHero == nullptr || !movingHero->isActive() || static_cast<int>( movingHero->GetColor() ) != _controllerPlayer ) {
             throw PythonEnvError( "illegal_action", "The hero must be an active hero owned by the waiting player." );
-        }
-        if ( movingHero->isShipMaster() ) {
-            throw PythonEnvError( "unsupported_action", "External ship movement is not supported yet." );
         }
         destination = params["y"].get<int>() * world.w() + params["x"].get<int>();
         if ( destination == movingHero->GetIndex() ) {
@@ -879,6 +884,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             const uint32_t movement = movingHero->GetMovePoints();
             const Funds before = movingHero->GetKingdom().GetFunds();
             const auto targetType = world.getTile( destination ).getMainObjectType();
+            const bool wasShipmaster = movingHero->isShipMaster();
             movingHero->GetPath().setPath( path );
             movingHero->SetMove( true );
             size_t remaining = path.size() + 1;
@@ -890,6 +896,13 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             }
             movingHero->SetMove( false );
             movingHero->ResetAction();
+            if ( movingHero->isActive() && wasShipmaster != movingHero->isShipMaster() )
+                _events.push_back( { { "type", movingHero->isShipMaster() ? "hero_boarded" : "hero_disembarked" },
+                                     { "hero_id", id },
+                                     { "from", from },
+                                     { "to", movingHero->GetIndex() } } );
+            if ( movingHero->isActive() && targetType == MP2::OBJ_CASTLE && movingHero->GetIndex() == destination && movingHero->inCastle() != nullptr )
+                _events.push_back( { { "type", "castle_visited" }, { "hero_id", id }, { "castle_id", movingHero->inCastle()->GetIndex() } } );
             _events.push_back( { { "type", "hero_moved" },
                                  { "hero_id", id },
                                  { "from", from },
@@ -1222,6 +1235,7 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
                            { "terrain_image", tile.getTerrainImageIndex() },
                            { "terrain_flags", tile.getTerrainFlags() },
                            { "water", tile.isWater() },
+                           { "boat_owner", static_cast<int>( tile.getBoatOwnerColor() ) },
                            { "road", tile.isRoad() },
                            { "object_type", tile.getMainObjectType() },
                            { "object_under_hero", tile.getMainObjectType( false ) },

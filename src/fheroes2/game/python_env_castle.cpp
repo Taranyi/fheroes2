@@ -34,6 +34,7 @@
 #include "heroes_recruits.h"
 #include "kingdom.h"
 #include "maps_fileinfo.h"
+#include "maps_tiles.h"
 #include "monster.h"
 #include "payment.h"
 #include "python_env_world.h"
@@ -236,6 +237,13 @@ nlohmann::json fheroes2::pythonEnvCastleOptions( const uint32_t castleId )
              { "buildings", buildings },
              { "dwellings", dwellings },
              { "hero_hiring", heroOffers( castle ) },
+             { "boat",
+               { { "has_shipyard", castle.isBuild( BUILD_SHIPYARD ) },
+                 { "has_sea_access", castle.HasSeaAccess() },
+                 { "boat_nearby", castle.HasBoatNearby() },
+                 { "placement_index", castle.getTileIndexToPlaceBoat() },
+                 { "can_buy", castle.AllowBuyBoat( true ) },
+                 { "cost", funds( PaymentConditions::BuyBoat() ) } } },
              { "market", marketOptions( castle ) } };
 }
 
@@ -244,6 +252,22 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
     Castle & castle = castleById( identifier( params, "castle_id" ) );
     if ( static_cast<int>( castle.GetColor() ) != playerId ) {
         throw PythonEnvError( "illegal_action", "The castle must be owned by the waiting player." );
+    }
+    if ( action == "castle.buy_boat" ) {
+        if ( params.size() != 1 )
+            throw PythonEnvError( "invalid_request", "castle.buy_boat requires only castle_id." );
+        if ( !castle.AllowBuyBoat( true ) )
+            throw PythonEnvError( "illegal_action", "Boat purchase requires a shipyard, funds and a free harbor without a nearby boat." );
+        const int index = castle.getTileIndexToPlaceBoat();
+        if ( validateOnly )
+            return Json::object();
+        if ( !castle.BuyBoat() )
+            throw PythonEnvError( "engine_error", "The validated boat purchase failed." );
+        return { { "type", "boat_purchased" },
+                 { "castle_id", castle.GetIndex() },
+                 { "player_id", playerId },
+                 { "tile_index", index },
+                 { "cost", funds( PaymentConditions::BuyBoat() ) } };
     }
     if ( action == "castle.refresh_heroes" ) {
         if ( params.size() != 1 ) {

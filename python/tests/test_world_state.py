@@ -217,7 +217,7 @@ class WorldStateTests(unittest.TestCase):
                 self.assertEqual(decision["controller"], "external")
                 self.assertEqual(decision["token"]["state_version"], before["state_version"])
                 self.assertEqual(decision["turn_order"], [player["id"] for player in sorted(before["players"], key=lambda p: (not p["is_human"], p["id"]))])
-                self.assertEqual(decision["available_actions"], ["session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire", "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting", "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast"])
+                self.assertEqual(decision["available_actions"], ["session.stop", "hero.move", "turn.end", "castle.build", "castle.recruit", "castle.refresh_heroes", "castle.hire", "castle.buy_boat", "market.trade", "hero.meet", "army.transfer", "army.swap", "artifact.transfer", "artifact.swap", "hero.end_meeting", "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast"])
                 self.assertIsNone(decision["pending_choice"])
                 self.assertEqual(decision["notifications"][0]["type"], "decision_required")
                 for _ in range(3):
@@ -292,7 +292,7 @@ class WorldStateTests(unittest.TestCase):
             game.load_save(ROOT / self.fixtures[0]["path"])
             before = game.get_state()
             decision = game.start_session(1)
-            for action in ("castle.buy_boat", "battle.attack", "choice.answer", "unknown"):
+            for action in ("castle.teleport", "battle.attack", "choice.answer", "unknown"):
                 with self.assertRaises(EngineError) as failed:
                     game.step(action, token=decision["token"])
                 self.assertEqual(failed.exception.code, "unsupported_action")

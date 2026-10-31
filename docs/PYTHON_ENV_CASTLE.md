@@ -181,3 +181,10 @@ a hiányzó piacot, a túl nagy csomagszámot, hibás erőforrásokat és hamis 
 2026-10-29-i folytatás: összesen 63 sikeres Python-integrációs teszt és sikeres normál `ENABLE_PYTHON_ENV=OFF`
 Windows-build. A bekapcsolt fejlesztői motor is lefordult, az `economy.py` példa a fenti konkrét eredményt adta.
 A közös piaci művelet normál GUI-beli kattintásos próbája és más platformok SDK-fordítása ebben a munkaszakaszban nem történt meg.
+
+## 7. kiegészítés: hajóvásárlás és látogató
+
+A `get_castle_options` `boat` blokkja a natív hajóvásárlási feltételeket/árat mutatja.
+A `buy_boat(castle_id, token=...)` / `castle.buy_boat` az eredeti `Castle::BuyBoat()` műveletét hívja.
+A saját vár bejáratára küldött `hero.move` létrehozza a valódi látogatókapcsolatot; helyőrségi műveletek ezután használhatók.
+[Részletek és futtatható példa](PYTHON_ENV_NAVIGATION.md).

@@ -108,6 +108,7 @@ engedélyei megmaradnak. Ezért a speciális célú térképek mindegyike külö
 A szokásos összes ellenfél legyőzése AI-only módban is natív győzelemhez vezet.
 
 A konfigurált session nem bővíti automatikusan a külső akcióprofil objektum- és varázslatlistáját.
+A 7. kiegészítés hajózása és saját várba belépése a konfigurált oldalakon is használható: [navigációs API](PYTHON_ENV_NAVIGATION.md).
 A beépített AI továbbra is a saját teljes natív stratégiáját használja: mozog, gyűjt, épít, vásárol és harcol.
 A külső profilban nem támogatott művelet hiba és visszaállítás; nincs helyette hallgatólagos AI-döntés.
 A Gym `Fheroes2-v0` továbbra is egy külső oldal tanítási adaptere. Több agent már az alap sessionnel vezérelhető;

@@ -46,8 +46,8 @@ Use `refresh_hero_offers(castle_id, token=...)` for the native lazy offer update
 Refreshing is an explicit action because it can change native RNG/state; read-only queries never generate offers.
 Use `trade_resources(castle_id, resource_from, resource_to, lots, token=...)` for exact quoted marketplace lots;
 rates use all marketplaces owned by that castle's kingdom. The UI and Python share checked quote/execution functions.
-See [the castle/economy API and limits](../docs/PYTHON_ENV_CASTLE.md). Ship purchases are still pending;
-the nine-action Gym preview remains unchanged.
+See [the castle/economy API and limits](../docs/PYTHON_ENV_CASTLE.md). Ship purchases and sailing now work through [the navigation API](../docs/PYTHON_ENV_NAVIGATION.md);
+the older nine-action Gym preview remains unchanged.
 
 ## Army management
 
@@ -542,3 +542,16 @@ Step 10 replaces the old unsupported-battle expectation with live external battl
 On 2026-10-29, all 111 integration tests passed, including 12 new battle tests, AI-initiated defense, offensive siege/capture,
 combat spell costs, surrender payment, loss, battle-to-level-up continuation, read-only snapshots and Gym battle boundaries.
 Both the enabled and feature-disabled normal Windows builds compiled. Other platform SDK builds and manual GUI battle checks were not run.
+
+## Sailing and own-castle entry
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File script/windows/python-env-artifact-fixture.ps1
+uv run --project python python python/examples/navigation.py
+```
+
+Use `buy_boat(castle_id, token=...)`, inspect `get_castle_options(castle_id)["boat"]`, and use `move_hero`
+for boarding, sailing, landing and entering an owned castle. Native movement costs and shipyard rules apply.
+State includes `heroes[*].is_shipmaster` and `map.tiles[*].boat_owner`. The structured Gym adapter includes
+boat purchase candidates and an explicit ship flag (hero rows now have 22 columns).
+See [the navigation contract and remaining limits](../docs/PYTHON_ENV_NAVIGATION.md).

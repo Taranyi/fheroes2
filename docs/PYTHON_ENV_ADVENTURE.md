@@ -2,7 +2,7 @@
 
 A 6. lépésben az `adventure_basic` profil működik: saját hős szárazföldi mozgatása, sima erőforráskupac felvétele és
 a kör lezárása a beépített AI-játékosokkal. Nem közvetlen koordinátaátírás vagy külön Python-játékszabály hajtja végre.
-A 9–10. lépés deklarált választásai és csatái már működnek; a hajózás továbbra is hiányzik. A később hozzáadott várépítés és toborzás
+A 9–10. lépés deklarált választásai és csatái már működnek; a 7. kiegészítés hajózása és saját várba belépése is elkészült: [navigációs API](PYTHON_ENV_NAVIGATION.md). A később hozzáadott várépítés és toborzás
 külön [várműveleti leírásban](PYTHON_ENV_CASTLE.md) szerepel.
 
 ## Használat
@@ -34,9 +34,9 @@ A korábbi tokent újra elküldve `stale_decision` a válasz. A hibás vagy nem 
 A hősnek aktívnak és a vezérelt játékos tulajdonában kell lennie. A cél nulla alapú mezőkoordináta.
 A motor saját `world.getPath` útkeresője adja az útvonalat és a terep/út/átlós mozgás költségét.
 A teljes útvonalnak ki kell férnie a megmaradt mozgáspontból; részleges többnapos útvonal ebben a profilban nincs.
-Minden érintett mezőt még a mozgás előtt ellenőrzünk: víz, esemény, nem támogatott akcióobjektum vagy őrzött köztes mező
+Minden érintett mezőt még a mozgás előtt ellenőrzünk: tiltott közegváltás, esemény, nem támogatott akcióobjektum vagy őrzött köztes mező
 esetén a művelet elutasított. A 9. lépéstől a cél lehet a [deklarált választási objektum](PYTHON_ENV_CHOICES.md) is;
-semleges célcsapatnál annak saját őrzése nem tiltja az ajánlat megkérdezését. Saját várból ki lehet indulni, a várba belépés még nincs bekötve.
+semleges célcsapatnál annak saját őrzése nem tiltja az ajánlat megkérdezését. Saját várból ki lehet indulni és szabad bejáratú saját várba vissza is lehet lépni.
 
 A tényleges lépések `Heroes::Move(true)` hívások. A `Scout`, mozgáspont-levonás, mezőváltás, útvonal-fogyasztás és
 `ActionNewPosition` megmarad. A radar/fókusz/hang/frissítő animációk headless ágon kimaradnak.
@@ -67,7 +67,7 @@ Az `available_actions` parancsneveket jelez; még nem ad minden paraméterezett 
 ## Határ és visszaállítás
 
 A [9. lépés deklarált választásai](PYTHON_ENV_CHOICES.md) már Pythonból megválaszolhatók; az adventure profil
-ezért kincsesládával, semleges lényekkel, dzsinnlámpával és Wagon Camp toborzással bővült. Más akcióobjektum és a hajózás még nem támogatott.
+ezért kincsesládával, semleges lényekkel, dzsinnlámpával és Wagon Camp toborzással bővült. A hajózást a 7. kiegészítés támogatja; további akcióobjektumok továbbra is bővítésre várnak.
 A [10. lépéstől a csata](PYTHON_ENV_BATTLE.md) is külső döntés. Ellenséges hős/vár megtámadható;
 ha az AI megtámadja a saját várat, a `turn.end` a védő egység döntésénél tér vissza, majd a csata után folytatódik.
 Más, még leválasztatlan interaktív motorútvonal ugyanezzel a hibakategóriával állhat meg. Ez nem kész, tetszőleges pályát végigjátszó Gym env.

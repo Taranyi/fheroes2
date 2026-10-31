@@ -93,7 +93,7 @@ A natív ID-kat megtartjuk; a hős/vár sorindex nem ugyanaz, mint a hős/vár I
 | `global` | 12 | Fázis, külső résztvevő, aktuális szín, térképméret/seed, dátum, eredmény, agent lépésszám és hátralévő limit |
 | `tiles`, `tile_mask` | 20736×16, 20736 | Terep, objektum, köd, járhatóság, metadata, fő objektum UID; natív tile-index sorrend |
 | `players`, `player_mask` | 6×13, 6 | ID, control, in_play, faj, szövetség, vár nélküli napok, hét erőforrás; minden oldal |
-| `heroes`, `hero_mask` | 128×21, 128 | Katalógus-ID szerint, az inaktív hősökkel együtt; képességek, mana, mozgás, státusz, vár és koordináta |
+| `heroes`, `hero_mask` | 128×22, 128 | Katalógus-ID szerint, az inaktív hősökkel együtt; képességek, mana, mozgás, státusz, vár és koordináta |
 | `hero_armies` | 128×5×2 | Lényazonosító, darabszám |
 | `hero_artifacts` | 128×14×2 | Tárgyazonosító, tekercsvarázslat |
 | `hero_skills`, `hero_spells` | 128×8×2, 128×128 | Másodlagos képesség/szint, varázslat-ID maszk |
@@ -164,7 +164,7 @@ Az új adapter ablakos `human` módot nem tartalmaz; a meglévő preview külső
 
 A base Python-csomag továbbra is külső függőség nélkül importálható; a Gym-modult külön kell importálni.
 A C++ ellenőrzési bővítés csak az opcionális adapterben fordul. Nincs új Python- vagy venv-követelmény a normál,
-Android vagy iOS build számára. A még nem támogatott hajózás, saját várba belépés, további varázslatok és objektumok
+Android vagy iOS build számára. A további varázslatok és objektumok
 ugyanazok a nyitott feladatok, mint az általános sessionnél; a „teljes Gym-adapter” e dokumentált profil teljes Gym-életciklusát jelenti.
 
 ## Ellenőrzés
@@ -190,3 +190,10 @@ két epizódja valódi motorbeli vereséggel és `-1` jutalommal zárult, 27 és
 A headless policy ellenőrzés, az engedélyezett és Python nélküli Windows-build is sikeres.
 A base csomag NumPy/Gym importálása nélkül is működik. Más platformok SDK-buildjét és a normál ablakos
 játék kézi végigkattintását ebben a lépésben nem ellenőriztük. A teljesítménymérés és a végső elfogadási futás a 14. lépés.
+
+## 7. kiegészítés: navigáció
+
+A `castle.buy_boat` új kategória a korábbiak után (21.), a natív maszk alapján. A `hero.move` hajózást és saját várba belépést is kezel.
+A hős numerikus sora `is_shipmaster` mezővel bővült (az x/y előtt), így a `heroes` alap alakja 128×22.
+A korábbi 128×21 bemenetet használó modelleket módosítani kell; az epizódon belüli alak továbbra is fix.
+[Natív szabályok, API, futtatható példa és ellenőrzések](PYTHON_ENV_NAVIGATION.md).

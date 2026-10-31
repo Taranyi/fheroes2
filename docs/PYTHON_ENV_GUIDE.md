@@ -155,8 +155,8 @@ Teljes séma és konfigurációs maximumok: [Gym-szerződés](PYTHON_ENV_GYM.md)
 | Betöltés/reset | Standard mentés, seedelt MP2/MX2/FH2M új játék; csatából/választásból reset | Kampányok, szerkesztő és hálózati játék nem célprofil |
 | Állapot | Minden oldal, AI-hősök/várak/seregek/tárgyak és teljes térkép | Láthatóságra szűrt `observe` nincs |
 | Vezérlés | Oldalanként Python/beépített AI, több Python-agent, AI-only, csata/választás útválasztás | Hozzárendelés resetkor; Gym egy külső oldalas; külön multi-agent wrapper nincs |
-| Adventure | Saját szárazföldi hős, erőforráskupac, deklarált célobjektumok, AI-körök | Hajózás, saját várba belépés és további objektumok |
-| Gazdaság | Natív építés, pontos toborzás, hősvásárlás, ajánlatfrissítés, piaci csere | Hajóvásárlás |
+| Adventure | Szárazföldi/vízi mozgás, beszállás/partraszállás, saját várba belépés, deklarált objektumok, AI-körök | További objektumok és speciális tengeri interakciók |
+| Gazdaság | Natív építés, toborzás, hős- és hajóvásárlás, ajánlatfrissítés, piaci csere | További speciális gazdasági műveletek |
 | Sereg/hős/tárgy | Natív találkozás, seregátadás/csere, upgrade/dismiss, könyvvásárlás, tárgy/tekercs/set | Jogosultság és találkozási távolság a natív szabályok szerint |
 | Választás | Láda, szintlépés, semleges csatlakozás/üldözés, megerősítés és toborzási darabszám | Más típusokat külön kell bekötni |
 | Adventure varázslat | Identify Hero, Visions | A többi varázslat |
@@ -241,5 +241,6 @@ Tipikus hibák:
 - `stale_decision` / `wrong_session`: session API-ban friss tokent használj, reset után a régi token érvénytelen.
 - Timeout/crash: kivétel után reset; a motorfolyamat kilépése nem játékmeneti eredmény.
 
-További munka: hajózás/hajóvásárlás/saját várba belépés; a profilon kívüli objektumok
+A 7. kiegészítés hajózása/hajóvásárlása/saját várba belépése elkészült: [navigációs példa és API](PYTHON_ENV_NAVIGATION.md).
+További munka: a profilon kívüli objektumok
 és varázslatok; konfigurálható battle-only indítás. Nagy léptékű RL-optimalizálás és láthatóságra szűrt observation ezek mellett külön bővítés.

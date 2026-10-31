@@ -543,7 +543,9 @@ namespace
             DEBUG_LOG( DBG_GAME, DBG_INFO, hero.GetName() << " visits " << castle->GetName() )
 
             castle->trainHeroInMageGuild( hero );
-            Game::OpenCastleDialog( *castle );
+            if ( !System::isHeadlessMode() ) {
+                Game::OpenCastleDialog( *castle );
+            }
 
             return;
         }
@@ -638,7 +640,9 @@ namespace
         captureCastle();
 
         castle->trainHeroInMageGuild( hero );
-        Game::OpenCastleDialog( *castle );
+        if ( !System::isHeadlessMode() ) {
+            Game::OpenCastleDialog( *castle );
+        }
     }
 
     void ActionToHeroes( Heroes & hero, const int32_t dstIndex )
@@ -719,9 +723,11 @@ namespace
         Maps::Tile & destinationTile = world.getTile( dst_index );
         const int boatDirection = destinationTile.getBoatDirection();
 
-        AudioManager::PlaySound( M82::KILLFADE );
         hero.ShowPath( false );
-        hero.FadeOut( offset );
+        if ( !System::isHeadlessMode() ) {
+            AudioManager::PlaySound( M82::KILLFADE );
+            hero.FadeOut( offset );
+        }
 
         hero.Scout( dst_index );
         hero.Move2Dest( dst_index );
@@ -730,9 +736,11 @@ namespace
         hero.setAlphaValue( 255 );
 
         // Update the radar map image before changing the direction of the hero.
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-        I.getRadar().SetRenderArea( hero.GetScoutRoi() );
-        I.redraw( Interface::REDRAW_RADAR );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( hero.GetScoutRoi() );
+            I.redraw( Interface::REDRAW_RADAR );
+        }
 
         // Set the direction of the hero to the one of the boat as the boat does not move when boarding it
         hero.setDirection( boatDirection );
@@ -777,14 +785,18 @@ namespace
         from.setBoat( Maps::GetDirection( fromIndex, dst_index ), hero.GetColor() );
         hero.SetShipMaster( false );
 
-        AudioManager::PlaySound( M82::KILLFADE );
-        hero.FadeIn( offset );
+        if ( !System::isHeadlessMode() ) {
+            AudioManager::PlaySound( M82::KILLFADE );
+            hero.FadeIn( offset );
+        }
         hero.ShowPath( true );
 
         // Clear hero position marker from the boat and scout the area on radar after disembarking.
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-        I.getRadar().SetRenderArea( hero.GetScoutRoi() );
-        I.setRedraw( Interface::REDRAW_RADAR );
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( hero.GetScoutRoi() );
+            I.setRedraw( Interface::REDRAW_RADAR );
+        }
 
         hero.ActionNewPosition( true );
     }
