@@ -20,7 +20,8 @@
 
 param(
     [ValidateRange(1, 256)]
-    [int]$Jobs = 8
+    [int]$Jobs = 8,
+    [switch]$ExpansionOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,8 +42,12 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not configure the optional native test builder.' }
     & (Join-Path $taskToolBin 'cmake.exe') --build build/windows-local --target fheroes2_artifact_fixture --parallel $Jobs
     if ($LASTEXITCODE -ne 0) { throw 'Could not build the native test builder.' }
-    & (Join-Path $taskRoot 'build/windows-local/fheroes2_artifact_fixture.exe') $taskBase $taskOutput
-    if ($LASTEXITCODE -ne 0) { throw 'Native fixture generation failed.' }
+    if (!$ExpansionOnly) {
+        & (Join-Path $taskRoot 'build/windows-local/fheroes2_artifact_fixture.exe') $taskBase $taskOutput
+        if ($LASTEXITCODE -ne 0) { throw 'Native fixture generation failed.' }
+    }
+    & (Join-Path $taskRoot 'build/windows-local/fheroes2_artifact_fixture.exe') $taskBase $taskOutput --expansion-only
+    if ($LASTEXITCODE -ne 0) { throw 'Native object/spell expansion fixture generation failed.' }
 }
 finally {
     $env:PATH = $taskOldPath

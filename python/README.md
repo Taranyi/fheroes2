@@ -555,3 +555,17 @@ for boarding, sailing, landing and entering an owned castle. Native movement cos
 State includes `heroes[*].is_shipmaster` and `map.tiles[*].boat_owner`. The structured Gym adapter includes
 boat purchase candidates and an explicit ship flag (hero rows now have 22 columns).
 See [the navigation contract and remaining limits](../docs/PYTHON_ENV_NAVIGATION.md).
+
+## Extended objects and spells (tasks 9–10)
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File script/windows/python-env-artifact-fixture.ps1
+uv run --project python python python/examples/expansion.py
+```
+
+The explicit profile now includes 83 adventure object types, 11 adventure spells and all 48 teachable combat spells.
+Use the existing move/cast/answer/battle APIs; native rules calculate prices, targets, effects and outcomes.
+New choices include arena primary skills and Town Portal/Dimension Door destinations. World state exposes
+maximum movement, morale/luck and captured-object owners/guardians for every side.
+Gym observation shapes are now heroes `(128,25)`, tiles `(20736,19)` and choice values `(16,)`.
+See [the complete contract, examples, verification and remaining special cases](../docs/PYTHON_ENV_EXPANSION.md).

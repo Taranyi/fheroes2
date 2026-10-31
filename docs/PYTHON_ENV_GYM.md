@@ -91,9 +91,9 @@ A natív ID-kat megtartjuk; a hős/vár sorindex nem ugyanaz, mint a hős/vár I
 | Mező | Alapméret | Tartalom |
 |---|---|---|
 | `global` | 12 | Fázis, külső résztvevő, aktuális szín, térképméret/seed, dátum, eredmény, agent lépésszám és hátralévő limit |
-| `tiles`, `tile_mask` | 20736×16, 20736 | Terep, objektum, köd, járhatóság, metadata, fő objektum UID; natív tile-index sorrend |
+| `tiles`, `tile_mask` | 20736×19, 20736 | Terep, objektum, köd, járhatóság, metadata, fő objektum UID; natív tile-index sorrend |
 | `players`, `player_mask` | 6×13, 6 | ID, control, in_play, faj, szövetség, vár nélküli napok, hét erőforrás; minden oldal |
-| `heroes`, `hero_mask` | 128×22, 128 | Katalógus-ID szerint, az inaktív hősökkel együtt; képességek, mana, mozgás, státusz, vár és koordináta |
+| `heroes`, `hero_mask` | 128×25, 128 | Katalógus-ID szerint, az inaktív hősökkel együtt; képességek, mana, mozgás, státusz, vár és koordináta |
 | `hero_armies` | 128×5×2 | Lényazonosító, darabszám |
 | `hero_artifacts` | 128×14×2 | Tárgyazonosító, tekercsvarázslat |
 | `hero_skills`, `hero_spells` | 128×8×2, 128×128 | Másodlagos képesség/szint, varázslat-ID maszk |
@@ -104,16 +104,16 @@ A natív ID-kat megtartjuk; a hős/vár sorindex nem ugyanaz, mint a hős/vár I
 | `battle_units`, `battle_unit_mask` | 32×16, 32 | Mindkét sereg élő harci egységei, HP, lövés, hely, módok; a natív listában a halott egységek is szerepelhetnek |
 | `battle_effects`, `battle_board` | 32×32, 99×3 | Egység módonként hátralévő kör; mezőindex, objektum és egység-UID |
 | `battle_commanders` | 2×3 | Szín, mana, varázsolt-e ebben a körben; támadó, majd védő |
-| `choice`, `choice_values`, `choice_value_mask` | 6, 9, 9 | Választástípus, ID, hős-ID, minimum/maximum, jelöltszám; jutalom/költség/képességadatok |
+| `choice`, `choice_values`, `choice_value_mask` | 6, 16, 16 | Választástípus, ID, hős-ID, minimum/maximum, jelöltszám; jutalom/költség/képességadatok |
 | `actions`, `action_mask` | 8192×30, 8192 | Numerikus akcióleírások és aktuális érvényességük |
 
 A `global` pontos sorrendje: phase, player_id, current_player, width, height, map_seed, total_days, total_weeks, month,
 game_result, episode_step, remaining_steps. Fáziskód: adventure=0, choice=1, battle=2, terminal=3.
 A `tiles` sorrendje: index, x, y, terrain, terrain_image, terrain_flags, water, road, object_type, object_under_hero,
-fog_colors, passability, a három metadata és main_part.uid.
+fog_colors, passability, a három metadata, main_part.uid, owner, guardian_monster_id, guardian_count.
 A hős- és egységoszlopokat a `gym_observation.HERO_FIELDS`, `UNIT_FIELDS` publikus konstansok adják;
 a hős sor végén még x/y szerepel. A `CHOICE_VALUES` sorrend: gold, experience, monster_id, count, available,
-gold_per_unit, primary_skill, first_level, second_level. Ismeretlen választási értékmezőt explicit elutasítunk.
+gold_per_unit, primary_skill, first_level, second_level, wood, mercury, ore, sulfur, crystal, gems, artifact_id. Ismeretlen választási értékmezőt explicit elutasítunk.
 
 Az `ACTION_FIELDS` oszlopai:
 
@@ -197,3 +197,12 @@ A `castle.buy_boat` új kategória a korábbiak után (21.), a natív maszk alap
 A hős numerikus sora `is_shipmaster` mezővel bővült (az x/y előtt), így a `heroes` alap alakja 128×22.
 A korábbi 128×21 bemenetet használó modelleket módosítani kell; az epizódon belüli alak továbbra is fix.
 [Natív szabályok, API, futtatható példa és ellenőrzések](PYTHON_ENV_NAVIGATION.md).
+
+## 9–10. bővítés
+
+83 térképi objektumtípus, 11 adventure és 48 tanítható harci varázslat a natív maszk/célpontlista alapján.
+Új választástípusok: `hero.primary_skill`, `spell.town_portal`, `spell.dimension_door`. Az eddigi típuskódok megmaradtak.
+A hősök max. mozgást/morált/szerencsét, a térkép tulajdonost/őrséget, a választás erőforrásárat és artifact ID-t is ad.
+Az aktuális alapméretek: `heroes=128×25`, `tiles=20736×19`, `choice_values=16`. Régi modell bemenete módosítandó.
+A 7. kiegészítéskor a hőssor 22 oszlopos volt; a további három mező az x/y elé került.
+[Teljes szerződés, kivételek és ellenőrzések](PYTHON_ENV_EXPANSION.md).

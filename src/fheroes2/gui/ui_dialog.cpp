@@ -94,6 +94,9 @@ namespace fheroes2
 {
     int showMessage( const TextBase & header, const TextBase & body, const int buttons, const std::vector<const DialogElement *> & elements /* = {} */ )
     {
+        if ( System::isHeadlessMode() ) {
+            return showStandardTextMessage( header.text(), body.text(), buttons );
+        }
         System::requireInteractive( "modal dialog" );
         outputInTextSupportMode( header, body, buttons );
 

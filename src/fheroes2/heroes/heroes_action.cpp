@@ -367,6 +367,16 @@ namespace
         fheroes2::showMessage( title, body, Dialog::OK );
     }
 
+    int confirmObject( const Heroes & hero, std::string title, std::string message, const std::vector<const fheroes2::DialogElement *> & elements,
+                       const std::map<std::string, int64_t> & values )
+    {
+        if ( System::isHeadlessMode() ) {
+            Game::ScopedExternalInteractions::notify( title, message );
+            return static_cast<int>( Game::ScopedExternalInteractions::choose( { "confirmation", hero.GetID(), { Dialog::YES, Dialog::NO }, values } ) );
+        }
+        return fheroes2::showStandardTextMessage( std::move( title ), std::move( message ), Dialog::YES | Dialog::NO, elements );
+    }
+
     void ActionToMonster( Heroes & hero, int32_t dst_index )
     {
         Maps::Tile & tile = world.getTile( dst_index );
@@ -1239,7 +1249,9 @@ namespace
                 const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dst_index );
 
                 // Hero' spell points and army could have changed. Update heroes icons and status area.
-                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                }
 
                 if ( res.isAttackerWin() ) {
                     hero.IncreaseExperience( res.getAttackerExperience() );
@@ -1456,7 +1468,9 @@ namespace
             const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dst_index );
 
             // Hero' spell points could have changed. Update heroes icons.
-            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS );
+            }
 
             if ( res.isAttackerWin() ) {
                 hero.IncreaseExperience( res.getAttackerExperience() );
@@ -1718,7 +1732,16 @@ namespace
 
             const fheroes2::ArtifactDialogElement artifactUI( art );
 
-            if ( Dialog::YES == fheroes2::showStandardTextMessage( title, std::move( msg ), Dialog::YES | Dialog::NO, { &artifactUI } ) ) {
+            if ( Dialog::YES
+                 == confirmObject( hero, title, std::move( msg ), { &artifactUI },
+                                   { { "artifact_id", art.GetID() },
+                                     { "gold", payment.gold },
+                                     { "wood", payment.wood },
+                                     { "mercury", payment.mercury },
+                                     { "ore", payment.ore },
+                                     { "sulfur", payment.sulfur },
+                                     { "crystal", payment.crystal },
+                                     { "gems", payment.gems } } ) ) {
                 if ( hero.GetKingdom().AllowPayment( payment ) ) {
                     result = true;
                     hero.GetKingdom().OddFundsResource( payment );
@@ -1797,7 +1820,9 @@ namespace
                 const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dst_index );
 
                 // Hero' spell points and army could have changed. Update heroes icons and status area.
-                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                }
 
                 if ( res.isAttackerWin() ) {
                     hero.IncreaseExperience( res.getAttackerExperience() );
@@ -2082,6 +2107,8 @@ namespace
 
         if ( !hero.isFriends( getColorFromTile( tile ) ) ) {
             const auto updateRadar = [objectType, dstIndex]() {
+                if ( System::isHeadlessMode() )
+                    return;
                 // TODO: make a function that will automatically get the object size in tiles and return a ROI for radar update.
                 // Set the radar update ROI according to captured object size and position.
                 fheroes2::Rect radarRoi( Maps::GetPoint( dstIndex ), { 1, 1 } );
@@ -2207,7 +2234,9 @@ namespace
                 const Battle::Result result = Battle::Loader( hero.GetArmy(), army, dstIndex );
 
                 // Hero' spell points and army could have changed. Update heroes icons and status area.
-                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                }
 
                 if ( result.isAttackerWin() ) {
                     hero.IncreaseExperience( result.getAttackerExperience() );
@@ -2260,7 +2289,9 @@ namespace
             const Battle::Result result = Battle::Loader( hero.GetArmy(), army, dstIndex );
 
             // Hero' spell points and army could have changed. Update heroes icons and status area.
-            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            }
 
             if ( result.isAttackerWin() ) {
                 hero.IncreaseExperience( result.getAttackerExperience() );
@@ -2274,11 +2305,11 @@ namespace
                 const fheroes2::Point tilePoint = Maps::GetPoint( dstIndex );
                 const fheroes2::Rect radarRoi( tilePoint.x - 1, tilePoint.y - 1, 3, 2 );
 
-                Interface::AdventureMap & I = Interface::AdventureMap::Get();
-
-                // Update the object on radar.
-                I.getRadar().SetRenderArea( radarRoi );
-                I.redraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap & I = Interface::AdventureMap::Get();
+                    I.getRadar().SetRenderArea( radarRoi );
+                    I.redraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+                }
 
                 fheroes2::showStandardTextMessage( MP2::StringObject( objectType ), _( "You beat the Ghosts and are able to restore the mine to production." ),
                                                    Dialog::OK );
@@ -2326,7 +2357,9 @@ namespace
                     setMonsterCountOnTile( tile, 0 );
                     hero.GetArmy().JoinTroop( troop );
 
-                    Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+                    if ( !System::isHeadlessMode() ) {
+                        Interface::AdventureMap::Get().setRedraw( Interface::REDRAW_STATUS );
+                    }
                 }
             }
         }
@@ -2544,7 +2577,9 @@ namespace
             const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dst_index );
 
             // Hero' spell points and army could have changed. Update heroes icons and status area.
-            Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            if ( !System::isHeadlessMode() ) {
+                Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+            }
 
             if ( res.isAttackerWin() ) {
                 hero.IncreaseExperience( res.getAttackerExperience() );
@@ -2586,6 +2621,8 @@ namespace
         const int32_t scoutRange = GameStatic::getFogDiscoveryDistance( GameStatic::FogDiscoveryType::OBSERVATION_TOWER );
         Maps::ClearFog( dst_index, scoutRange, hero.GetColor() );
 
+        if ( System::isHeadlessMode() )
+            return;
         Interface::AdventureMap & I = Interface::AdventureMap::Get();
         const fheroes2::Point towerPosition = Maps::GetPoint( dst_index );
         const fheroes2::Rect towerRoi( towerPosition.x - scoutRange, towerPosition.y - scoutRange, 2 * scoutRange + 1, 2 * scoutRange + 1 );
@@ -2991,7 +3028,8 @@ namespace
                 std::move( title ),
                 _( "You come upon an obelisk made from a type of stone you have never seen before. Staring at it intensely, the smooth surface suddenly changes to an inscription. The inscription is a piece of a lost ancient map. Quickly you copy down the piece and the inscription vanishes as abruptly as it appeared." ),
                 Dialog::OK );
-            kingdom.PuzzleMaps().ShowMapsDialog();
+            if ( !System::isHeadlessMode() )
+                kingdom.PuzzleMaps().ShowMapsDialog();
         }
         else {
             fheroes2::showStandardTextMessage( std::move( title ), _( "You have already been to this obelisk." ), Dialog::OK );
@@ -3027,10 +3065,10 @@ namespace
 
                     // In the original game, there was no way to refuse to level up for free, this is an improvement specific to fheroes2
                     increaseExperience
-                        = ( fheroes2::showStandardTextMessage(
-                                std::move( title ),
+                        = ( confirmObject(
+                                hero, std::move( title ),
                                 _( "Upon your approach, the tree opens its eyes in delight. \"Ahh, an adventurer! Allow me to teach you a little of what I have learned over the ages.\"" ),
-                                Dialog::YES | Dialog::NO, { &experienceUI } )
+                                { &experienceUI }, { { "experience", possibleExperience }, { "gold", payment.gold }, { "gems", payment.gems } } )
                             == Dialog::YES );
                 }
                 else {
@@ -3049,8 +3087,9 @@ namespace
 
                         const fheroes2::ExperienceDialogElement experienceUI( static_cast<int32_t>( possibleExperience ) );
 
-                        increaseExperience
-                            = ( fheroes2::showStandardTextMessage( std::move( title ), std::move( msg ), Dialog::YES | Dialog::NO, { &experienceUI } ) == Dialog::YES );
+                        increaseExperience = ( confirmObject( hero, std::move( title ), std::move( msg ), { &experienceUI },
+                                                              { { "experience", possibleExperience }, { "gold", payment.gold }, { "gems", payment.gems } } )
+                                               == Dialog::YES );
                     }
                     else {
                         std::string msg = _( "Tears brim in the eyes of the tree." );
@@ -3242,7 +3281,9 @@ namespace
                     const Battle::Result res = Battle::Loader( hero.GetArmy(), army, dst_index );
 
                     // Hero' spell points and army could have changed. Update heroes icons and status area.
-                    Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                    if ( !System::isHeadlessMode() ) {
+                        Interface::AdventureMap::Get().renderWithFadeInOrPlanRender( Interface::REDRAW_HEROES | Interface::REDRAW_BUTTONS | Interface::REDRAW_STATUS );
+                    }
 
                     if ( res.isAttackerWin() ) {
                         hero.IncreaseExperience( res.getAttackerExperience() );
@@ -3414,7 +3455,11 @@ namespace
         else {
             hero.SetVisited( dst_index );
             AudioManager::PlaySound( M82::EXPERNCE );
-            hero.IncreasePrimarySkill( Dialog::SelectSkillFromArena() );
+            const int skill = System::isHeadlessMode()
+                                  ? static_cast<int>( Game::ScopedExternalInteractions::choose(
+                                        { "hero.primary_skill", hero.GetID(), { Skill::Primary::ATTACK, Skill::Primary::DEFENSE, Skill::Primary::POWER }, {} } ) )
+                                  : Dialog::SelectSkillFromArena();
+            hero.IncreasePrimarySkill( skill );
         }
     }
 
@@ -3478,7 +3523,9 @@ namespace
                 prisoner->Recruit( hero.GetColor(), Maps::GetPoint( dst_index ) );
 
                 // Update the kingdom heroes list including the scrollbar.
-                Interface::AdventureMap::Get().GetIconsPanel().resetIcons( ICON_HEROES );
+                if ( !System::isHeadlessMode() ) {
+                    Interface::AdventureMap::Get().GetIconsPanel().resetIcons( ICON_HEROES );
+                }
             }
         }
         else {

@@ -153,13 +153,40 @@ fheroes2::PythonEnvBattleDecision fheroes2::pythonEnvBattleDecision( Battle::Are
 
     const HeroBase * hero = arena.GetCurrentCommander();
     if ( hero != nullptr && hero->HaveSpellBook() ) {
-        for ( const int id : { Spell::ARROW, Spell::LIGHTNINGBOLT, Spell::BLESS, Spell::CURSE, Spell::HASTE, Spell::SLOW, Spell::SHIELD, Spell::STONESKIN,
-                               Spell::STEELSKIN, Spell::CURE, Spell::DISPEL, Spell::COLDRAY, Spell::FIREBALL } ) {
+        for ( int id = Spell::FIREBALL; id <= Spell::EARTHQUAKE; ++id ) {
             const Spell spell( id );
             if ( !hero->HaveSpell( spell ) || !hero->CanCastSpell( spell ) || arena.isDisableCastSpell( spell ) ) {
                 continue;
             }
+            if ( spell == Spell::TELEPORT ) {
+                for ( const Force * force : { &arena.getAttackingForce(), &arena.getDefendingForce() } ) {
+                    for ( const Unit * target : force->getUnits() ) {
+                        if ( !target->isValid() || !target->AllowApplySpell( spell, hero ) )
+                            continue;
+                        for ( const Cell & cell : *Arena::GetBoard() ) {
+                            if ( cell.GetIndex() != target->GetHeadIndex() && cell.GetIndex() != target->GetTailIndex() && cell.isPassableForUnit( *target ) ) {
+                                add( Command( Command::SPELLCAST, id, target->GetHeadIndex(), cell.GetIndex() ), { { "kind", "spell" },
+                                                                                                                   { "spell_id", id },
+                                                                                                                   { "target_uid", target->GetUID() },
+                                                                                                                   { "target_cell", cell.GetIndex() },
+                                                                                                                   { "spell_points", spell.spellPoints( hero ) } } );
+                            }
+                        }
+                    }
+                }
+                continue;
+            }
+            if ( spell.isApplyWithoutFocusObject() ) {
+                add( Command( Command::SPELLCAST, id, -1 ),
+                     { { "kind", "spell" }, { "spell_id", id }, { "target_cell", -1 }, { "spell_points", spell.spellPoints( hero ) } } );
+                continue;
+            }
             for ( int32_t cell = 0; cell < Board::sizeInCells; ++cell ) {
+                if ( spell == Spell::CHAINLIGHTNING ) {
+                    const Unit * first = arena.GetTroopBoard( cell );
+                    if ( first == nullptr || !first->AllowApplySpell( spell, hero ) )
+                        continue;
+                }
                 if ( !arena.GetTargetsForSpell( hero, spell, cell ).empty() ) {
                     add( Command( Command::SPELLCAST, id, cell ),
                          { { "kind", "spell" }, { "spell_id", id }, { "target_cell", cell }, { "spell_points", spell.spellPoints( hero ) } } );

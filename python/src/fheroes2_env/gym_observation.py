@@ -33,14 +33,14 @@ ACTION_FIELDS = ("type", "hero_id", "other_hero_id", "castle_id", "x", "y", "bui
                  "target_uid", "destination", "target_cell", "attack_direction", "spell_points", "gold")
 HERO_FIELDS = ("id", "owner", "active", "race", "level", "experience", "attack", "defense", "power", "knowledge",
                "spell_points", "max_spell_points", "move_points", "scouting_distance", "has_spell_book", "can_dismiss",
-               "dismissal_prohibited", "can_buy_spell_book", "castle_id", "is_shipmaster")
+               "dismissal_prohibited", "can_buy_spell_book", "castle_id", "is_shipmaster", "max_move_points", "morale", "luck")
 UNIT_FIELDS = ("uid", "monster_id", "count", "alive", "army_color", "current_color", "head", "tail", "wide", "flying",
                "hit_points", "shots", "speed", "attack", "defense", "modes")
-CHOICE_VALUES = ("gold", "experience", "monster_id", "count", "available", "gold_per_unit", "primary_skill", "first_level", "second_level")
+CHOICE_VALUES = ("gold", "experience", "monster_id", "count", "available", "gold_per_unit", "primary_skill", "first_level", "second_level", "wood", "mercury", "ore", "sulfur", "crystal", "gems", "artifact_id")
 
 
 def observation_space(map_size, heroes, castles, units, actions):
-    shapes = {"global": (12,), "tiles": (map_size * map_size, 16), "tile_mask": (map_size * map_size,),
+    shapes = {"global": (12,), "tiles": (map_size * map_size, 19), "tile_mask": (map_size * map_size,),
               "players": (6, 13), "player_mask": (6,), "heroes": (heroes, len(HERO_FIELDS) + 2), "hero_mask": (heroes,),
               "hero_armies": (heroes, 5, 2), "hero_artifacts": (heroes, 14, 2), "hero_skills": (heroes, 8, 2),
               "hero_spells": (heroes, 128), "castles": (castles, 7), "castle_mask": (castles,),
@@ -76,7 +76,7 @@ def encode(space, state, decision, commands, step, max_steps):
     for i, tile in enumerate(m["tiles"]):
         require(len(tile["metadata"]) == 3, "Unknown tile metadata schema")
         out["tiles"][i] = tuple(tile[k] for k in ("index", "x", "y", "terrain", "terrain_image", "terrain_flags", "water", "road",
-                                                    "object_type", "object_under_hero", "fog_colors", "passability")) + tuple(tile["metadata"]) + (tile["main_part"]["uid"],)
+                                                    "object_type", "object_under_hero", "fog_colors", "passability")) + tuple(tile["metadata"]) + (tile["main_part"]["uid"], tile["owner"], tile["guardian_monster_id"], tile["guardian_count"])
         out["tile_mask"][i] = 1
     require(len(state["players"]) <= 6, "Player count exceeds six")
     for i, p in enumerate(sorted(state["players"], key=lambda p: p["id"])):

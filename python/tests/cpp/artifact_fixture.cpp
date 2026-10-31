@@ -21,6 +21,7 @@
 // Explicit test-data builder. Never linked into the game or exposed by the production Python protocol.
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <set>
 
@@ -40,6 +41,7 @@
 #include "maps_tiles_helper.h"
 #include "monster.h"
 #include "players.h"
+#include "python_env_profile.h"
 #include "python_env_world.h"
 #include "resource.h"
 #include "settings.h"
@@ -49,8 +51,8 @@
 
 int main( int argc, char ** argv )
 {
-    if ( argc != 3 && !( argc == 4 && std::string( argv[3] ) == "--gym-only" ) ) {
-        std::cerr << "Usage: fheroes2_artifact_fixture BASE_SAVE OUTPUT_DIRECTORY [--gym-only]\n";
+    if ( argc != 3 && !( argc == 4 && ( std::string( argv[3] ) == "--gym-only" || std::string( argv[3] ) == "--expansion-only" ) ) ) {
+        std::cerr << "Usage: fheroes2_artifact_fixture BASE_SAVE OUTPUT_DIRECTORY [--gym-only|--expansion-only]\n";
         return EXIT_FAILURE;
     }
     try {
@@ -83,6 +85,118 @@ int main( int argc, char ** argv )
                 throw std::runtime_error( "Could not save the native Gym victory fixture." );
             }
         };
+        if ( argc == 4 && std::string( argv[3] ) == "--expansion-only" ) {
+            if ( input.parent_path() == output && input.filename().string().find( "expansion-" ) == 0 )
+                throw std::runtime_error( "Expansion outputs must not overwrite the input." );
+            using Json = nlohmann::json;
+            Json manifest = Json::array();
+            constexpr int target = 18 * 36 + 15;
+            const auto prepare = [&]( const bool water ) {
+                session.loadSave( input.u8string() );
+                if ( world.w() != 36 || world.h() != 36 )
+                    throw std::runtime_error( "Expansion fixtures require the recorded 36x36 base map." );
+                for ( int y = 10; y <= 21; ++y ) {
+                    for ( int x = 10; x <= 21; ++x ) {
+                        auto & tile = world.getTile( y * 36 + x );
+                        if ( tile.getMainObjectType() == MP2::OBJ_HERO || tile.getMainObjectType() == MP2::OBJ_CASTLE )
+                            throw std::runtime_error( "Expansion patch must not replace a hero or castle." );
+                        if ( tile.getMainObjectType() != MP2::OBJ_NONE )
+                            Maps::removeMainObjectFromTile( tile );
+                        tile.resetMainObjectPart();
+                        tile.getGroundObjectParts().clear();
+                        tile.setMainObjectType( MP2::OBJ_NONE );
+                        tile.setTerrain( water ? 0 : 30, 0 );
+                    }
+                }
+                Heroes * hero = world.GetHeroes( 52 );
+                hero->Move2Dest( 19 * 36 + 15 );
+                hero->SetShipMaster( water );
+                hero->Scout( hero->GetIndex() );
+                hero->GetArmy().Reset();
+                hero->GetArmy().JoinTroop( Monster::BONE_DRAGON, 100, false );
+                hero->SetSpellPoints( 1000 );
+                for ( const int id : fheroes2::pythonEnvAdventureSpells() )
+                    hero->AppendSpellToBook( id, true );
+                hero->GetKingdom().AddFundsResource( Funds( Resource::GOLD, 20000 ) + Funds( Resource::GEMS, 100 ) );
+                world.updatePassabilities();
+                return hero;
+            };
+            const auto save = [&]( const std::string & name ) {
+                if ( !Game::Save( ( output / name ).string() ) )
+                    throw std::runtime_error( "Could not save an expansion fixture." );
+            };
+            for ( const auto type : fheroes2::pythonEnvAdventureObjects() ) {
+                if ( type == MP2::OBJ_MONSTER || type == MP2::OBJ_JAIL || type == MP2::OBJ_SIGN || type == MP2::OBJ_BOTTLE )
+                    continue; // Existing monster fixtures; jail/sign need authored map data.
+                const bool water = type == MP2::OBJ_SEA_CHEST || type == MP2::OBJ_FLOTSAM || type == MP2::OBJ_SHIPWRECK_SURVIVOR || type == MP2::OBJ_SHIPWRECK
+                                   || type == MP2::OBJ_DERELICT_SHIP || type == MP2::OBJ_BARREL || type == MP2::OBJ_BOTTLE || type == MP2::OBJ_BUOY
+                                   || type == MP2::OBJ_SIRENS || type == MP2::OBJ_MERMAID;
+                prepare( water );
+                bool placed = false;
+                for ( int group = static_cast<int>( Maps::ObjectGroup::ADVENTURE_ARTIFACTS ); group < static_cast<int>( Maps::ObjectGroup::GROUP_COUNT ) && !placed;
+                      ++group ) {
+                    for ( const auto & info : Maps::getObjectsByGroup( static_cast<Maps::ObjectGroup>( group ) ) ) {
+                        if ( info.objectType == type && Maps::setObjectOnTile( world.getTile( target ), info, true ) ) {
+                            placed = true;
+                            break;
+                        }
+                    }
+                }
+                if ( !placed )
+                    throw std::runtime_error( "No native object template for " + std::to_string( type ) );
+                auto & tile = world.getTile( target );
+                Maps::setInitialObjectInfo( tile );
+                if ( type == MP2::OBJ_ARTIFACT )
+                    tile.metadata() = { Artifact::TELESCOPE, 0, static_cast<uint32_t>( Maps::ArtifactCaptureCondition::PAY_2000_GOLD ) };
+                if ( type == MP2::OBJ_TREE_OF_KNOWLEDGE )
+                    tile.metadata() = { Resource::GOLD, 2000, 0 };
+                if ( type == MP2::OBJ_SHRINE_FIRST_CIRCLE )
+                    Maps::setSpellOnTile( tile, Spell::BLESS );
+                if ( type == MP2::OBJ_SHRINE_SECOND_CIRCLE )
+                    Maps::setSpellOnTile( tile, Spell::BLIND );
+                if ( type == MP2::OBJ_SHRINE_THIRD_CIRCLE )
+                    Maps::setSpellOnTile( tile, Spell::FIREBALL );
+                if ( type == MP2::OBJ_WITCHS_HUT )
+                    tile.metadata()[0] = Skill::Secondary::ARCHERY;
+                if ( type == MP2::OBJ_MINE || type == MP2::OBJ_SAWMILL || type == MP2::OBJ_ALCHEMIST_LAB || type == MP2::OBJ_LIGHTHOUSE )
+                    world.CaptureObject( target, PlayerColor::NONE );
+                world.updatePassabilities();
+                const auto name = "expansion-object-" + std::to_string( type ) + ".sav";
+                save( name );
+                manifest.push_back( { { "object_id", static_cast<int>( type ) }, { "name", MP2::StringObject( type ) }, { "save", name }, { "water", water } } );
+            }
+            Heroes * caster = prepare( false );
+            caster->GetArmy().Reset();
+            caster->GetArmy().JoinTroop( Monster::ARCHER, 100, false );
+            caster->GetArmy().JoinTroop( Monster::SKELETON, 40, false );
+            Heroes * opponent = world.GetHeroes( 42 );
+            opponent->Move2Dest( target );
+            opponent->Scout( target );
+            opponent->GetArmy().Reset();
+            opponent->GetArmy().JoinTroop( Monster::PEASANT, 1000, false );
+            opponent->GetArmy().JoinTroop( Monster::ARCHER, 100, false );
+            opponent->SetSpellPoints( 1000 );
+            for ( int id = Spell::FIREBALL; id <= Spell::EARTHQUAKE; ++id ) {
+                caster->AppendSpellToBook( id, true );
+                opponent->AppendSpellToBook( id, true );
+            }
+            save( "expansion-battle.sav" );
+            session.loadSave( ( output / "battles-siege-day1.sav" ).u8string() );
+            world.GetHeroes( 52 )->AppendSpellToBook( Spell::EARTHQUAKE, true );
+            world.GetHeroes( 52 )->SetSpellPoints( 1000 );
+            save( "expansion-siege.sav" );
+            session.loadSave( ( output / "navigation-blocked-day1.sav" ).u8string() );
+            Heroes * summoner = world.GetHeroes( 52 );
+            summoner->Move2Dest( 932 );
+            summoner->AppendSpellToBook( Spell::SUMMONBOAT, true );
+            summoner->SetSpellPoints( 1000 );
+            Maps::removeMainObjectFromTile( world.getTile( 968 ) );
+            world.getTile( 34 + 29 * 36 ).setBoat( Direction::RIGHT, PlayerColor::BLUE );
+            save( "expansion-summon.sav" );
+            std::ofstream( output / "expansion-objects.json" ) << manifest.dump( 2 ) << '\n';
+            std::cout << "Expansion fixtures: " << manifest.size() << " objects and native spell battle.\n";
+            return EXIT_SUCCESS;
+        }
         if ( argc == 4 ) {
             saveGymVictory();
             return EXIT_SUCCESS;
@@ -186,11 +300,11 @@ int main( int argc, char ** argv )
         embarkedTile.setMainObjectType( MP2::OBJ_HERO );
         embarkedTile.resetBoatOwnerColor();
         sailor->SetShipMaster( true );
-        Heroes * opponent = world.GetHeroes( 42 );
-        opponent->Move2Dest( 1040 );
-        opponent->SetShipMaster( true );
-        opponent->GetArmy().Reset();
-        opponent->GetArmy().JoinTroop( Monster::PEASANT, 30, false );
+        Heroes * navalOpponent = world.GetHeroes( 42 );
+        navalOpponent->Move2Dest( 1040 );
+        navalOpponent->SetShipMaster( true );
+        navalOpponent->GetArmy().Reset();
+        navalOpponent->GetArmy().JoinTroop( Monster::PEASANT, 30, false );
         save( "navigation-battle-day1.sav" );
         session.loadSave( ( output / "navigation-shipyard-day1.sav" ).u8string() );
         world.GetKingdom( PlayerColor::BLUE ).OddFundsResource( world.GetKingdom( PlayerColor::BLUE ).GetFunds() );

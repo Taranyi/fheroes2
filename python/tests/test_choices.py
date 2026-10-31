@@ -227,7 +227,7 @@ class ChoiceTests(unittest.TestCase):
         with self.session() as (game, _):
             decision = self.start(game, "spells")
             before = game.get_state()
-            quotes = self.hero(before)["adventure_spell_options"]
+            quotes = [q for q in self.hero(before)["adventure_spell_options"] if q["spell_id"] in (55, 60)]
             for quote in quotes:
                 self.assertTrue(quote["can_cast"])
                 previous = game.get_state()

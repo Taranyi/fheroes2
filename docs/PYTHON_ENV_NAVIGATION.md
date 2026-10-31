@@ -96,7 +96,8 @@ A `Fheroes2-v0` jelöltjei között megjelenik a szabályos `castle.buy_boat`.
 A meglévő szomszédos `hero.move` jelöltek a hajóra lépést, vízi lépést, partraszállást és várba belépést is lefedik.
 A maszk mindegyiket a natív `check_actions` alapján engedi vagy tiltja.
 A hajóvásárlás a korábbi akciókódok megtartásával a kategórialista végére került.
-A hős numerikus sora `is_shipmaster` mezővel bővült: a `heroes` alakja alapból **128×22**.
+A hős numerikus sora `is_shipmaster` mezővel bővült: a 7. kiegészítés bevezetésekor a `heroes` alakja **128×22** volt.
+Azóta a [9–10. bővítés](PYTHON_ENV_EXPANSION.md) max. mozgás/morál/szerencse mezőivel az aktuális alak **128×25**.
 A két utolsó oszlop továbbra is x/y. A korábbi 128×21 megfigyelésre épült modell bemenetét ehhez igazítani kell.
 
 A `python/tests/test_navigation.py` ellenőrzi a pontos költséget, kikötőfoglaltságot, hibák atomi elutasítását,

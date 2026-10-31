@@ -29,7 +29,7 @@ ACTION_NAMES = ("turn.end", "hero.move", "castle.build", "castle.recruit", "cast
                 "hero.end_meeting", "army.upgrade", "army.dismiss", "hero.dismiss", "hero.buy_spell_book", "hero.cast",
                 "choice.answer", "battle.act", "castle.buy_boat")
 BATTLE_KINDS = ("skip", "move", "attack", "shoot", "spell", "retreat", "surrender")
-CHOICE_KINDS = ("treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count")
+CHOICE_KINDS = ("treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count", "hero.primary_skill", "spell.town_portal", "spell.dimension_door")
 DIRECTIONS = ((0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1))
 
 

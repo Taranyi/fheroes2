@@ -37,6 +37,7 @@
 #include "../../thirdparty/nlohmann/json.hpp"
 #include "core.h"
 #include "game_external_interaction.h"
+#include "python_env_profile.h"
 #include "python_env_world.h"
 #include "version.h"
 
@@ -112,10 +113,16 @@ namespace
                  { "artifact_actions", { "artifact.transfer", "artifact.swap", "hero.end_meeting" } },
                  { "choices", true },
                  { "battles", true },
-                 { "battle_spell_profile", "basic_targeted" },
+                 { "battle_spell_profile", "native_combat" },
                  { "battle_actions", { "skip", "move", "attack", "shoot", "spell", "retreat", "surrender" } },
-                 { "choice_types", { "treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count" } },
-                 { "adventure_spells", { "identify_hero", "visions" } },
+                 { "choice_types",
+                   { "treasure.gold_or_experience", "hero.secondary_skill", "monster.join", "monster.pursue", "confirmation", "army.recruit_count", "hero.primary_skill",
+                     "spell.town_portal", "spell.dimension_door" } },
+                 { "adventure_spell_ids", fheroes2::pythonEnvAdventureSpells() },
+                 { "adventure_spells",
+                   { "identify_hero", "visions", "summon_boat", "town_gate", "town_portal", "dimension_door", "haunt", "set_earth_guardian", "set_air_guardian",
+                     "set_fire_guardian", "set_water_guardian" } },
+                 { "adventure_object_ids", fheroes2::pythonEnvAdventureObjects() },
                  { "simulation", true },
                  { "render", true },
                  { "render_views", { "adventure", "battle", "hero", "castle" } },

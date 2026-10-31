@@ -471,6 +471,13 @@ public:
         return map_captureobj.Get( index );
     }
 
+    // Read-only lookup: observing unowned objects must never insert capture records.
+    const CapturedObject * findCapturedObject( const int32_t index ) const
+    {
+        const auto found = map_captureobj.find( index );
+        return found == map_captureobj.end() ? nullptr : &found->second;
+    }
+
     void ActionForMagellanMaps( const PlayerColor color );
     void ClearFog( PlayerColor color ) const;
 

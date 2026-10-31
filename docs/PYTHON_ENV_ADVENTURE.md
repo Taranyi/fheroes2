@@ -98,3 +98,8 @@ A példa Roxanával lép, lefuttatja az ellenfél körét, majd felvesz 7 fát, 
 A játékműveletekhez az AGG-k mellett a normál játékhoz illő H2D adatcsomag is szükséges; az AI belső harci számításai
 is olvashatnak képadatokat. Ez az SDL video/audio inicializálását nem igényli. A Python nélküli Windows-build is sikeres;
 más platformok SDK-buildjét helyben nem futtattuk.
+
+## 9–10. bővítés
+
+Az aktuális, közös támogatási lista 83 objektumtípust kezel, az erőforráshelyektől és képességépületektől a bányákon át a csatával felszabadítható lakóhelyekig.
+A natív fizetés, látogatási szabály, választás és csata megmarad. [Teljes objektum-/varázslatprofil és futtatható példa](PYTHON_ENV_EXPANSION.md).

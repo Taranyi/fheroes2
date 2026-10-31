@@ -62,6 +62,7 @@
 #include "python_env_army.h"
 #include "python_env_battle.h"
 #include "python_env_castle.h"
+#include "python_env_profile.h"
 #include "python_env_views.h"
 #include "race.h"
 #include "rand.h"
@@ -152,7 +153,7 @@ namespace
             spells.push_back( spell.GetID() );
         }
         Json adventureSpells = Json::array();
-        for ( const int id : { Spell::IDENTIFYHERO, Spell::VISIONS } ) {
+        for ( const int id : fheroes2::pythonEnvAdventureSpells() ) {
             const Spell spell( id );
             std::string reason;
             const bool known = hero.HaveSpellBook() && hero.HaveSpell( spell );
@@ -185,6 +186,9 @@ namespace
                  { "max_spell_points", hero.GetMaxSpellPoints() },
                  { "move_points", hero.GetMovePoints() },
                  { "is_shipmaster", hero.isShipMaster() },
+                 { "max_move_points", hero.GetMaxMovePoints() },
+                 { "morale", hero.GetMorale() },
+                 { "luck", hero.GetLuck() },
                  { "scouting_distance", hero.GetScoutingDistance() },
                  { "has_spell_book", hero.HaveSpellBook() },
                  { "adventure_spell_options", adventureSpells },
@@ -257,8 +261,9 @@ namespace
             const Castle * targetCastle = type == MP2::OBJ_CASTLE ? world.getCastleEntrance( Maps::GetPoint( step.GetIndex() ) ) : nullptr;
             const bool supportedTarget
                 = step.GetIndex() == destination
-                  && ( type == MP2::OBJ_RESOURCE || type == MP2::OBJ_TREASURE_CHEST || type == MP2::OBJ_MONSTER || type == MP2::OBJ_GENIE_LAMP
-                       || type == MP2::OBJ_WAGON_CAMP || ( type == MP2::OBJ_HERO && tile.getHero() != nullptr && !movingHero->isFriends( tile.getHero()->GetColor() ) )
+                  && ( std::find( fheroes2::pythonEnvAdventureObjects().begin(), fheroes2::pythonEnvAdventureObjects().end(), type )
+                           != fheroes2::pythonEnvAdventureObjects().end()
+                       || ( type == MP2::OBJ_HERO && tile.getHero() != nullptr && !movingHero->isFriends( tile.getHero()->GetColor() ) )
                        || ( !movingHero->isShipMaster() && type == MP2::OBJ_BOAT ) || ( movingHero->isShipMaster() && tile.isSuitableForDisembarkation() )
                        || ( targetCastle != nullptr && ( targetCastle->GetColor() == movingHero->GetColor() || !movingHero->isFriends( targetCastle->GetColor() ) ) ) );
             const auto guards = Maps::getMonstersProtectingTile( step.GetIndex(), false );
@@ -534,7 +539,8 @@ void fheroes2::PythonEnvWorld::startSession( const int playerId, const std::func
 const char * fheroes2::PythonEnvWorld::decisionPhase() const
 {
     if ( _controlled && _pendingChoice.is_null() && _battleState.is_null() ) {
-        return _simulationFinished ? "terminal" : ( _controllerPlayer == 0 ? "simulation" : "adventure" );
+        const int player = !_waiting && !_turnOrder.empty() ? _turnOrder.at( _turnIndex ) : _controllerPlayer;
+        return _simulationFinished ? "terminal" : ( externalPlayer( player ) ? "adventure" : "simulation" );
     }
     return !_battleState.is_null() ? "battle" : ( !_pendingChoice.is_null() ? "choice" : ( GameOver::Result::Get().GetResult() == 0 ? "adventure" : "terminal" ) );
 }
@@ -716,8 +722,8 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             throw PythonEnvError( "illegal_action", "The casting hero must be active and owned by the waiting player." );
         }
         castingSpell = Spell( params["spell_id"].get<int>() );
-        if ( castingSpell != Spell::IDENTIFYHERO && castingSpell != Spell::VISIONS ) {
-            throw PythonEnvError( "unsupported_action", "Supported adventure spells are Identify Hero and Visions." );
+        if ( !pythonEnvSupportsSpell( castingSpell.GetID() ) ) {
+            throw PythonEnvError( "unsupported_action", "This adventure spell is not in the documented external profile." );
         }
         std::string reason;
         if ( !castingHero->HaveSpellBook() || !castingHero->HaveSpell( castingSpell ) || !castingHero->MayCastAdventureSpells() ) {
@@ -1228,7 +1234,11 @@ nlohmann::json fheroes2::PythonEnvWorld::getState( const bool includeSerialized 
         for ( const auto & part : tile.getTopObjectParts() ) {
             top.push_back( objectPart( part ) );
         }
+        const CapturedObject * captured = world.findCapturedObject( index );
         tiles.push_back( { { "index", index },
+                           { "owner", static_cast<int>( world.ColorCapturedObject( index ) ) },
+                           { "guardian_monster_id", captured == nullptr ? 0 : captured->guardians.GetID() },
+                           { "guardian_count", captured == nullptr ? 0U : captured->guardians.GetCount() },
                            { "x", index % world.w() },
                            { "y", index / world.w() },
                            { "terrain", tile.GetGround() },

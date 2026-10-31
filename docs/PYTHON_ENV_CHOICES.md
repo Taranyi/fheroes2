@@ -88,18 +88,18 @@ Nem támogatott köztes akcióobjektumon/őrzött útvonalon továbbra sem halad
 ## Adventure varázslatok
 
 `game.cast_spell(hero_id, spell_id, token=...)` → `hero.cast`, `params={hero_id,spell_id}`.
-Jelenleg Identify Hero és Visions; egyik sem igényel képernyős célkijelölést.
+Az eredeti profil Identify Hero és Visions támogatását a [9–10. bővítés](PYTHON_ENV_EXPANSION.md) 11 adventure varázslatra bővíti, natív célválasztással is.
 Saját, aktív, varázslásra jogosult hős kell könyvvel, elérhető varázslattal, elegendő manával/mozgással és a natív
 helyzetfeltételekkel. A `CanCastSpell` ellenőrzést a meglévő `ActionSpellCast` és `SpellCasted` követi, ugyanazzal az árral
 és mellékhatással, mint a normál játékban. Az Identify Hero ismétlése aktív hatásnál tiltott; a Visions újra elmondható a natív feltételekkel.
 
-A `get_state` minden hősének `adventure_spell_options` listája tartalmazza a két támogatott varázslat azonosítóját,
+A `get_state` minden hősének `adventure_spell_options` listája tartalmazza a 11 támogatott varázslat azonosítóját,
 nevét, árát (`spell_points`, `move_points`), `can_cast` jelzőjét és `blocked_reason` szövegét.
 Ez tisztán olvasó, az AI-hősöket is tartalmazza; módosítási jogosultságot nem ad.
 A résztvevők `identify_hero` és `vision_monster_indices` mezői mutatják a natív hatásokat.
 Sikeres varázslás: `spell_cast` esemény, tényleges mana- és mozgáspont-levonással.
 Más varázslat: `unsupported_action`; hibás azonosító/típus: `invalid_request`; tiltott natív feltétel: `illegal_action`.
-A célzott teleportálás, hajóidézés, őrzőlények és a View World varázslatok még nincsenek a támogatott profilon.
+A Dimension Door, Town Gate/Portal, hajóidézés és őrzőlények már támogatottak; a hat View World információs nézet még nincs bekötve.
 
 ## Gym és platformhatár
 
@@ -115,3 +115,5 @@ A mobilos és normál PC-s buildhez továbbra sem szükséges Python vagy venv.
 A láda → két szintlépés → adventure példaprogram is sikeresen lefutott (2049 tapasztalat, 3. szint), videó/hang nélkül.
 A bekapcsolt PC-s fejlesztői build és a külön `ENABLE_PYTHON_ENV=OFF` normál Windows-build is lefordult.
 A bemeneti baseline és felhasználói mentések nem változtak. A többi platform SDK-fordítása és a normál GUI kézi kattintásos próbája itt nem történt meg.
+
+A 9–10. bővítés további objektumai, arénaválasztása, strukturált árai és utazási célpontjai: [aktuális profil](PYTHON_ENV_EXPANSION.md).

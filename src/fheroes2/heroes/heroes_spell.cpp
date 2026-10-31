@@ -21,6 +21,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -33,9 +34,11 @@
 #include "audio_manager.h"
 #include "castle.h"
 #include "color.h"
+#include "core.h"
 #include "dialog.h"
 #include "dialog_selectitems.h"
 #include "direction.h"
+#include "game_external_interaction.h"
 #include "game_interface.h"
 #include "heroes.h" // IWYU pragma: associated
 #include "interface_base.h"
@@ -66,42 +69,32 @@ namespace
     void HeroesTownGate( Heroes & hero, const Castle * castle )
     {
         assert( castle && castle->GetHero() == nullptr );
-
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-
         const fheroes2::Point fromPosition = hero.GetCenter();
-        // Position of Hero on radar before casting the spell to clear it after casting.
-        const fheroes2::Rect fromRoi( fromPosition.x, fromPosition.y, 1, 1 );
-
-        // Before casting the spell, make sure that the game area is centered on the hero
-        I.getGameArea().SetCenter( fromPosition );
-        I.redraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR_CURSOR );
-
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getGameArea().SetCenter( fromPosition );
+            I.redraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR_CURSOR );
+            AudioManager::PlaySound( M82::KILLFADE );
+        }
         const int32_t dst = castle->GetIndex();
         assert( Maps::isValidAbsIndex( dst ) );
-
-        AudioManager::PlaySound( M82::KILLFADE );
         hero.ShowPath( false );
-        hero.FadeOut();
-
+        if ( !System::isHeadlessMode() )
+            hero.FadeOut();
         hero.Scout( dst );
         hero.Move2Dest( dst );
         hero.GetPath().Reset();
-
-        // Clear previous hero position on radar.
-        I.getRadar().SetRenderArea( fromRoi );
-        I.redraw( Interface::REDRAW_RADAR );
-
-        I.getGameArea().SetCenter( hero.GetCenter() );
-
-        // Update radar image in scout area around Hero after teleport.
-        I.getRadar().SetRenderArea( hero.GetScoutRoi() );
-        I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
-
-        AudioManager::PlaySound( M82::KILLFADE );
-        hero.FadeIn();
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( { fromPosition.x, fromPosition.y, 1, 1 } );
+            I.redraw( Interface::REDRAW_RADAR );
+            I.getGameArea().SetCenter( hero.GetCenter() );
+            I.getRadar().SetRenderArea( hero.GetScoutRoi() );
+            I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+            AudioManager::PlaySound( M82::KILLFADE );
+            hero.FadeIn();
+        }
         hero.ShowPath( true );
-
         castle->trainHeroInMageGuild( hero );
     }
 
@@ -165,69 +158,77 @@ namespace
 
         const PlayerColor heroColor = hero.GetColor();
 
-        Interface::GameArea & gameArea = Interface::AdventureMap::Get().getGameArea();
-
         Maps::Tile & tileSource = world.getTile( boatSource );
 
-        gameArea.runSingleObjectAnimation( std::make_shared<Interface::ObjectFadingOutInfo>( tileSource.getMainObjectPart()._uid, boatSource, MP2::OBJ_BOAT ) );
+        if ( System::isHeadlessMode() )
+            Maps::removeMainObjectFromTile( tileSource );
+        else
+            Interface::AdventureMap::Get().getGameArea().runSingleObjectAnimation(
+                std::make_shared<Interface::ObjectFadingOutInfo>( tileSource.getMainObjectPart()._uid, boatSource, MP2::OBJ_BOAT ) );
 
         Maps::Tile & tileDest = world.getTile( boatDestination );
 
         tileDest.setBoat( Direction::RIGHT, heroColor );
         tileSource.resetBoatOwnerColor();
 
-        gameArea.runSingleObjectAnimation( std::make_shared<Interface::ObjectFadingInInfo>( tileDest.getMainObjectPart()._uid, boatDestination, MP2::OBJ_BOAT ) );
+        if ( !System::isHeadlessMode() )
+            Interface::AdventureMap::Get().getGameArea().runSingleObjectAnimation(
+                std::make_shared<Interface::ObjectFadingInInfo>( tileDest.getMainObjectPart()._uid, boatDestination, MP2::OBJ_BOAT ) );
 
         return true;
     }
 
     bool ActionSpellDimensionDoor( Heroes & hero )
     {
-        Interface::AdventureMap & I = Interface::AdventureMap::Get();
-
         const fheroes2::Point fromPosition = hero.GetCenter();
-        // Position of Hero on radar before casting the spell to clear it after casting.
-        const fheroes2::Rect fromRoi( fromPosition.x, fromPosition.y, 1, 1 );
-
-        // Before casting the spell, make sure that the game area is centered on the hero
-        I.getGameArea().SetCenter( hero.GetCenter() );
-        I.redraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR_CURSOR );
-
         const int32_t src = hero.GetIndex();
         assert( Maps::isValidAbsIndex( src ) );
-
-        const int32_t dst = I.GetDimensionDoorDestination( src, Spell::CalculateDimensionDoorDistance(), hero.isShipMaster() );
-        if ( !Maps::isValidAbsIndex( dst ) ) {
-            return false;
+        int32_t dst = -1;
+        if ( System::isHeadlessMode() ) {
+            std::vector<int64_t> options;
+            const int radius = Spell::CalculateDimensionDoorDistance() / 2;
+            for ( int y = std::max( 0, fromPosition.y - radius ); y <= std::min( world.h() - 1, fromPosition.y + radius ); ++y ) {
+                for ( int x = std::max( 0, fromPosition.x - radius ); x <= std::min( world.w() - 1, fromPosition.x + radius ); ++x ) {
+                    const int index = y * world.w() + x;
+                    if ( Maps::isValidForDimensionDoor( index, hero.isShipMaster() ) )
+                        options.push_back( index );
+                }
+            }
+            if ( options.empty() )
+                return false;
+            dst = static_cast<int32_t>( Game::ScopedExternalInteractions::choose( { "spell.dimension_door", hero.GetID(), options, {} } ) );
         }
-
-        AudioManager::PlaySound( M82::KILLFADE );
+        else {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getGameArea().SetCenter( hero.GetCenter() );
+            I.redraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR_CURSOR );
+            dst = I.GetDimensionDoorDestination( src, Spell::CalculateDimensionDoorDistance(), hero.isShipMaster() );
+        }
+        if ( !Maps::isValidAbsIndex( dst ) )
+            return false;
         hero.ShowPath( false );
-        hero.FadeOut();
-
+        if ( !System::isHeadlessMode() ) {
+            AudioManager::PlaySound( M82::KILLFADE );
+            hero.FadeOut();
+        }
         hero.Scout( dst );
         hero.Move2Dest( dst );
         hero.SpellCasted( Spell::DIMENSIONDOOR );
         hero.calculatePath( -1 );
-
-        // Clear previous hero position on radar.
-        I.getRadar().SetRenderArea( fromRoi );
-        I.redraw( Interface::REDRAW_RADAR );
-
-        I.getGameArea().SetCenter( hero.GetCenter() );
-
-        // Update radar image in scout area around Hero after teleport.
-        I.getRadar().SetRenderArea( hero.GetScoutRoi() );
-        I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
-
-        AudioManager::PlaySound( M82::KILLFADE );
-        hero.FadeIn();
+        if ( !System::isHeadlessMode() ) {
+            Interface::AdventureMap & I = Interface::AdventureMap::Get();
+            I.getRadar().SetRenderArea( { fromPosition.x, fromPosition.y, 1, 1 } );
+            I.redraw( Interface::REDRAW_RADAR );
+            I.getGameArea().SetCenter( hero.GetCenter() );
+            I.getRadar().SetRenderArea( hero.GetScoutRoi() );
+            I.setRedraw( Interface::REDRAW_GAMEAREA | Interface::REDRAW_RADAR );
+            AudioManager::PlaySound( M82::KILLFADE );
+            hero.FadeIn();
+        }
         hero.ShowPath( true );
-
         hero.ActionNewPosition( false );
-
-        // SpellCasted() has already been called, we should not call it once again
-        return false;
+        // Already charged above. Preserve the UI routine's legacy apply=false convention.
+        return System::isHeadlessMode();
     }
 
     bool ActionSpellTownGate( Heroes & hero )
@@ -256,7 +257,17 @@ namespace
     {
         assert( !hero.isShipMaster() );
 
-        const int32_t townPositionIndex = Dialog::selectKingdomCastle( hero.GetKingdom(), true, _( "Town Portal" ), _( "Select town to port to." ) );
+        int32_t townPositionIndex = -1;
+        if ( System::isHeadlessMode() ) {
+            std::vector<int64_t> options;
+            for ( const Castle * castle : hero.GetKingdom().GetCastles() ) {
+                if ( castle->GetHero() == nullptr )
+                    options.push_back( castle->GetIndex() );
+            }
+            townPositionIndex = static_cast<int32_t>( Game::ScopedExternalInteractions::choose( { "spell.town_portal", hero.GetID(), options, {} } ) );
+        }
+        else
+            townPositionIndex = Dialog::selectKingdomCastle( hero.GetKingdom(), true, _( "Town Portal" ), _( "Select town to port to." ) );
 
         if ( townPositionIndex == -1 ) {
             return false;
@@ -342,12 +353,14 @@ namespace
         if ( spell == Spell::HAUNT && hero.isControlHuman() ) {
             world.CaptureObject( tile.GetIndex(), PlayerColor::NONE );
 
-            // Update the color of haunted mine on radar.
-            Interface::AdventureMap & I = Interface::AdventureMap::Get();
-            const fheroes2::Point heroPosition = hero.GetCenter();
-            I.getRadar().SetRenderArea( { heroPosition.x - 1, heroPosition.y - 1, 3, 2 } );
+            if ( !System::isHeadlessMode() ) {
+                // Update the color of haunted mine on radar.
+                Interface::AdventureMap & I = Interface::AdventureMap::Get();
+                const fheroes2::Point heroPosition = hero.GetCenter();
+                I.getRadar().SetRenderArea( { heroPosition.x - 1, heroPosition.y - 1, 3, 2 } );
 
-            I.setRedraw( Interface::REDRAW_RADAR );
+                I.setRedraw( Interface::REDRAW_RADAR );
+            }
         }
 
         world.GetCapturedObject( tile.GetIndex() ).GetTroop().Set( Monster( spell ), count );
@@ -388,6 +401,8 @@ bool Heroes::ActionSpellCast( const Spell & spell )
         apply = ActionSpellSummonBoat( *this );
         break;
     case Spell::DIMENSIONDOOR:
+        if ( System::isHeadlessMode() )
+            return ActionSpellDimensionDoor( *this );
         apply = ActionSpellDimensionDoor( *this );
         break;
     case Spell::TOWNGATE:
