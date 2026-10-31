@@ -95,7 +95,7 @@ class EngineIntegrationTests(unittest.TestCase):
     def test_multiple_sessions_and_repeated_close(self):
         with HeroesSession(EXECUTABLE) as first, HeroesSession(EXECUTABLE) as second:
             self.assertNotEqual(first.pid, second.pid)
-            self.assertEqual(first.capabilities()["commands"], ["hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options", "get_army_options", "new_game"])
+            self.assertEqual(first.capabilities()["commands"], ["hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options", "get_army_options", "new_game", "check_actions"])
             first.close()
             first.close()
             self.assertTrue(first.closed)

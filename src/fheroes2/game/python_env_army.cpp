@@ -172,7 +172,7 @@ namespace
         return artifact.isValid() ? Json{ { "id", artifact.GetID() }, { "spell_id", artifact.getSpellId() } } : Json( nullptr );
     }
 
-    Json artifactAction( const std::string & action, const Json & params, const int playerId, const Json & meeting )
+    Json artifactAction( const std::string & action, const Json & params, const int playerId, const Json & meeting, const bool validateOnly )
     {
         if ( params.size() != 2 || !params.contains( "source" ) || !params.contains( "target" ) ) {
             throw fheroes2::PythonEnvError( "invalid_request", "Artifact operations require source and target endpoints." );
@@ -188,6 +188,14 @@ namespace
         }
         const Json beforeSource = artifactState( *source.artifact );
         const Json beforeTarget = artifactState( *target.artifact );
+        if ( validateOnly ) {
+            Artifact a = *source.artifact;
+            Artifact b = *target.artifact;
+            if ( source.artifact == target.artifact || !BagArtifacts::swapArtifactSlots( a, b ) ) {
+                throw fheroes2::PythonEnvError( "illegal_action", "The artifact slots cannot be exchanged." );
+            }
+            return Json::object();
+        }
         if ( !BagArtifacts::swapArtifactSlots( *source.artifact, *target.artifact ) ) {
             throw fheroes2::PythonEnvError( "illegal_action", "Select distinct slots with at least one artifact; Magic Books cannot be moved or traded." );
         }
@@ -265,7 +273,8 @@ nlohmann::json fheroes2::pythonEnvEndMeeting( nlohmann::json & meeting )
     return result;
 }
 
-nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const nlohmann::json & params, const int playerId, nlohmann::json & meeting )
+nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const nlohmann::json & params, const int playerId, nlohmann::json & meeting,
+                                              const bool validateOnly )
 {
     if ( action == "hero.dismiss" || action == "hero.buy_spell_book" ) {
         if ( params.size() != 1 ) {
@@ -277,6 +286,8 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
                 throw PythonEnvError( "illegal_action", "This hero cannot be dismissed: leave the castle and respect scenario restrictions." );
             }
             const int index = hero.GetIndex();
+            if ( validateOnly )
+                return Json::object();
             hero.Dismiss( 0 );
             world.resetPathfinder();
             return { { "type", "hero_dismissed" }, { "hero_id", hero.GetID() }, { "from", index } };
@@ -284,6 +295,11 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
         const Castle * castle = hero.inCastle();
         if ( castle == nullptr || static_cast<int>( castle->GetColor() ) != playerId || world.GetHero( *castle ) != &hero ) {
             throw PythonEnvError( "illegal_action", "The hero must occupy an owned castle's visitor slot to buy a spell book." );
+        }
+        if ( validateOnly ) {
+            if ( !hero.canPurchaseSpellBook( *castle ) )
+                throw PythonEnvError( "illegal_action", "The hero cannot purchase a spell book." );
+            return Json::object();
         }
         if ( !hero.purchaseSpellBook( *castle ) ) {
             throw PythonEnvError( "illegal_action", "Buying a spell book requires a mage guild, enough funds, a free artifact slot and no existing spell book." );
@@ -301,6 +317,11 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
         const int monster = source.troop->GetID();
         const uint32_t count = source.troop->GetCount();
         if ( action == "army.dismiss" ) {
+            if ( validateOnly ) {
+                if ( !source.troop->isValid() || source.army->SaveLastTroop() )
+                    throw PythonEnvError( "illegal_action", "The stack cannot be dismissed." );
+                return Json::object();
+            }
             if ( !source.army->dismissTroop( *source.troop ) ) {
                 throw PythonEnvError( "illegal_action", "Dismissal requires a nonempty slot and cannot remove the hero's last stack." );
             }
@@ -308,6 +329,11 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
             return { { "type", "army_dismissed" }, { "source", params["source"] }, { "monster_id", monster }, { "count", count } };
         }
         Funds cost;
+        if ( validateOnly ) {
+            if ( !source.army->canUpgradeTroop( *source.troop ) )
+                throw PythonEnvError( "illegal_action", "The stack cannot be upgraded." );
+            return Json::object();
+        }
         if ( !Army::getTroopUpgradeCost( *source.troop, cost ) || !source.army->upgradeTroop( *source.troop ) ) {
             throw PythonEnvError( "illegal_action", "Upgrade requires an upgradable stack, the matching upgraded castle dwelling and enough funds for the whole stack." );
         }
@@ -322,10 +348,12 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
         if ( meeting.is_null() ) {
             throw PythonEnvError( "illegal_action", "There is no active meeting to end." );
         }
+        if ( validateOnly )
+            return Json::object();
         return pythonEnvEndMeeting( meeting );
     }
     if ( action == "artifact.transfer" || action == "artifact.swap" ) {
-        return artifactAction( action, params, playerId, meeting );
+        return artifactAction( action, params, playerId, meeting, validateOnly );
     }
     if ( action == "hero.meet" ) {
         if ( params.size() != 2 ) {
@@ -347,6 +375,8 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
             throw PythonEnvError( "illegal_action", "The heroes must be adjacent through a native passable route and the initiating hero must afford the meeting." );
         }
         const int from = hero.GetIndex();
+        if ( validateOnly )
+            return Json::object();
         const uint32_t movement = hero.GetMovePoints();
         pythonEnvEndMeeting( meeting );
         hero.GetPath().setPath( path );
@@ -386,6 +416,14 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
             throw PythonEnvError( "invalid_request", "count must be positive." );
         }
         const int monster = source.troop->GetID();
+        if ( validateOnly ) {
+            Troop a = *source.troop;
+            Troop b = *target.troop;
+            if ( !Army::TransferTroops( a, b, count, source.army != target.army && source.army->SaveLastTroop() ) ) {
+                throw PythonEnvError( "illegal_action", "The exact transfer is not allowed." );
+            }
+            return Json::object();
+        }
         if ( !Army::TransferTroops( *source.troop, *target.troop, count, source.army != target.army && source.army->SaveLastTroop() ) ) {
             throw PythonEnvError( "illegal_action",
                                   "The exact transfer requires enough source units, a compatible target, no count overflow and preservation of the hero's last unit." );
@@ -398,6 +436,8 @@ nlohmann::json fheroes2::pythonEnvArmyAction( const std::string & action, const 
               && ( ( source.army->SaveLastTroop() && !target.troop->isValid() ) || ( target.army->SaveLastTroop() && !source.troop->isValid() ) ) ) ) {
         throw PythonEnvError( "illegal_action", "A swap must change a stack and cannot empty a hero's army." );
     }
+    if ( validateOnly )
+        return Json::object();
     Army::SwapTroops( *source.troop, *target.troop );
     world.resetPathfinder();
     return { { "type", "army_swapped" }, { "source", params["source"] }, { "target", params["target"] } };

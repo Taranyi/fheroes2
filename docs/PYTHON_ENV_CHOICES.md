@@ -105,7 +105,7 @@ A célzott teleportálás, hajóidézés, őrzőlények és a View World varázs
 
 A korai `Discrete(9)` Gym-példa nem tartalmaz választási akciókat. Ha választást ér el, `unsupported_choice` hibát ad
 és resetet kér, nem ad hamis `terminated`/`truncated` eredményt, és nem választ automatikusan.
-Az általános Python API már kezeli ezeket; a teljes Gym-kódolás a 13. lépés része.
+Az általános Python API már kezeli ezeket; a [13. lépés külön Gym-adaptere](PYTHON_ENV_GYM.md) is ugyanabban az epizódban kínálja a válaszjelölteket.
 
 A közös interakciós szolgáltatás nem függ Pythontól vagy JSON-tól. A normál UI az eredeti ágait használja,
 az env-szolgáltatás az explicit headless módban és aktív motoros művelet alatt él.

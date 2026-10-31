@@ -30,7 +30,7 @@
 namespace fheroes2
 {
     nlohmann::json pythonEnvCastleOptions( uint32_t castleId );
-    nlohmann::json pythonEnvCastleAction( const std::string & action, const nlohmann::json & params, int playerId );
+    nlohmann::json pythonEnvCastleAction( const std::string & action, const nlohmann::json & params, int playerId, bool validateOnly = false );
 }
 
 #endif

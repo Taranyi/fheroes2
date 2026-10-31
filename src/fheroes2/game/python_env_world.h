@@ -69,7 +69,8 @@ namespace fheroes2
         bool waiting() const;
         void startSession( int playerId, const std::function<void( const nlohmann::json & )> & wait );
         nlohmann::json getDecision() const;
-        nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params, const std::function<void()> & choiceWait = {} );
+        nlohmann::json dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params, const std::function<void()> & choiceWait = {},
+                                 bool validateOnly = false );
         nlohmann::json actionResult() const;
         nlohmann::json render( const nlohmann::json & params );
 

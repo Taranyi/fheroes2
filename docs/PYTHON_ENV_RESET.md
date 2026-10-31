@@ -82,7 +82,7 @@ A példa két friss folyamatban három AI-körön át ugyanazt az akciósort fut
 a natív mentéspayloadot is beleértve. Más pályán választás/csata döntésénél megáll; a példa nem választ helyettünk.
 Telepítés saját venv-be: `python -m pip install -e ./python`; a base csomag csak a standard könyvtárat használja.
 Az opcionális Gym-preview `reset(seed=...)` most már a főgenerátor folytatását is seedeli; az effektív seed `info["seed"]`.
-Ez nem bővíti a preview kilenc akcióját vagy jutalmát, a teljes Gym-szerződés továbbra is a 13. lépés.
+Ez nem bővíti a preview kilenc akcióját vagy jutalmát; a [13. lépés teljesebb Gym-adaptere](PYTHON_ENV_GYM.md) külön környezetként érhető el.
 
 ## Ellenőrzés
 

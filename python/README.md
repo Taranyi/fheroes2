@@ -4,7 +4,8 @@ Implementation steps 2–6 provide real save loading/state inspection, external 
 native land movement/resource pickup and turn progression through the built-in AI. These work without video/audio
 initialization. Selected native choices, two adventure spells and native battles work through the session API.
 Step 11 adds offscreen hero, castle and live battle snapshots, including AI-owned heroes and castles.
-An optional Gymnasium preview demonstrates the reset/step loop below. Further actions and the full Gym action/observation contract remain future steps.
+Step 13 provides the structured `Fheroes2-v0` Gym adapter below, including native choices and battles.
+Further engine actions remain outside the documented profile; the older visual preview is also retained.
 
 Participant-control requirement (2026-10-29): the final session must support a built-in AI or Python controller per side,
 including AI-only simulation and multiple external agents with no manual player. Currently the state is already omniscient
@@ -337,6 +338,41 @@ uv run --project python python python/examples/reset.py
 uv run --project python python python/examples/reset.py --map maps/THEOTHER.MP2 --seed 123
 ```
 
+## Structured Gymnasium environment
+
+```python
+from fheroes2_env.gym_env import make_env
+
+with make_env(executable="fheroes2.exe", save="checkpoint.sav", max_steps=1000) as env:
+    obs, info = env.reset(seed=123)
+    for _ in range(10000):
+        action = env.action_space.sample(mask=obs["action_mask"])
+        obs, reward, terminated, truncated, info = env.step(action)
+        if terminated or truncated:
+            obs, info = env.reset()
+```
+
+`Fheroes2-v0` uses a fixed numeric `Dict` observation and `Discrete(8192)` action slots with descriptors and a native-validated
+mask. Every own active hero can move to adjacent tiles; supported castle, army, artifact and spell commands are included.
+Choices and every native battle candidate stay inside the episode. Exact integer quantity ranges are enumerated; configured
+entity/action limits raise `ProfileLimitError` instead of dropping legal candidates. The full omniscient state and events,
+including AI sides, remain in `info`. The current one-external-side engine profile still applies.
+
+Reward is 0 between decisions, +1 for native victory, -1 for native defeat. Only native results terminate; the agent-attempt
+limit truncates. Unsupported engine situations and failures raise exceptions and require reset. An in-range masked slot
+is an explicit rejected attempt with zero reward and unchanged native state; it counts toward the agent limit.
+`render_mode=None` makes no image requests. With `"rgb_array"`, explicit `render()` returns the configured native view;
+the default `render_view="auto"` selects the live battle or adventure view. This adapter does not open a human viewer.
+
+```powershell
+uv run --project python --extra gym python python/examples/train_loop.py
+uv run --project python --extra gym python python/examples/train_loop.py --battle-demo --max-steps 100
+```
+
+See the [full Gym schema, command codes, bounds and verification](../docs/PYTHON_ENV_GYM.md).
+Import the Gym module explicitly; importing the base package remains free of NumPy/Gym dependencies.
+The old `Fheroes2AdventurePreview-v0` remains available with its narrower nine-action interface.
+
 ## Headless rendering
 
 ```python
@@ -430,13 +466,15 @@ Error:
 
 * `id`: unsigned 32-bit integer; replies echo it. Invalid/unreadable IDs produce `null` in the error response.
 * `api_version`: integer 1. Unsupported versions are rejected rather than interpreted as another protocol.
-* Methods: `hello`, `capabilities`, `load_save`, `new_game`, `get_state`, `get_castle_options`, `get_army_options`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
+* Methods: `hello`, `capabilities`, `load_save`, `new_game`, `get_state`, `get_castle_options`, `get_army_options`, `check_actions`, `start_session`, `get_decision`, `step`, `runtime_info`, `render`, `close`.
   `params` is optional and must be an object.
   `load_save` requires `{"path":"absolute save path"}` with an optional uint32 `seed`;
   `new_game` requires `path`, uint32 `seed`, `player_id` and `difficulty` (0..4). `get_state` accepts only `{"include_serialized":true}`
   (optional, default true). `start_session` requires `{"player_id":1}` (one color bit); `step` requires `action`, `token`
   and `params`, as described in the controller contract. `render` uses the frame parameters described above.
-  `get_castle_options` requires `{castle_id}`; `get_army_options` requires `{kind,id}`. Other methods require empty parameters.
+  `get_castle_options` requires `{castle_id}`; `get_army_options` requires `{kind,id}`.
+  `check_actions` requires `{token,actions}` with at most 128 adventure `{action,params}` commands; its `valid` array
+  reports native precondition checks without executing commands. Other methods require empty parameters.
 * Request limit: 65,536 bytes before the terminating LF. CRLF is accepted as JSON trailing whitespace plus LF.
 * Response limit: 64 MiB including the terminating LF. A larger state returns `response_too_large`; retry without the payload.
 * Nesting is limited to a shallow request envelope. Malformed/deep/oversized records return an error; the next record can run.

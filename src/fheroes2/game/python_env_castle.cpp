@@ -239,7 +239,7 @@ nlohmann::json fheroes2::pythonEnvCastleOptions( const uint32_t castleId )
              { "market", marketOptions( castle ) } };
 }
 
-nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, const nlohmann::json & params, const int playerId )
+nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, const nlohmann::json & params, const int playerId, const bool validateOnly )
 {
     Castle & castle = castleById( identifier( params, "castle_id" ) );
     if ( static_cast<int>( castle.GetColor() ) != playerId ) {
@@ -249,6 +249,8 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
         if ( params.size() != 1 ) {
             throw PythonEnvError( "invalid_request", "castle.refresh_heroes requires only castle_id." );
         }
+        if ( validateOnly )
+            return Json::object();
         castle.GetKingdom().GetRecruits();
         return { { "type", "hero_offers_refreshed" }, { "castle_id", castle.GetIndex() }, { "hero_hiring", heroOffers( castle ) } };
     }
@@ -266,6 +268,8 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
             throw PythonEnvError( "illegal_action",
                                   "The offered hero must be available, affordable and have an empty castle visitor slot; refresh stale offers explicitly." );
         }
+        if ( validateOnly )
+            return Json::object();
         if ( castle.RecruitHero( hero ) == nullptr ) {
             throw PythonEnvError( "engine_error", "The validated hero purchase failed." );
         }
@@ -283,6 +287,11 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
             throw PythonEnvError( "invalid_request", "Use distinct native resource IDs and a positive number of whole trade lots." );
         }
         const auto quote = getResourceTradeQuote( castle.GetKingdom(), static_cast<int>( from ), static_cast<int>( to ) );
+        if ( validateOnly ) {
+            if ( lots > quote.maxLots )
+                throw PythonEnvError( "illegal_action", "The trade exceeds the native lot limit." );
+            return Json::object();
+        }
         if ( !tradeResources( castle.GetKingdom(), static_cast<int>( from ), static_cast<int>( to ), lots ) ) {
             throw PythonEnvError( "illegal_action", "Trading requires a kingdom marketplace, enough funds and room for the exact result." );
         }
@@ -309,6 +318,8 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
             throw PythonEnvError( "illegal_action", std::string( "Cannot build: " ) + buildingStatus( status ) );
         }
         const Funds cost = PaymentConditions::BuyBuilding( castle.GetRace(), building );
+        if ( validateOnly )
+            return Json::object();
         if ( !castle.BuyBuilding( building ) ) {
             throw PythonEnvError( "engine_error", "The validated building purchase failed." );
         }
@@ -327,6 +338,8 @@ nlohmann::json fheroes2::pythonEnvCastleAction( const std::string & action, cons
         throw PythonEnvError( "illegal_action", "The exact count exceeds the built dwelling's stock, funds or army capacity." );
     }
     const Troop troop( Monster( castle.GetRace(), castle.GetActualDwelling( dwelling ) ), count );
+    if ( validateOnly )
+        return Json::object();
     const Funds cost = troop.GetTotalCost();
     // RecruitMonster assumes the original troop count is in stock; never forward an unchecked request.
     if ( !castle.RecruitMonster( troop, false ) ) {

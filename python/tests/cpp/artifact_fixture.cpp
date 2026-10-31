@@ -31,29 +31,33 @@
 #include "core.h"
 #include "game_io.h"
 #include "heroes.h"
+#include "kingdom.h"
 #include "map_object_info.h"
+#include "maps_fileinfo.h"
 #include "maps_tiles.h"
 #include "maps_tiles_helper.h"
 #include "monster.h"
 #include "python_env_world.h"
+#include "resource.h"
+#include "settings.h"
 #include "skill.h"
 #include "spell.h"
 #include "world.h"
 
 int main( int argc, char ** argv )
 {
-    if ( argc != 3 ) {
-        std::cerr << "Usage: fheroes2_artifact_fixture BASE_SAVE OUTPUT_DIRECTORY\n";
+    if ( argc != 3 && !( argc == 4 && std::string( argv[3] ) == "--gym-only" ) ) {
+        std::cerr << "Usage: fheroes2_artifact_fixture BASE_SAVE OUTPUT_DIRECTORY [--gym-only]\n";
         return EXIT_FAILURE;
     }
     try {
         const auto input = std::filesystem::absolute( std::filesystem::u8path( argv[1] ) );
         const auto output = std::filesystem::absolute( std::filesystem::u8path( argv[2] ) );
         std::filesystem::create_directories( output );
-        for ( const char * name :
-              { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav", "choices-chest-day1.sav", "choices-join-day1.sav",
-                "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav", "choices-paid-join-day1.sav", "battles-melee-day1.sav",
-                "battles-ranged-day1.sav", "battles-heroes-day1.sav", "battles-loss-day1.sav", "battles-boss-day1.sav", "battles-siege-day1.sav" } ) {
+        for ( const char * name : { "artifacts-day1.sav", "artifacts-full-day1.sav", "heroes-full-day1.sav", "heroes-protected-day1.sav", "choices-chest-day1.sav",
+                                    "choices-join-day1.sav", "choices-pursue-day1.sav", "choices-recruit-day1.sav", "choices-spells-day1.sav",
+                                    "choices-paid-join-day1.sav", "battles-melee-day1.sav", "battles-ranged-day1.sav", "battles-heroes-day1.sav", "battles-loss-day1.sav",
+                                    "battles-boss-day1.sav", "battles-siege-day1.sav", "gym-victory-day1.sav" } ) {
             const auto file = output / name;
             if ( std::filesystem::exists( file ) && std::filesystem::equivalent( input, file ) ) {
                 throw std::runtime_error( "The output must not overwrite the input save." );
@@ -63,6 +67,21 @@ int main( int argc, char ** argv )
         const System::CoreInitializer core( std::set<System::SystemInitializationComponent>{} );
         fheroes2::PythonEnvWorld session( argv[0] );
         session.loadSave( input.u8string() );
+        const auto saveGymVictory = [&]() {
+            session.loadSave( input.u8string() );
+            auto & info = Settings::Get().getCurrentMapInfo();
+            info.victoryConditionType = Maps::FileInfo::VICTORY_COLLECT_ENOUGH_GOLD;
+            info.victoryConditionParams = { 10, 0 };
+            info.compAlsoWins = false;
+            world.GetKingdom( PlayerColor::BLUE ).AddFundsResource( Funds( Resource::GOLD, 2500 ) );
+            if ( !Game::Save( ( output / "gym-victory-day1.sav" ).string() ) ) {
+                throw std::runtime_error( "Could not save the native Gym victory fixture." );
+            }
+        };
+        if ( argc == 4 ) {
+            saveGymVictory();
+            return EXIT_SUCCESS;
+        }
         Heroes * roxana = world.GetHeroes( 52 );
         Heroes * zom = world.GetHeroes( 46 );
         if ( roxana == nullptr || zom == nullptr || roxana->GetIndex() != 896 || static_cast<int>( roxana->GetColor() ) != 1 ) {
@@ -195,6 +214,7 @@ int main( int argc, char ** argv )
         attacker->GetArmy().Reset();
         attacker->GetArmy().JoinTroop( Monster::BONE_DRAGON, 100, false );
         save( "battles-siege-day1.sav" );
+        saveGymVictory();
         std::cout << "Native environment fixtures saved in " << output.string() << '\n';
         return EXIT_SUCCESS;
     }

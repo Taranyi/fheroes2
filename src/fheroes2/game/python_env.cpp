@@ -86,7 +86,8 @@ namespace
     {
         return { { "commands",
                    { "hello", "capabilities", "load_save", "get_state", "start_session", "get_decision", "step", "runtime_info", "render", "close", "get_castle_options",
-                     "get_army_options", "new_game" } },
+                     "get_army_options", "new_game", "check_actions" } },
+                 { "action_validation", true },
                  { "seeded_new_game", true },
                  { "seeded_save_continuation", true },
                  { "max_request_bytes", maxRequestBytes },
@@ -178,6 +179,33 @@ namespace
             }
             const DiagnosticRedirect redirect;
             return world.newGame( params["path"].get<std::string>(), params["seed"].get<uint32_t>(), player, params["difficulty"].get<int>() );
+        }
+        if ( method == "check_actions" ) {
+            if ( params.size() != 2 || !params.contains( "token" ) || !params["token"].is_object() || !params.contains( "actions" ) || !params["actions"].is_array()
+                 || params["actions"].size() > 128 ) {
+                throw fheroes2::PythonEnvError( "invalid_request", "check_actions requires token and at most 128 action/params objects." );
+            }
+            if ( world.getDecision()["phase"] != "adventure" ) {
+                throw fheroes2::PythonEnvError( "unsupported_state", "check_actions is for adventure commands; choices and battles already supply legal candidates." );
+            }
+            const DiagnosticRedirect redirect;
+            Json valid = Json::array();
+            for ( const Json & candidate : params["actions"] ) {
+                if ( !candidate.is_object() || candidate.size() != 2 || !candidate.contains( "action" ) || !candidate["action"].is_string()
+                     || !candidate.contains( "params" ) || !candidate["params"].is_object() || candidate["action"] == "session.stop" ) {
+                    throw fheroes2::PythonEnvError( "invalid_request", "Each candidate requires action and params; session.stop is not a gameplay candidate." );
+                }
+                try {
+                    world.dispatch( candidate["action"].get<std::string>(), params["token"], candidate["params"], {}, true );
+                    valid.push_back( true );
+                }
+                catch ( const fheroes2::PythonEnvError & error ) {
+                    if ( error.code != "illegal_action" && error.code != "unsupported_action" )
+                        throw;
+                    valid.push_back( false );
+                }
+            }
+            return { { "valid", valid } };
         }
         if ( method == "get_state" ) {
             if ( params.size() > 1 || ( !params.empty() && ( !params.contains( "include_serialized" ) || !params["include_serialized"].is_boolean() ) ) ) {

@@ -324,6 +324,16 @@ class HeroesSession:
         """Inspect the pending decision and its explicit action token."""
         return self.request("get_decision")
 
+    def check_actions(self, actions, *, token: Mapping[str, Any]) -> list[bool]:
+        """Validate up to 128 adventure command candidates without executing them."""
+        actions = list(actions)
+        result = self.request("check_actions", {"actions": actions, "token": dict(token)})
+        valid = result.get("valid")
+        if not isinstance(valid, list) or len(valid) != len(actions) or any(type(value) is not bool for value in valid):
+            self._dispose()
+            raise ProtocolError("Invalid native action validation result")
+        return valid
+
     def runtime_info(self) -> dict[str, Any]:
         """Report the actual presentation subsystem state of this process."""
         return self.request("runtime_info")

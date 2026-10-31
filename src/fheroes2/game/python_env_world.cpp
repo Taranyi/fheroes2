@@ -241,6 +241,38 @@ namespace
         return result;
     }
 
+    std::list<Route::Step> validatedMoveRoute( Heroes * movingHero, const int destination )
+    {
+        using fheroes2::PythonEnvError;
+        std::list<Route::Step> path;
+        path = world.getPath( *movingHero, destination );
+        if ( path.empty() || path.back().GetIndex() != destination ) {
+            throw PythonEnvError( "illegal_action", "The engine found no route to that tile." );
+        }
+        uint64_t cost = 0;
+        for ( const auto & step : path ) {
+            const auto & tile = world.getTile( step.GetIndex() );
+            const auto type = tile.getMainObjectType();
+            const Castle * targetCastle = type == MP2::OBJ_CASTLE ? world.getCastleEntrance( Maps::GetPoint( step.GetIndex() ) ) : nullptr;
+            const bool supportedTarget
+                = step.GetIndex() == destination
+                  && ( type == MP2::OBJ_RESOURCE || type == MP2::OBJ_TREASURE_CHEST || type == MP2::OBJ_MONSTER || type == MP2::OBJ_GENIE_LAMP
+                       || type == MP2::OBJ_WAGON_CAMP || ( type == MP2::OBJ_HERO && tile.getHero() != nullptr && !movingHero->isFriends( tile.getHero()->GetColor() ) )
+                       || ( targetCastle != nullptr && !movingHero->isFriends( targetCastle->GetColor() ) ) );
+            const auto guards = Maps::getMonstersProtectingTile( step.GetIndex(), false );
+            const bool protectedTile = std::any_of( guards.begin(), guards.end(),
+                                                    [&]( const int32_t guard ) { return !( supportedTarget && type == MP2::OBJ_MONSTER && guard == destination ); } );
+            if ( tile.isWater() || type == MP2::OBJ_EVENT || ( MP2::isInGameActionObject( type ) && !supportedTarget ) || protectedTile ) {
+                throw PythonEnvError( "unsupported_action", "The route reaches a battle, choice or unsupported adventure object." );
+            }
+            cost += step.GetPenalty();
+        }
+        if ( cost > movingHero->GetMovePoints() ) {
+            throw PythonEnvError( "illegal_action", "The whole route must be affordable with the hero's remaining movement points." );
+        }
+        return path;
+    }
+
     std::string sessionId()
     {
         // This transport identifier must not consume the game's random number generator.
@@ -516,7 +548,7 @@ nlohmann::json fheroes2::PythonEnvWorld::actionResult() const
 }
 
 nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, const nlohmann::json & token, const nlohmann::json & params,
-                                                   const std::function<void()> & choiceWait )
+                                                   const std::function<void()> & choiceWait, const bool validateOnly )
 {
     const Json current = getDecision()["token"];
     if ( token.size() != current.size() || !token.contains( "session_id" ) || !token["session_id"].is_string() ) {
@@ -655,6 +687,19 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
         throw PythonEnvError( "invalid_request", "turn.end requires empty action params." );
     }
 
+    if ( validateOnly ) {
+        if ( armyAction || heroAction ) {
+            pythonEnvArmyAction( action, params, _controllerPlayer, _armyMeeting, true );
+        }
+        else if ( castleAction ) {
+            pythonEnvCastleAction( action, params, _controllerPlayer, true );
+        }
+        else if ( movingHero != nullptr ) {
+            validatedMoveRoute( movingHero, destination );
+        }
+        return Json::object();
+    }
+
     ensureGraphicsData();
 
     // A native AI turn may reach an interaction not yet supported by the external profile.
@@ -765,31 +810,7 @@ nlohmann::json fheroes2::PythonEnvWorld::dispatch( const std::string & action, c
             GameOver::Result::Get().checkGameOver();
         }
         else if ( movingHero != nullptr ) {
-            path = world.getPath( *movingHero, destination );
-            if ( path.empty() || path.back().GetIndex() != destination ) {
-                throw PythonEnvError( "illegal_action", "The engine found no route to that tile." );
-            }
-            uint64_t cost = 0;
-            for ( const auto & step : path ) {
-                const auto & tile = world.getTile( step.GetIndex() );
-                const auto type = tile.getMainObjectType();
-                const Castle * targetCastle = type == MP2::OBJ_CASTLE ? world.getCastleEntrance( Maps::GetPoint( step.GetIndex() ) ) : nullptr;
-                const bool supportedTarget = step.GetIndex() == destination
-                                             && ( type == MP2::OBJ_RESOURCE || type == MP2::OBJ_TREASURE_CHEST || type == MP2::OBJ_MONSTER || type == MP2::OBJ_GENIE_LAMP
-                                                  || type == MP2::OBJ_WAGON_CAMP
-                                                  || ( type == MP2::OBJ_HERO && tile.getHero() != nullptr && !movingHero->isFriends( tile.getHero()->GetColor() ) )
-                                                  || ( targetCastle != nullptr && !movingHero->isFriends( targetCastle->GetColor() ) ) );
-                const auto guards = Maps::getMonstersProtectingTile( step.GetIndex(), false );
-                const bool protectedTile = std::any_of( guards.begin(), guards.end(),
-                                                        [&]( const int32_t guard ) { return !( supportedTarget && type == MP2::OBJ_MONSTER && guard == destination ); } );
-                if ( tile.isWater() || type == MP2::OBJ_EVENT || ( MP2::isInGameActionObject( type ) && !supportedTarget ) || protectedTile ) {
-                    throw PythonEnvError( "unsupported_action", "The route reaches a battle, choice or unsupported adventure object." );
-                }
-                cost += step.GetPenalty();
-            }
-            if ( cost > movingHero->GetMovePoints() ) {
-                throw PythonEnvError( "illegal_action", "The whole route must be affordable with the hero's remaining movement points." );
-            }
+            path = validatedMoveRoute( movingHero, destination );
             const int from = movingHero->GetIndex();
             const int id = movingHero->GetID();
             const uint32_t movement = movingHero->GetMovePoints();

@@ -85,7 +85,8 @@ Az eredeti mentést a builder nem módosítja; az éles API nem kap tesztadat-l�
 Hiányzó tesztmentésnél az érintett teszt jelzett skipet ad.
 
 A kilencakciós Gym-példa továbbra is a korábbi szűk mozgás/körváltás profilt adja; ezek a bővítések a `HeroesSession` API-ban érhetők el.
-Valódi választások, adventure varázslás, csata, többoldalas vezérlés és a teljes Gym adapter továbbra is hátralévő munka.
+A 9–10. lépés deklarált választásai, varázslatai és csatái, valamint a [13. lépés Gym-adaptere](PYTHON_ENV_GYM.md) elkészültek.
+A többoldalas vezérlés és a motorprofilon kívüli műveletek továbbra is hátralévő munka.
 
 2026-10-29, Windows: mind a 85 Python-integrációs teszt sikeres, a nyolc új teszttel, ténylegesen betöltött natív
 tesztmentésekkel és a Gymnasium ellenőrzőjével együtt. A futtatható példa is sikeres, 3100 arannyal és video/audio nélkül.
