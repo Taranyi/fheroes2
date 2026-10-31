@@ -152,6 +152,7 @@ A gyökérben az opcionális Release futtatható maradt. Más platform SDK-build
 A felsorolt speciális esetek elkészültek. A további feladatok:
 
 Az önálló battle-only indítás/reset is elkészült: [konfiguráció és példa](PYTHON_ENV_STANDALONE_BATTLE.md).
-1. Szélesebb pálya-, terep-, ostrom- és hajós kombinációs ellenőrzések.
-2. Linux/macOS és mobil SDK-buildek ellenőrzése.
-3. Nagyobb léptékű RL-profilozás és teljesítményjavítás; külön bővítés a láthatóságra szűrt observation és a több agentes Gym-wrapper.
+A [terep/ostrom/hajós kombinációs és stresszellenőrzés](PYTHON_ENV_BATTLE_STRESS.md) is elkészült.
+
+1. Linux/macOS és mobil SDK-buildek ellenőrzése.
+2. Nagyobb léptékű RL-profilozás és teljesítményjavítás; külön bővítés a láthatóságra szűrt observation és a több agentes Gym-wrapper.

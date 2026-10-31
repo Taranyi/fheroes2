@@ -611,3 +611,15 @@ uv run --project python --cache-dir .tools/uv-cache python python/examples/stand
 ```
 
 See [the complete configuration, API, Gym loop, render lifecycle and remaining roadmap](../docs/PYTHON_ENV_STANDALONE_BATTLE.md).
+
+### Battle combinations and process stress
+
+```powershell
+uv run --project python --cache-dir .tools/uv-cache python python/examples/battle_stress.py --profile full
+```
+
+The standard-library runner covers 996 terrain/army/siege/boundary cases, 144 explicit spell probes,
+42 mixed Python/AI cases, seeded replay with rendering, a 200-battle native-process soak,
+100 reset/recovery cycles and concurrent sessions. Detailed local receipts and compact hashable summaries
+record real outcomes, failures, private-memory and handle samples. The regular unittest suite includes bounded regressions.
+See [coverage, reproducible commands, discovered fixes and remaining work](../docs/PYTHON_ENV_BATTLE_STRESS.md).

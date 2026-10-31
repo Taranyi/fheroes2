@@ -1,0 +1,479 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "source_commit": "6dc056b50c734df2335d90ba2293664c60bbfd82",
+    "worktree_dirty": true,
+    "asset_sha256": {
+      "DATA/HEROES2.AGG": "7a11c86db8ec8fbf19d810c1f7ebf9d8520f63fbdc42d6f51f7538654004315d",
+      "DATA/HEROES2X.AGG": "1f3edad1bb88052da50b3fae5d00e8f7e73dd977f356463022aab132b54f4d41",
+      "files/data/resurrection.h2d": "5963a20776351035a9a1030170cf418570622cd3bed76e189b0868b8a9583f32"
+    },
+    "executable_sha256": "9c60fb310544649d9f825cac4ff44d498bd7a8bba0f451632e1af180c0fc6320",
+    "harness_sha256": {
+      "python/examples/battle_stress.py": "1a287e2ef0d1d979b5a57ebd67abb9fa7e7d8e2155a3e43ed153b7098f9998d1",
+      "python/tests/test_battle_stress.py": "c07368e8bacb6e14244f396855d729738a7bbd619e62227acafab280b0382a49",
+      "python/src/fheroes2_env/__init__.py": "7f74a07eaa2b6616fefa6805f53d8af4a0a09a368607cdb5c9e90b080cacc1d4",
+      "python/src/fheroes2_env/frame.py": "deec10377eafbd86d4dd0b2a0e2f06f1f33e16180e23fc986131a542d3cd9248",
+      "python/src/fheroes2_env/gym_candidates.py": "036027d453575bb06bc10d5953b882397a992a77c7e6fa6cb37d882335c925e4",
+      "python/src/fheroes2_env/gym_env.py": "678b2d108e15608dd48f4187f23fb783e64c40061b454a6cf7a4c9f202ab5627",
+      "python/src/fheroes2_env/gym_observation.py": "c809a2bcd3a4049c1c5b84a3a5888d8fc9d131ab808d396ad0f59c411fc792c8",
+      "python/src/fheroes2_env/gym_preview.py": "3e05522723c385dea5010edd37b9a83566f57d2dd9191658a59e9ec58dc54b3d",
+      "python/src/fheroes2_env/session.py": "2bc2f8b8e912c6eb537dc991d238da959a8aa6ff40e63db3bc09e3bcb20821c9"
+    },
+    "native_sources_sha256": "8ab285c42e0c383446b3074011fd5165106455fa135d51b88ed1310b4535b566",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.14.7",
+    "logical_cpus": 16,
+    "created_utc": "2026-10-31T16:22:24.210132+00:00"
+  },
+  "profile": "full",
+  "build_label": "debug",
+  "matrix_manifest_coverage": {
+    "cases": 996,
+    "terrains": [
+      "beach",
+      "desert",
+      "dirt",
+      "grass",
+      "lava",
+      "snow",
+      "swamp",
+      "wasteland",
+      "water"
+    ],
+    "races": [
+      "barbarian",
+      "knight",
+      "necromancer",
+      "sorceress",
+      "warlock",
+      "wizard"
+    ],
+    "army_profiles": [
+      "boundary_count",
+      "elemental",
+      "five_slots",
+      "flying",
+      "immunity",
+      "melee",
+      "mixed",
+      "ranged",
+      "undead"
+    ],
+    "siege_flag_combinations": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "configured_spell_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48
+    ]
+  },
+  "sections": {
+    "matrix": {
+      "passed": true,
+      "scheduled": 996,
+      "completed": 996,
+      "failures": 0,
+      "wall_seconds": 102.42609720000019,
+      "manifest_sha256": "ec6d0c38da7deddcbe77f1c45e796d417d6fe0e180f81804514071a62db66724",
+      "case_receipts_sha256": "f852ce08c14a4ada6e6b7d3abb51001447b496275369e663c41f9bdbefba2688",
+      "failed_cases": [],
+      "spells_executed_by_python": [],
+      "spell_mana_checks": 0,
+      "python_decisions": 0,
+      "outcomes": {
+        "winner_1": 633,
+        "winner_2": 359,
+        "truncated": 4
+      }
+    },
+    "probes": {
+      "passed": true,
+      "scheduled": 144,
+      "completed": 144,
+      "failures": 0,
+      "wall_seconds": 20.626804999999877,
+      "manifest_sha256": "65e3de3909b78a6344974c605c37a45a7648ab6ab150b940064f2dfdfeb1fe4b",
+      "case_receipts_sha256": "8b347d1bc42cc875127ba75c8b0438a0c7931bd4b3062b5268987a27c501d49b",
+      "failed_cases": [],
+      "spells_executed_by_python": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48
+      ],
+      "spell_mana_checks": 688,
+      "python_decisions": 3723,
+      "outcomes": {
+        "winner_1": 141,
+        "winner_2": 0,
+        "truncated": 0
+      }
+    },
+    "agents": {
+      "passed": true,
+      "scheduled": 42,
+      "completed": 42,
+      "failures": 0,
+      "wall_seconds": 5.216982100000678,
+      "manifest_sha256": "d9b9d7f5669d7985236b285d0b88fe29ec23cfdb01685e9548a28b992848b39a",
+      "case_receipts_sha256": "4642f6f3b4ca709c5edc6de56d859a17e1637b079980ba9fa2863c3eba4b8799",
+      "failed_cases": [],
+      "spells_executed_by_python": [],
+      "spell_mana_checks": 0,
+      "python_decisions": 424,
+      "outcomes": {
+        "winner_1": 13,
+        "winner_2": 29,
+        "truncated": 0
+      }
+    },
+    "replay": {
+      "passed": true,
+      "battles": 90,
+      "comparisons": 30,
+      "wall_seconds": 17.94893950000005,
+      "case_receipts_sha256": "659cf35386a442a652a93de6e123af97a3485584edc8b9c7136956b477084b4b",
+      "failed_cases": [],
+      "spells_executed_by_python": [
+        4,
+        5,
+        9,
+        11,
+        40,
+        41,
+        44
+      ],
+      "spell_mana_checks": 0,
+      "python_decisions": 0
+    },
+    "hot": {
+      "passed": true,
+      "iterations": 200,
+      "warmup_battles": 24,
+      "same_process": true,
+      "wall_seconds": 33.762964499999725,
+      "baseline": {
+        "rss_bytes": 48324608,
+        "private_bytes": 39485440,
+        "handles": 148
+      },
+      "final": {
+        "rss_bytes": 51580928,
+        "private_bytes": 42045440,
+        "handles": 148
+      },
+      "growth": {
+        "private_bytes": 2560000,
+        "rss_bytes": 3256320,
+        "handles": 0,
+        "peak_private_growth_bytes": 2859008
+      },
+      "samples": [
+        {
+          "iteration": 1,
+          "metrics": {
+            "rss_bytes": 48324608,
+            "private_bytes": 39813120,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 11,
+          "metrics": {
+            "rss_bytes": 48721920,
+            "private_bytes": 38932480,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 21,
+          "metrics": {
+            "rss_bytes": 50905088,
+            "private_bytes": 41418752,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 31,
+          "metrics": {
+            "rss_bytes": 47300608,
+            "private_bytes": 38649856,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 41,
+          "metrics": {
+            "rss_bytes": 51625984,
+            "private_bytes": 42344448,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 51,
+          "metrics": {
+            "rss_bytes": 47247360,
+            "private_bytes": 38854656,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 61,
+          "metrics": {
+            "rss_bytes": 47456256,
+            "private_bytes": 38395904,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 71,
+          "metrics": {
+            "rss_bytes": 50925568,
+            "private_bytes": 41385984,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 81,
+          "metrics": {
+            "rss_bytes": 47665152,
+            "private_bytes": 39063552,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 91,
+          "metrics": {
+            "rss_bytes": 49848320,
+            "private_bytes": 40079360,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 101,
+          "metrics": {
+            "rss_bytes": 50802688,
+            "private_bytes": 41279488,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 111,
+          "metrics": {
+            "rss_bytes": 48644096,
+            "private_bytes": 38858752,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 121,
+          "metrics": {
+            "rss_bytes": 50192384,
+            "private_bytes": 40534016,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 131,
+          "metrics": {
+            "rss_bytes": 49790976,
+            "private_bytes": 40026112,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 141,
+          "metrics": {
+            "rss_bytes": 50769920,
+            "private_bytes": 41340928,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 151,
+          "metrics": {
+            "rss_bytes": 47144960,
+            "private_bytes": 37539840,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 161,
+          "metrics": {
+            "rss_bytes": 50339840,
+            "private_bytes": 40570880,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 171,
+          "metrics": {
+            "rss_bytes": 51060736,
+            "private_bytes": 41517056,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 181,
+          "metrics": {
+            "rss_bytes": 49774592,
+            "private_bytes": 40112128,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 191,
+          "metrics": {
+            "rss_bytes": 49664000,
+            "private_bytes": 39899136,
+            "handles": 148
+          }
+        },
+        {
+          "iteration": 200,
+          "metrics": {
+            "rss_bytes": 51580928,
+            "private_bytes": 42045440,
+            "handles": 148
+          }
+        }
+      ],
+      "outcomes": {
+        "wins": 192,
+        "draws": 0,
+        "truncated": 8
+      },
+      "limits": {
+        "private_growth_mib": 64,
+        "handle_growth": 4
+      },
+      "metrics_supported": true,
+      "clean_exit": true
+    },
+    "resets": {
+      "passed": true,
+      "cycles": 100,
+      "native_resets": 200,
+      "modes": {
+        "pending": 20,
+        "stop": 20,
+        "terminal": 20,
+        "closed": 20,
+        "killed": 20
+      },
+      "expected_process_terminations": 20,
+      "clean_final_exit": true,
+      "wall_seconds": 28.86170619999939
+    },
+    "parallel": {
+      "passed": true,
+      "workers": 2,
+      "battles": 24,
+      "matching_seeded_results": true,
+      "foreign_tokens_rejected": true,
+      "clean_exits": 2,
+      "wall_seconds": 1.7302409000003536
+    }
+  },
+  "passed": true,
+  "report_kind": "summary",
+  "full_report_canonical_sha256": "ab72d55e07f71facaace59d0cc80a804e321782dda24fdac6951b003669e9de0"
+}

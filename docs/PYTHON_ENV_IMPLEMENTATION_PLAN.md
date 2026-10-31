@@ -299,3 +299,11 @@ Kilenc terep, hat várfaj ostroma, natív hajós csata, hős/sereg/képesség/t�
 oldalanként Python vagy AI, AI–AI futás, körlimit, terminális eredmény és opcionális végső RGB.
 A meglévő Gym adapter egy Python-oldallal ugyanezt a forrást is fogadja.
 [Részletes szerződés, futtatható példa és teljes fennmaradó lista](PYTHON_ENV_STANDALONE_BATTLE.md).
+
+### Nagyobb kombinációs és stresszellenőrzés
+
+Kész a reprodukálható csatateszt-futtató: 996 terep/sereg/ostrom/szélsőérték-kombináció,
+144 varázslatpróba, 42 Python–AI eset, renderes replay, egy folyamatban 200 mért csata,
+100 reset/helyreállítási ciklus és párhuzamos sessionök.
+Külön regresszió védi a Hypnotize öncélzását és a hős nélküli ostrom AI-elemzését.
+[Leírás, jelentések, futtatás és teljes fennmaradó lista](PYTHON_ENV_BATTLE_STRESS.md).

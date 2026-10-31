@@ -1111,7 +1111,10 @@ void AI::BattlePlanner::analyzeBattleState( const Battle::Arena & arena, const B
     if ( castle && Battle::Arena::isAnyTowerPresent() ) {
         const bool attackerIgnoresCover = [&arena]() {
             const HeroBase * commander = arena.getAttackingForce().GetCommander();
-            assert( commander != nullptr );
+            // An uncommanded army has neither artifacts nor the Archery skill.
+            if ( commander == nullptr ) {
+                return false;
+            }
 
             if ( commander->GetBagArtifacts().isArtifactBonusPresent( fheroes2::ArtifactBonusType::NO_SHOOTING_PENALTY ) ) {
                 return true;

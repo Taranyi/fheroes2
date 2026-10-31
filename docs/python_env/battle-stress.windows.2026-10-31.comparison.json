@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "report_kind": "cross_build_comparison",
+  "passed": true,
+  "native_sources_sha256": "8ab285c42e0c383446b3074011fd5165106455fa135d51b88ed1310b4535b566",
+  "left_build": "release",
+  "right_build": "debug",
+  "left_executable_sha256": "b7e7284b9130c538c6c6564139909344741f8d7328b2fab30730fedfd776f58f",
+  "right_executable_sha256": "9c60fb310544649d9f825cac4ff44d498bd7a8bba0f451632e1af180c0fc6320",
+  "left_full_report_canonical_sha256": "b17acd403201cf4cc799a60d0f55fa9f9a1eeb9b56735c212514cb05e49aad8e",
+  "right_full_report_canonical_sha256": "ab72d55e07f71facaace59d0cc80a804e321782dda24fdac6951b003669e9de0",
+  "compared_cases": 1212,
+  "mismatches": []
+}

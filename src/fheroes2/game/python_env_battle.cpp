@@ -111,7 +111,8 @@ fheroes2::PythonEnvBattleDecision fheroes2::pythonEnvBattleDecision( Battle::Are
     for ( const Force * force : { &arena.getAttackingForce(), &arena.getDefendingForce() } ) {
         for ( const Unit * target : force->getUnits() ) {
             units.push_back( unitState( *target ) );
-            if ( !target->isValid() || target->GetColor() == unit.GetCurrentColor() ) {
+            // A hypnotized unit's controlling color differs from its owning color, so color alone does not exclude itself.
+            if ( target == &unit || !target->isValid() || target->GetColor() == unit.GetCurrentColor() ) {
                 continue;
             }
             if ( unit.isArchers() && !unit.isHandFighting() ) {

@@ -199,7 +199,8 @@ Más platform SDK-buildje és nagy léptékű RL-benchmark ebben a munkaszakaszb
 
 Az önálló csataindítás elkészült. Fennmaradó feladatok:
 
-1. Nagyobb kombinációs és stressztesztek: többféle sereg, képesség és varázslat terep-/ostrom-/hajós kombinációi.
-2. Linux/macOS és mobil SDK-build ellenőrzése.
-3. Nagyobb léptékű RL-profilozás és teljesítményjavítás.
-4. Igény szerint láthatóságra szűrt observation és több agentes Gym-wrapper.
+A [nagyobb kombinációs és stresszteszt-készlet](PYTHON_ENV_BATTLE_STRESS.md) is elkészült, reprodukálható futtatóval és Windows jelentésekkel.
+
+1. Linux/macOS és mobil SDK-build ellenőrzése.
+2. Nagyobb léptékű RL-profilozás és teljesítményjavítás.
+3. Igény szerint láthatóságra szűrt observation és több agentes Gym-wrapper.
