@@ -363,6 +363,14 @@ A hosszabb futások megtalálták az AI hajóidézésének feltétel nélküli k
 a célzott javítás csak a tényleges animációs ágakban kéri le a felületet, a szabályokat nem módosítja.
 [Futtatás, eredmények, regressziók és korlátok](PYTHON_ENV_ADVENTURE_COMPLETE.md).
 
+### Első adventure RL-kísérlet
+
+Külön Python stratégiai task, natívan ellenőrzött mozgás/építés/toborzás/seregátadás,
+állapotalapú potenciáljutalom, két dense és egy sparse MaskablePPO-futás.
+Elkülönített validáció, tesztseedek, új pálya, hosszabb natív játék és ellenőrzött helyi videó-replay.
+A csata/választás itt közös, rögzített vezérlő; a C++ motor és a teljes alap-Gym nem változik.
+[Szerződés, mérés, videók és korlátok](PYTHON_ENV_ADVENTURE_RL.md).
+
 A teljes fennmaradó sorrend:
 
 5. Adventure RL: megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.

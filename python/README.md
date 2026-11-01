@@ -668,3 +668,19 @@ Evaluation compares random and rule controls, sampled/greedy PPO and the same fr
 Native video replay is verified against non-rendered traces; a local gallery includes fixed unseen-army examples.
 All models, videos, images and result files remain in ignored `build/`. No engine changes or new package dependencies.
 See [the full task, reward, split definitions, reproducible commands and remaining roadmap](../docs/PYTHON_ENV_ADVANCED_RL.md).
+
+### Adventure PPO: strategy, custom reward and local videos
+
+```powershell
+uv run --project python --cache-dir .tools/uv-cache --extra battle-rl --locked python python/examples/adventure_rl.py --output build/python-env-adventure-rl/new-run --steps 8192 --workers 4
+uv run --project python --cache-dir .tools/uv-cache --extra battle-rl --with matplotlib python python/examples/adventure_rl_media.py --run build/python-env-adventure-rl/new-run --plot
+```
+
+This separate strategic task trains masked PPO on native map movement, building, recruitment, reinforcement and hiring.
+Its observation uses current world state; its custom potential reward uses actual exploration, castles, army, income and experience.
+The deliberately limited macro menu uses native affordable routes. A fixed shared rule controller handles battles and choices.
+Two dense learning seeds and an equal-budget sparse control are selected on validation, then tested on held-out native seeds,
+a new map and a separate longer full-game window. An early-game progress metric or step limit is never counted as a win.
+The base `HeroesEnv`, native rules, package dependencies and mobile projects are unchanged.
+Verified native replay MP4s, comparison gallery, charts, models and reports stay in ignored `build/`.
+See [reward, task limits, actual results and full remaining roadmap](../docs/PYTHON_ENV_ADVENTURE_RL.md).

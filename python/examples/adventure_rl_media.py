@@ -77,6 +77,8 @@ class Recording:
                     self.frames += 1
         finally:
             self.writer.close()
+        if not self.frames:
+            return {'file': self.path.name, 'frames': 0}
         with imageio.get_reader(str(self.path)) as reader:
             base.require(reader.count_frames() == self.frames, 'Recording lost frames')
             base.require(reader.get_data(self.frames - 1).shape == (560, 640, 3), 'Recording geometry changed')
@@ -145,7 +147,7 @@ def comparisons(folder, report, plan, labels):
 A csaták és párbeszédek minden vezérlőnél ugyanazt a rögzített szabályt követik; ez a kísérlet a stratégiai döntéseket tanítja.
 A felirat metrikái az előző stratégiai snapshothoz tartoznak. Eltérhet a két oldalon a nap; a rövidebb felvétel végképe megmarad.</p>
 <p>A videók a 128 döntéses korai játékszakaszt mutatják. A tanítás teljes játékbeli eredményeit külön mértük; a lépéslimit nem győzelem.</p>
-<p><a href="../report.json">Teljes mérés</a> · <a href="media-verification.json">Videó-ellenőrzés</a></p>'''
+<p><a href="../report.json">Teljes mérés</a> · <a href="../paired-analysis.json">Párosított tesztkülönbségek</a> · <a href="media-verification.json">Videó-ellenőrzés</a></p>'''
     if (folder / 'learning.png').is_file():
         page += '<img src="../learning.png" alt="Tanulási görbe">'
     page += '<pre>' + html.escape(json.dumps({'test': report['test'], 'full': report['full']}, indent=2)) + '</pre>'
@@ -153,6 +155,27 @@ A felirat metrikái az előző stratégiai snapshothoz tartoznak. Eltérhet a k�
         page += f'<h2>{html.escape(case)} — balra: {html.escape(labels[control])}</h2><video controls preload="metadata" src="{filename}"></video>'
     (directory / 'index.html').write_text(page + '</html>', encoding='utf-8')
     return checks
+
+
+def paired_effects(folder, report):
+    """Paired case bootstrap; descriptive seed uncertainty, not map-wide evidence."""
+    selected = f'dense_{report["selected"]["learning_seed"]}'
+    rows = lambda mode: {r['id']: r for r in json.loads((folder / f'test-{mode}.json').read_text())}
+    trained = rows(selected)
+    rng = np.random.default_rng(271828)
+    result = {'selected': selected, 'scope': 'Six paired native seeds on one fixed map; two learning seeds only', 'comparisons': {}}
+    for control in ('uniform', 'rule', 'sparse_7'):
+        other = rows(control)
+        base.require(trained.keys() == other.keys(), 'Paired test IDs differ')
+        effects = {}
+        for metric in ('explored', 'mobile', 'income'):
+            differences = np.array([trained[key]['delta'][metric] - other[key]['delta'][metric] for key in sorted(trained)])
+            sample = rng.choice(differences, size=(10000, len(differences)), replace=True).mean(axis=1)
+            effects[metric] = {'mean_difference': float(differences.mean()), 'paired_differences': differences.tolist(),
+                               'bootstrap_95_percentile': np.quantile(sample, [.025, .975]).tolist()}
+        result['comparisons'][control] = effects
+    base.write_json(folder / 'paired-analysis.json', result)
+    return result
 
 
 def main():
@@ -208,6 +231,7 @@ def main():
                     base.write_json(directory / 'recording-progress.json', verified)
     if args.plot:
         plot(folder, report)
+    paired_effects(folder, report)
     checks = comparisons(folder, report, plan, labels)
     base.write_json(directory / 'media-verification.json', {'source_asset_model_fingerprints_match': True,
                     'render_replays_match_unrendered_tests': True, 'videos_decoded': verified, 'comparisons_decoded': checks})
@@ -216,4 +240,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

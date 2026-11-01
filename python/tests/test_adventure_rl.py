@@ -25,6 +25,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import test_world_state as support
 
@@ -189,6 +190,23 @@ class AdventureRLTests(unittest.TestCase):
             finally:
                 vec.close()
             self.assertEqual(env.closed_process['returncode'], 0)
+
+    def test_native_video_replay_matches_unrendered_episode(self):
+        import adventure_rl as experiment
+        from adventure_rl_media import Recording
+        with tempfile.TemporaryDirectory(dir=support.ROOT / 'build') as directory:
+            with mock.patch.object(tempfile, 'tempdir', directory):
+                with self.environment(directory, max_steps=8, rich_info=False) as env:
+                    case = [{'id': 'smoke/THEOTHER/7', 'seed': 7, 'map': 'THEOTHER.MP2'}]
+                    _, original = experiment.evaluate(env, case, mode='uniform')
+                    movie = Recording(Path(directory) / 'native.mp4', 'Native replay regression')
+                    try:
+                        _, replay = experiment.evaluate(env, case, mode='uniform', observer=movie)
+                    finally:
+                        result = movie.close()
+                    for key in ('trace_sha256', 'final', 'native_result', 'reward_parts', 'steps', 'native_steps'):
+                        self.assertEqual(original[0][key], replay[0][key])
+                    self.assertGreater(result['frames'], 12)
 
 
 if __name__ == '__main__':
