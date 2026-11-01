@@ -152,7 +152,7 @@ def comparisons(folder, report, plan, labels):
                 for reader in readers:
                     reader.close()
     page = '''<!doctype html><html lang="hu"><meta charset="utf-8"><title>Adventure RL – helyi eredmények</title>
-<style>body{font:17px system-ui;background:#14212d;color:#eee;max-width:1300px;margin:30px auto;padding:20px}video,img{width:100%;border-radius:8px}h2{margin-top:40px}a{color:#9ddcd2}pre{white-space:pre-wrap}</style>
+<style>body{font:17px system-ui;background:#14212d;color:#eee;max-width:1300px;margin:30px auto;padding:20px}video,img{width:100%;border-radius:8px}h2{margin-top:40px}a{color:#9ddcd2}table{border-collapse:collapse;width:100%;font-size:16px}td,th{padding:12px;text-align:left;border-bottom:1px solid #41515e}.scroll{overflow-x:auto}</style>
 <h1>Adventure RL – mit tanult a modell?</h1>
 <p>Jobbra a validáción kiválasztott tanított modell, balra a kontroll. Azonos eredeti pálya és seed; a teszteseteket a tanítás előtt rögzítettük.</p>
 <p>Natív döntési pillanatképek: stratégiai döntésenként 0,25 s; csata/választás lépésenként 1/12 s. Nincsenek köztes animációk.
@@ -162,7 +162,16 @@ A felirat metrikái az előző stratégiai snapshothoz tartoznak. Eltérhet a k�
 <p><a href="../report.json">Teljes mérés</a> · <a href="../paired-analysis.json">Párosított tesztkülönbségek</a> · <a href="media-verification.json">Videó-ellenőrzés</a></p>'''
     if (folder / 'learning.png').is_file():
         page += '<img src="../learning.png" alt="Tanulási görbe">'
-    page += '<pre>' + html.escape(json.dumps({'test': report['test'], 'full': report['full']}, indent=2)) + '</pre>'
+    names = dict.fromkeys(('dense_7', 'dense_19'), 'Másik saját jutalmas PPO-tanítás')
+    names.update(labels)
+    page += '<h2>Hat külön teszteset, legfeljebb 128 döntés</h2><p>A nagyobb mobil létszám részben több hős bérléséből jön. A modell sok információs varázslást ismétel; nyerő stratégiát még nem tanult.</p>'
+    page += '<div class="scroll"><table><tr><th>Vezérlő</th><th>Új mezők</th><th>Mobil katonák változása</th><th>Záró nap</th><th>Győzelem / vereség / limit</th></tr>'
+    for mode, score in report['test'].items():
+        page += (f'<tr><td>{html.escape(names.get(mode, mode))}</td><td>{score["new_tiles"]:.1f}</td>'
+                 f'<td>{score["mobile_delta"]:+.1f}</td><td>{score["days"]:.1f}</td>'
+                 f'<td>{score["wins"]} / {score["losses"]} / {score["truncated"]}</td></tr>')
+    page += '</table></div><p>Az átlagos felfedezés a kiválasztott modellnél magasabb a véletlennél, de ezen a kevés eseten a különbség bizonytalan. A második tanítási seed gyengébb lett.</p>'
+    page += '<h2>Hosszabb játékpróba</h2><p>Mindhárom vizsgált vezérlő valódi natív vereséget szenvedett. A tanított modell a 64. napon a játék időkorlátjába ütközött; ez nem a futtató lépéslimitje.</p>'
     for case, control, filename in pairs:
         page += f'<h2>{html.escape(case)} — balra: {html.escape(labels[control])}</h2><video controls preload="metadata" src="{filename}"></video>'
     (directory / 'index.html').write_text(page + '</html>', encoding='utf-8')
