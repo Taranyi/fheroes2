@@ -106,7 +106,8 @@ A Gym továbbra is fix kapacitású, és a profilba nem férő állapotnál expl
 
 ## Teljes fennmaradó sorrend
 
-5. Adventure RL: feladathoz illő megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.
+5. Az első adventure RL-kísérlet azóta elkészült: [jutalom, tanítás, mérés és helyi videók](PYTHON_ENV_ADVENTURE_RL.md).
+   A folytatás erősebb, teljes pályát nyerő stratégia, az információs-varázslási ismétlések kezelése és több feladatos tanítás.
 6. Kampányátmenetek, átvitt hősök/jutalmak és kampányválasztások.
 7. Igény szerint korlátozott láthatóság, több agentes Gym-wrapper és self-play.
 8. Platformonkénti Python-csomagok, csomagolt motor, automatikus motorkeresés,

@@ -27,6 +27,7 @@ import html
 import json
 from pathlib import Path
 import tempfile
+import unicodedata
 
 import imageio.v2 as imageio
 import numpy as np
@@ -43,6 +44,16 @@ class Recording:
         self.path, self.label, self.frames = path, label, 0
         self.writer = imageio.get_writer(str(path), fps=12, codec='libx264', macro_block_size=2, ffmpeg_log_level='error')
         self.last = None
+        self.ascii_labels = False
+        for name in ('arial.ttf', 'DejaVuSans.ttf', 'LiberationSans-Regular.ttf', '/System/Library/Fonts/Supplemental/Arial.ttf'):
+            try:
+                self.font = ImageFont.truetype(name, 16)
+                break
+            except OSError:
+                continue
+        else:
+            self.font = ImageFont.load_default(size=16)
+            self.ascii_labels = True
 
     def __call__(self, env, command):
         phase = env.decision['phase']
@@ -55,13 +66,14 @@ class Recording:
         canvas = Image.new('RGB', (640, 560), '#14212d')
         canvas.paste(Image.fromarray(frame.to_numpy()), (0, 80))
         draw = ImageDraw.Draw(canvas)
-        font = ImageFont.load_default(size=16)
         m = env.current_metrics
         lines = (self.label,
                  f'Seed {env.seed_value} | day {m["day"]} | strategic {env.steps} | native {env.native_steps} | {phase}',
                  f'{command["action"]} | explored {m["explored"]}/{m["map_tiles"]} | army {m["army"]} | castles {m["castles"]}')
         for y, line in zip((5, 29, 53), lines):
-            draw.text((10, y), line, font=font, fill='white')
+            if self.ascii_labels:
+                line = unicodedata.normalize('NFKD', line).encode('ascii', 'ignore').decode()
+            draw.text((10, y), line, font=self.font, fill='white')
         self.last = np.asarray(canvas).copy()
         for _ in range(1 if phase in ('battle', 'choice') else 3):
             self.writer.append_data(self.last)

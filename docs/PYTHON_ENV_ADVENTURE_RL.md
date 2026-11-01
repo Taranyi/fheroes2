@@ -111,10 +111,85 @@ A források, reprodukálási leírás és tesztek kerülhetnek a saját forkba.
 
 ## Eredmények
 
-A végleges, elkülönített futás mért eredményeit a befejezés után rögzítjük itt.
+Helyi futás: `build/python-env-adventure-rl/final/`. Három valódi, egyenként 8192 döntéses tanítás,
+összesen 24 576 stratégiai döntés, 63 befejezett tanítóepizód; ebből 21 natív terminális vereség, 0 győzelem.
+A többi epizód a külső tanítási limiten ért véget. Mindhárom policy súlyai ténylegesen változtak;
+a dense/sparse 7-es seed kezdősúlyai bitpontosan egyeztek. Mindhárom futás négy saját natív motort használt és zárt le 0-s kilépéssel.
+
+A validáció a dense/7 modell 8192-es, a dense/19 és sparse/7 modellek 4096-os checkpointját választotta.
+Az összesített dense modellválasztás a 7-es seedre esett. A 19-es seed utolsó checkpointja gyengébb lett a köztesnél;
+a több tanítás ebben a kis kísérletben nem adott monoton javulást.
+
+Hat elkülönített THEOTHER tesztseed, legfeljebb 128 döntés / 32 nap:
+
+| Vezérlő | Új mezők átlaga | Mobil sereg változása | Záró nap átlaga | Natív győzelem / vereség / limit |
+|---|---:|---:|---:|---|
+| Maszkos véletlen | 245,5 | +70,2 | 10,2 | 0 / 0 / 6 |
+| Egyszerű szabály | 299,2 | +59,3 | 25,7 | 0 / 1 / 5 |
+| Dense/7, kiválasztott | 266,7 | +111,2 | 4,2 | 0 / 0 / 6 |
+| Dense/19 | 194,8 | +23,3 | 13,5 | 0 / 2 / 4 |
+| Sparse/7 | 191,2 | +57,7 | 6,7 | 0 / 0 / 6 |
+
+**Részleges tanulás, nem nyerő adventure stratégia.** A kiválasztott dense modell a véletlennél átlagosan
+8,6%-kal több mezőt és +41 mobil katonát adott, utóbbi mind a hat párosított esetben nagyobb volt.
+A felfedezéskülönbség bootstrap 95%-os intervalluma azonban −59,8…+101,5 mező: a véletlenhez képest ez nem stabil bizonyíték.
+A mobil darabszámkülönbségé +28,5…+50,2. A sparse/7 kontrollhoz képest a felfedezés átlagos különbsége +75,5 mező,
+az intervallum +7,2…+142,7; ezek csak ezen hat seeden belüli leírások, két tanítási seedből nem következik általános RL-siker.
+
+Az akciók is megmutatják a korlátot: a kiválasztott modell hat epizódban 37 hőst bérelt a véletlen 24-ével szemben,
+334-szer varázsolt és mindössze 19-szer adott kört, seregátadást egyszer sem választott.
+Az első előre kijelölt videós esetben 70 `View Artifacts` és 9 `View Mines` varázslás szerepel;
+ennek külön diagnosztikai visszajátszási hash-e is egyezik a tesztével (`behavior-dense_7.json`).
+A varázslás nem kap külön pozitív jutalmat, mégis ilyen rossz ismétlési mintát tanult a véges PPO-futás.
+A nagyobb mobil létszám jelentős része hősbérlésből jön, nem megtanult seregösszevonásból vagy jobb harcértékből.
+A kiválasztott modell tesztjén a bevétel és saját várak száma nem nőtt.
+Az epizódok eltérő játéknapig jutnak ugyanannyi döntésből; a rövid teszt nem azonos napig tartó verseny.
+
+A négyworkeres tanítás mért sebessége 43,2 / 54,7 / 44,3 stratégiai döntés/s (dense/7, dense/19, sparse/7),
+a modell inicializálásával, friss resetekkel és PPO-frissítésekkel, a validáció idejét külön levonva.
+Ez megfigyelt tanítási áteresztés ezen a gépen, nem tiszta natív motorbenchmark vagy battle-only FPS.
+Minden checkpoint és idő a futási JSON-okban szerepel.
+
+Ellenőrzés: a 254 helyi tesztből 253 közvetlenül átment; egy meglévő, hardlinket létrehozó assettesztet
+a korlátozott Windows-futtatás fájljogosultsága blokkolt, majd normál jogosultságú célzott újrafuttatásban az is sikeres lett.
+Az új hét teszt az igazi Gym-szerződést, natív mozgást/felderítést, seregmegmaradást,
+jutalominvariánsokat, terminálás/limit különbségét, PPO-frissítést/visszatöltést és MP4-visszajátszást ellenőrzi.
+A [platform-CI](https://github.com/Taranyi/fheroes2/actions/runs/41270104420) 7/7 jobja sikeres a `2b84de38a` forráscommiton:
+Linux/macOS OFF/ON, macOS bundle, Android négy ABI és iOS-szimulátor.
+Ez a meglévő platformok build-/füsttesztje; az adventure PPO tanítását helyben Windows CPU-n mértük.
+
+BROKENA, két új seed, ugyanaz a rövid limit: a kiválasztott modell 1139,0 új mezőt adott a véletlen 746,0 és
+a sparse/7 202,5 mezőjével szemben. A mobil seregváltozás +94,5 volt a véletlen +97,0-jához képest,
+tehát ez a mutató itt nem javult. A második dense modell csak 176,0 mezőig jutott; mind a tíz epizód limitált, győzelem nélkül.
+Ez kevés eset egyetlen új pályán, nem általános pályatámogatás vagy stabil policy-általánosítás bizonyítéka.
+
+A hosszú THEOTHER-próba (seed 40000; max. 1536 döntés / 128 nap) mindhárom vezérlőnél valódi natív vereséggel zárult:
+
+| Vezérlő | Stratégiai döntés | Záró nap | Új mező | Eredmény |
+|---|---:|---:|---:|---|
+| Véletlen | 486 | 47 | 472 | Natív vereség |
+| Egyszerű szabály | 120 | 26 | 492 | Natív vereség |
+| Kiválasztott dense/7 | 985 | 64 | 388 | Natív `LOSS_TIME` (2048), nem külső truncation |
+
+A modell a hosszú futáson sem foglalt új várat, a végén a toborzott sereg a várőrségben maradt.
+A 64 napig tartó futás önmagában nem jobb stratégia: nem teljesítette a győzelmi célt és a felfedezésben is elmaradt a kontrolloktól.
+Ez a kísérlet a teljes natív játékban használható RL-adatgyűjtést, tanítást, kiértékelést és modell-visszajátszást igazolja;
+**erős, teljes pályát nyerő adventure agent még nincs**.
+
+Helyi kimenetek:
+
+- `build/python-env-adventure-rl/final/report.json`, `plan.json`: teljes mérés és előre rögzített terv.
+- `test-*.json`, `transfer-*.json`, `full-*.json`: minden epizód metrikái, eredménye, parancsszámai és akcióhash-e.
+- `dense-7/selected.zip`, `dense-19/selected.zip`, `sparse-7/selected.zip`: visszatölthető, saját tanított modellek.
+- `learning.png`, `paired-analysis.json`, `videos/index.html`: görbe, párosított összehasonlítás és helyi videógaléria.
+- `videos/media-verification.json`: renderes replay és MP4-ellenőrzés; a videók a tanítás előtt kijelölt két tesztseedből készülnek.
+- `build/python-env-adventure-rl/tests-summary.json`, `platform-report.json`: helyi és platformellenőrzés, részletes logokkal.
 
 ## Teljes fennmaradó sorrend
 
+5/B. Erősebb adventure policy: fölösleges információs-varázslási ismétlések kezelése a taskban,
+   harcérték/gazdaság/seregösszevonás jobb megfigyelése és feladatai, fokozatos várfoglalási tanítás, több pálya és hosszabb tanítás.
+   Ez új kísérleti protokollt és új elkülönített tesztseedeket igényel; a mostani teszteredményekre nem hangoljuk utólag a közölt modellt.
 6. Kampányátmenetek, átvitt hősök/jutalmak és kampányválasztások.
 7. Igény szerint láthatósági korlátozás, több agentes Gym-wrapper és self-play.
 8. Platformonkénti telepíthető Python-csomagok, csomagolt motor, automatikus motorkeresés,
