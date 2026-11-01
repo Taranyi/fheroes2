@@ -151,6 +151,13 @@ def comparisons(folder, report, plan, labels):
             finally:
                 for reader in readers:
                     reader.close()
+    write_gallery(folder, report, labels, pairs)
+    return checks
+
+
+def write_gallery(folder, report, labels, pairs):
+    """Refresh the presentation without re-encoding already verified recordings."""
+    directory = folder / 'videos'
     page = '''<!doctype html><html lang="hu"><meta charset="utf-8"><title>Adventure RL – helyi eredmények</title>
 <style>body{font:17px system-ui;background:#14212d;color:#eee;max-width:1300px;margin:30px auto;padding:20px}video,img{width:100%;border-radius:8px}h2{margin-top:40px}a{color:#9ddcd2}table{border-collapse:collapse;width:100%;font-size:16px}td,th{padding:12px;text-align:left;border-bottom:1px solid #41515e}.scroll{overflow-x:auto}</style>
 <h1>Adventure RL – mit tanult a modell?</h1>
@@ -175,7 +182,6 @@ A felirat metrikái az előző stratégiai snapshothoz tartoznak. Eltérhet a k�
     for case, control, filename in pairs:
         page += f'<h2>{html.escape(case)} — balra: {html.escape(labels[control])}</h2><video controls preload="metadata" src="{filename}"></video>'
     (directory / 'index.html').write_text(page + '</html>', encoding='utf-8')
-    return checks
 
 
 def paired_effects(folder, report):
