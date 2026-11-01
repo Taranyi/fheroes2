@@ -208,10 +208,11 @@ A ZIP cloudpickle-t tartalmazhat, ezért csak saját/megbízható modell tölthe
 ## Teljes fennmaradó munkasorrend
 
 2. **Kész:** [Gym/reset gyorsítás és párhuzamos tanítás](PYTHON_ENV_PERFORMANCE.md), bemért 1/2/4-env futásokkal.
-3. Linux/macOS tényleges futás és mobil SDK-buildellenőrzés.
+3. [Linux/macOS és mobil SDK-buildellenőrzés](PYTHON_ENV_PLATFORMS.md) — külön CI-mátrix és eredmények.
 4. Kiválasztott normál adventure-pályák végigjátszásának ellenőrzése és az elakadások javítása.
 5. Adventure RL: feladathoz illő megfigyelés, jutalom, tanítás, teszt és helyi videók.
 6. Kampánykezelés: továbbhaladás, átvitt hősök/jutalmak, kampányválasztások.
 7. Igény szerint korlátozott láthatóság, több agentes Gym-wrapper és self-play.
+8. Telepíthető platformonkénti Python-csomagok és automatikus motorkeresés (`pip install`).
 
 A jelenlegi csatakísérlet nem teljes varázslat-/hős-/artifact-kombinációs tanítás és nem általános szakértői csata-AI.

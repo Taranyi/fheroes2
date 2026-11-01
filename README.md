@@ -22,6 +22,7 @@ You can find a complete list of all of our changes and enhancements in [**this p
 This fork also provides an optional desktop Python/Gym interface. See the
 [Python environment guide](docs/PYTHON_ENV_GUIDE.md) and the
 [measured Gym/reset optimizations and parallel PPO examples](docs/PYTHON_ENV_PERFORMANCE.md).
+Desktop and mobile build coverage is documented in the [platform compatibility checks](docs/PYTHON_ENV_PLATFORMS.md).
 Python dependencies are optional; the native engine and mobile build configuration are unchanged by these optimizations.
 
 Please follow the [**installation guide**](docs/INSTALL.md) to download and install fheroes2.

@@ -213,8 +213,9 @@ A packed policy külön tesztje a maszkolt valószínűségeket, criticértékek
 
 ## Teljes fennmaradó sorrend
 
-3. Linux/macOS tényleges futás és mobil SDK-buildellenőrzés.
+3. [Linux/macOS és mobil SDK-buildellenőrzés](PYTHON_ENV_PLATFORMS.md) — a következő munkaszakasz eredményei külön dokumentumban.
 4. Kiválasztott normál adventure-pályák végigjátszásának ellenőrzése és az elakadások javítása.
 5. Adventure RL: megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.
 6. Kampánykezelés: továbbhaladás, átvitt hősök/jutalmak, kampányválasztások.
 7. Igény szerint korlátozott láthatóság, több agentes Gym-wrapper és self-play.
+8. Platformonkénti telepíthető Python-csomagok és automatikus motorkeresés (`pip install`).

@@ -347,10 +347,19 @@ Azonos feladatmérésen 1,49× teljes-API és 13,22× kis csatafeladat-sebesség
 440,5→53,8 másodperc tanítás. A nem packed egyenv-kontroll súlyai bitpontosan egyeznek a régivel.
 [Módszer, összes konfiguráció eredménye és reprodukálás](PYTHON_ENV_PERFORMANCE.md).
 
+### Linux/macOS és mobil buildellenőrzés — kész
+
+Külön, csak olvasási jogosultságú CI-mátrix ellenőrzi a Linux/macOS Python OFF/ON buildeket,
+a normál macOS alkalmazáscsomagot, az Android APK/AAB négy ABI-ját és az iOS-szimulátoros buildet.
+A desktop Pythonos jobok natív headless/protokoll-, valamint valódi Gym/reset/RGB-próbát is futtatnak.
+A meglévő mobilprojekt, kiadási workflow-k, natív játékforrások és alapértelmezett OFF kapcsoló változatlanok.
+[Tényleges eredmények, ellenőrzési kör és korlátok](PYTHON_ENV_PLATFORMS.md).
+
 A teljes fennmaradó sorrend:
 
-3. Linux/macOS tényleges futás és mobil SDK-buildellenőrzés.
 4. Normál adventure-pályák végigjátszásának ellenőrzése és elakadások javítása.
 5. Adventure RL: megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.
 6. Kampányátmenetek, átvitt hősök/jutalmak és kampányválasztások.
 7. Igény szerint láthatósági korlátozás, több agentes Gym-wrapper és self-play.
+8. Platformonkénti telepíthető Python-csomagok, csomagolt motor, automatikus motorkeresés,
+   `pip install` és tiszta telepítésből ellenőrzött példák; az eredeti játékadatok külön biztosítandók.

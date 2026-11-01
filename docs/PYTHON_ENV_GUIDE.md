@@ -228,7 +228,9 @@ Aktuális teljesítménybővítés: [Gyorsított Gym, opcionális csata-reset é
 A teljes `HeroesEnv` adatprofilja megmaradt; a külön `BattleEnv` kisebb csatamegfigyelést ad,
 teljes világállapottal külön `world_snapshot()` kérésre. A folyamat újrafelhasználása csak önálló csatára,
 explicit `reuse_process=True` kapcsolóval engedélyezett. A leírás tartalmazza a bemért 1/2/4-env tanításokat
-és a teljes fennmaradó feladatlistát; következő a Linux/macOS és mobil SDK ellenőrzése.
+és a teljes fennmaradó feladatlistát.
+A [Linux/macOS és mobil SDK-ellenőrzés](PYTHON_ENV_PLATFORMS.md) külön CI-mátrixban fut,
+a meglévő mobilprojekt és kiadási folyamatok változtatása nélkül. Következő a normál adventure-végigjátszások ellenőrzése.
 
 Az alábbi script helyi profilokat és JSON-jelentést ír a figyelmen kívül hagyott `build/python-env-acceptance` mappába:
 
