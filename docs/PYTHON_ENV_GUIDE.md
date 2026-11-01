@@ -230,7 +230,9 @@ teljes világállapottal külön `world_snapshot()` kérésre. A folyamat újraf
 explicit `reuse_process=True` kapcsolóval engedélyezett. A leírás tartalmazza a bemért 1/2/4-env tanításokat
 és a teljes fennmaradó feladatlistát.
 A [Linux/macOS és mobil SDK-ellenőrzés](PYTHON_ENV_PLATFORMS.md) külön CI-mátrixban fut,
-a meglévő mobilprojekt és kiadási folyamatok változtatása nélkül. Következő a normál adventure-végigjátszások ellenőrzése.
+a meglévő mobilprojekt és kiadási folyamatok változtatása nélkül.
+A [teljes adventure-epizódok ellenőrzése](PYTHON_ENV_ADVENTURE_COMPLETE.md) normál pályákon teszteli az AI–AI futást,
+az aktív Python/Gym vezérlést és a natív terminális eredményt. Következő az adventure RL-tanítás.
 
 Az alábbi script helyi profilokat és JSON-jelentést ír a figyelmen kívül hagyott `build/python-env-acceptance` mappába:
 

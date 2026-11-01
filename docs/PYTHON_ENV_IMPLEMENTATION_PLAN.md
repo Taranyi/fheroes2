@@ -355,9 +355,16 @@ A desktop Pythonos jobok natív headless/protokoll-, valamint valódi Gym/reset/
 A meglévő mobilprojekt, kiadási workflow-k, natív játékforrások és alapértelmezett OFF kapcsoló változatlanok.
 [Tényleges eredmények, ellenőrzési kör és korlátok](PYTHON_ENV_PLATFORMS.md).
 
+### Normál adventure-pályák teljes epizódjai — kész
+
+Négy kiválasztott pálya, AI–AI és aktív Python/Gym vezérlés, valódi natív terminális eredmények,
+seedelt visszajátszás, teljes világ-/renderellenőrzés és explicit sikertelen tesztkeret-kifutás.
+A hosszabb futások megtalálták az AI hajóidézésének feltétel nélküli képernyőlekérését;
+a célzott javítás csak a tényleges animációs ágakban kéri le a felületet, a szabályokat nem módosítja.
+[Futtatás, eredmények, regressziók és korlátok](PYTHON_ENV_ADVENTURE_COMPLETE.md).
+
 A teljes fennmaradó sorrend:
 
-4. Normál adventure-pályák végigjátszásának ellenőrzése és elakadások javítása.
 5. Adventure RL: megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.
 6. Kampányátmenetek, átvitt hősök/jutalmak és kampányválasztások.
 7. Igény szerint láthatósági korlátozás, több agentes Gym-wrapper és self-play.

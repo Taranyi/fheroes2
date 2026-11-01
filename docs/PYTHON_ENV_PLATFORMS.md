@@ -58,7 +58,9 @@ vagy minden történeti OS-/SDK-verzió támogatásának újraminősítését.
 
 Ellenőrzött kódcommit: `62e9657d0c793c48ef45a024c75d495aaf1090ac`.
 [Teljes buildmátrix és naplók](https://github.com/Taranyi/fheroes2/actions/runs/41250904849).
-A kódcommit után csak dokumentációs változások következnek.
+Az akkori lezáró commit csak dokumentációt adott hozzá.
+A későbbi [adventure hajóidézés-javítás](PYTHON_ENV_ADVENTURE_COMPLETE.md) külön újrafuttatja ugyanezt a platformmátrixot,
+és Linux/macOS alatt egy teljes demópályás AI-regressziót is hozzáad.
 
 A desktop jobok mind sikeresek: Linux GCC 13.3.0 x86-64 és macOS AppleClang 17 arm64,
 Python OFF/ON, továbbá a macOS `.app` csomag. Minden esetben 233 tényleges játékfordítási parancs ellenőrzött:
@@ -74,7 +76,7 @@ aláírás nélkül. Ez a repó meglévő SDK-/minimumverzió-beállításaival 
 A helyi Windows ON/OFF fordításiprofil-ellenőrzés és a két valódi Gym-próba is sikeres.
 Az Android/iOS/Emscripten CMake-flageknél a desktop adapter ON beállítása mindhárom esetben
 a szándékos, célzott hibaüzenettel elutasított; ez külön konfigurációs gate-próba, nem Emscripten-build.
-A helyi Windows executable SHA256-a változatlan:
+A 3. munkaszakaszban a helyi Windows executable SHA256-a változatlan maradt:
 `b7e7284b9130c538c6c6564139909344741f8d7328b2fab30730fedfd776f58f`.
 
 A natív játékforrásokat, `CMakeLists.txt` fájlokat, Android-/iOS-projektfákat, eredeti
@@ -88,7 +90,7 @@ Helyi bizonyítékok: `build/python-env-platforms/windows-smoke.json`, `mobile-g
 
 ## Teljes fennmaradó sorrend
 
-4. Normál adventure-pályák végigjátszása, elakadások javítása.
+4. [Teljes adventure-epizódok és célzott javítás](PYTHON_ENV_ADVENTURE_COMPLETE.md) — külön eredmények.
 5. Adventure RL: megfigyelés, jutalom, tanítás, kiértékelés és helyi videók.
 6. Kampányátmenetek, átvitt hősök/jutalmak és kampányválasztások.
 7. Igény szerint korlátozott láthatóság, több agentes Gym-wrapper és self-play.
