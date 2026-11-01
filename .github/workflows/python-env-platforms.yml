@@ -80,6 +80,9 @@ jobs:
           cp files/data/resurrection.h2d "$RUNNER_TEMP/fheroes2-demo/files/data/"
           python python/examples/platform_smoke.py --executable build/platform/fheroes2 \
             --data "$RUNNER_TEMP/fheroes2-demo" --output build/platform/smoke.json
+          FHEROES2_DATA="$RUNNER_TEMP/fheroes2-demo" python python/examples/adventure_acceptance.py \
+            --executable build/platform/fheroes2 --regression-map "$RUNNER_TEMP/fheroes2-demo/maps/BROKENA.MP2" \
+            --output build/platform/adventure
       - name: Install existing desktop target
         if: matrix.bundle == 'OFF'
         run: cmake --install build/platform --prefix "$RUNNER_TEMP/fheroes2-install"
@@ -89,6 +92,7 @@ jobs:
           name: profile-${{ matrix.os }}-${{ matrix.python_env }}-${{ matrix.bundle }}
           path: |
             build/platform/smoke.json
+            build/platform/adventure/report.json
             build/platform/CMakeCache.txt
             build/platform/compile_commands.json
           if-no-files-found: warn

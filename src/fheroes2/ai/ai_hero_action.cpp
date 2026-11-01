@@ -2508,12 +2508,11 @@ int32_t AI::HeroesCastSummonBoat( Heroes & hero, const int32_t boatDestinationIn
 
     const PlayerColor heroColor = hero.GetColor();
 
-    Interface::GameArea & gameArea = Interface::AdventureMap::Get().getGameArea();
-
     Maps::Tile & tileSource = world.getTile( boatSource );
 
     const auto allianceColors = AIGetAllianceColors();
     if ( AIIsShowAnimationForTile( tileSource, allianceColors ) ) {
+        Interface::GameArea & gameArea = Interface::AdventureMap::Get().getGameArea();
         gameArea.SetCenter( Maps::GetPoint( boatSource ) );
         gameArea.runSingleObjectAnimation( std::make_shared<Interface::ObjectFadingOutInfo>( tileSource.getMainObjectPart()._uid, boatSource, MP2::OBJ_BOAT ) );
     }
@@ -2528,6 +2527,7 @@ int32_t AI::HeroesCastSummonBoat( Heroes & hero, const int32_t boatDestinationIn
     tileSource.resetBoatOwnerColor();
 
     if ( AIIsShowAnimationForTile( tileDest, allianceColors ) ) {
+        Interface::GameArea & gameArea = Interface::AdventureMap::Get().getGameArea();
         gameArea.SetCenter( Maps::GetPoint( boatDestinationIndex ) );
         gameArea.runSingleObjectAnimation( std::make_shared<Interface::ObjectFadingInInfo>( tileDest.getMainObjectPart()._uid, boatDestinationIndex, MP2::OBJ_BOAT ) );
     }
